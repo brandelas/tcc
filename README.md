@@ -101,25 +101,36 @@ Ordem de serviço é concluída
 Financeiro registra pagamento
         ↓
 Histórico do veículo é atualizado
-Tecnologias Planejadas
-Área	Tecnologia
-Backend	Node.js, TypeScript, NestJS
-Frontend	React, TypeScript, Vite
-Banco de Dados	PostgreSQL
-Mensageria	RabbitMQ
-Containers	Docker, Docker Compose
-Testes Backend	Jest, Supertest
-Testes Frontend	React Testing Library
-CI/CD	GitHub Actions
-Infraestrutura	Terraform
-Cloud	AWS
-Monitoramento	Prometheus, Grafana
+```
 
+---
 
-Decisão de Banco de Dados
-O banco principal escolhido para o OficinaPro é o PostgreSQL.
+## Tecnologias Planejadas
+
+| Área | Tecnologia |
+|---|---|
+| Backend | Node.js, TypeScript, NestJS |
+| Frontend | React, TypeScript, Vite |
+| Banco de Dados | PostgreSQL |
+| Mensageria | RabbitMQ |
+| Containers | Docker, Docker Compose |
+| Testes Backend | Jest, Supertest |
+| Testes Frontend | React Testing Library |
+| CI/CD | GitHub Actions |
+| Infraestrutura | Terraform |
+| Cloud | AWS |
+| Monitoramento | Prometheus, Grafana |
+
+---
+
+## Decisão de Banco de Dados
+
+O banco principal escolhido para o OficinaPro é o **PostgreSQL**.
+
 A escolha foi feita porque o sistema possui um núcleo transacional forte, com dados altamente relacionados e regras que exigem consistência.
+
 Exemplos:
+
 - uma ordem de serviço precisa estar vinculada a um cliente e a um veículo;
 - um orçamento precisa estar vinculado a uma ordem de serviço;
 - uma peça utilizada precisa existir no estoque;
@@ -127,79 +138,170 @@ Exemplos:
 - um pagamento precisa estar vinculado a uma ordem de serviço;
 - o histórico de manutenção do veículo não pode ficar inconsistente;
 - o fechamento financeiro depende da soma correta de serviços, peças, descontos e pagamentos.
+
 Por esses motivos, o PostgreSQL é mais adequado para o núcleo principal do sistema do que uma solução NoSQL. O modelo relacional oferece integridade referencial, transações ACID, constraints, relacionamentos, índices e consultas estruturadas.
+
 Soluções NoSQL podem ser úteis em cenários de grande volume documental, dados pouco estruturados ou leitura altamente distribuída, mas não são a melhor escolha para o núcleo operacional e financeiro do OficinaPro.
-Ambiente Local
+
+---
+
+## Ambiente Local
+
 O ambiente local deve ser padronizado com Docker Compose para garantir que todos os integrantes trabalhem com a mesma configuração.
+
 Serviços previstos no ambiente local:
-Serviço	Finalidade
-PostgreSQL	Banco de dados principal
-Adminer	Interface web para acesso ao banco
-RabbitMQ	Mensageria entre serviços
-RabbitMQ Management	Interface web para visualizar filas e mensagens
 
+| Serviço | Finalidade |
+|---|---|
+| PostgreSQL | Banco de dados principal |
+| Adminer | Interface web para acesso ao banco |
+| RabbitMQ | Mensageria entre serviços |
+| RabbitMQ Management | Interface web para visualizar filas e mensagens |
 
-Pré-requisitos
+---
+
+## Pré-requisitos
+
 Antes de rodar o projeto, instale:
+
 - Git;
 - Docker Desktop;
 - Node.js LTS;
 - npm ou pnpm;
 - VS Code ou IDE equivalente.
+
 Verifique as instalações:
+
+```bash
 git --version
 docker --version
 docker compose version
 node --version
 npm --version
-Configuração Inicial
+```
+
+---
+
+## Configuração Inicial
+
 Clone o repositório:
+
+```bash
 git clone URL_DO_REPOSITORIO
 cd NOME_DO_REPOSITORIO
+```
+
 Crie o arquivo de ambiente local:
+
+```bash
 cp .env.example .env
+```
+
 No Windows PowerShell:
+
+```powershell
 Copy-Item .env.example .env
+```
+
 Suba os containers:
+
+```bash
 docker compose up -d
+```
+
 Verifique se os serviços estão ativos:
+
+```bash
 docker compose ps
-Serviços Locais
-Serviço	Endereço	Usuário	Senha
-PostgreSQL	localhost:5432	oficinapro	definida no .env
-Adminer	http://localhost:8080	oficinapro	definida no .env
-RabbitMQ	localhost:5672	garageops	definida no .env
-RabbitMQ Management	http://localhost:15672	garageops	definida no .env
+```
 
+---
 
-Acesso ao Banco pelo Adminer
+## Serviços Locais
+
+| Serviço | Endereço | Usuário | Senha |
+|---|---|---|---|
+| PostgreSQL | localhost:5432 | oficinapro | definida no `.env` |
+| Adminer | http://localhost:8080 | oficinapro | definida no `.env` |
+| RabbitMQ | localhost:5672 | garageops | definida no `.env` |
+| RabbitMQ Management | http://localhost:15672 | garageops | definida no `.env` |
+
+---
+
+## Acesso ao Banco pelo Adminer
+
 Acesse:
+
+```text
 http://localhost:8080
+```
+
 Use os seguintes dados:
+
+```text
 Sistema: PostgreSQL
 Servidor: postgres
 Usuário: oficinapro
 Senha: definida no arquivo .env
 Banco de dados: oficinapro
-Observação: no Adminer, o servidor deve ser postgres, pois esse é o nome do serviço dentro da rede do Docker Compose. Para acessar o banco diretamente pela máquina local, use localhost.
-Comandos Úteis
+```
+
+Observação: no Adminer, o servidor deve ser `postgres`, pois esse é o nome do serviço dentro da rede do Docker Compose. Para acessar o banco diretamente pela máquina local, use `localhost`.
+
+---
+
+## Comandos Úteis
+
 Subir o ambiente:
+
+```bash
 docker compose up -d
+```
+
 Parar o ambiente:
+
+```bash
 docker compose down
+```
+
 Listar containers:
+
+```bash
 docker compose ps
+```
+
 Ver logs do PostgreSQL:
+
+```bash
 docker compose logs postgres
+```
+
 Ver logs do RabbitMQ:
+
+```bash
 docker compose logs rabbitmq
+```
+
 Reiniciar os serviços:
+
+```bash
 docker compose restart
+```
+
 Apagar volumes locais e recriar o ambiente:
+
+```bash
 docker compose down -v
 docker compose up -d
-Use docker compose down -v com cuidado, pois ele apaga os dados locais do banco.
-Estrutura Planejada do Repositório
+```
+
+Use `docker compose down -v` com cuidado, pois ele apaga os dados locais do banco.
+
+---
+
+## Estrutura Planejada do Repositório
+
+```text
 .
 ├── backend/
 │   ├── auth-service/
@@ -220,16 +322,29 @@ Estrutura Planejada do Repositório
 ├── docker-compose.yml
 ├── .env.example
 └── README.md
+```
+
 A estrutura pode evoluir conforme o projeto amadurecer, mas alterações relevantes devem ser discutidas pelo grupo antes de serem aplicadas.
-Padrão de Branches
+
+---
+
+## Padrão de Branches
+
 A branch principal deve permanecer estável.
+
 Padrão recomendado:
+
+```text
 main
 develop
 feature/nome-da-tarefa
 fix/nome-do-ajuste
 docs/nome-da-documentacao
+```
+
 Exemplos:
+
+```text
 feature/docker-compose
 feature/modelagem-banco
 feature/auth-service
@@ -237,35 +352,78 @@ feature/work-order-service
 feature/frontend-login
 fix/correcao-env
 docs/atualiza-readme
-Fluxo de Trabalho
+```
+
+---
+
+## Fluxo de Trabalho
+
 1. Atualizar a branch local:
+
+```bash
 git pull origin develop
+```
+
 2. Criar uma branch para a tarefa:
+
+```bash
 git checkout -b feature/nome-da-tarefa
+```
+
 3. Fazer as alterações.
+
 4. Verificar os arquivos modificados:
+
+```bash
 git status
+```
+
 5. Criar commit com mensagem objetiva:
+
+```bash
 git add .
 git commit -m "Adiciona configuração inicial do Docker Compose"
+```
+
 6. Enviar a branch:
+
+```bash
 git push origin feature/nome-da-tarefa
+```
+
 7. Abrir Pull Request para revisão do grupo.
-Padrão de Commits
+
+---
+
+## Padrão de Commits
+
 Use mensagens claras e no presente.
+
 Exemplos:
+
+```text
 Adiciona configuração inicial do Docker Compose
 Cria estrutura inicial de migrations
 Implementa autenticação com JWT
 Corrige conexão com PostgreSQL
 Atualiza documentação de setup local
+```
+
 Evite mensagens vagas como:
+
+```text
 ajustes
 update
 arrumando coisas
 teste
-Qualidade
+```
+
+---
+
+## Qualidade
+
 O projeto deve manter os seguintes critérios:
+
 - código revisado via Pull Request;
 - ambiente local documentado;
 - banco de dados versionado por migrations;
@@ -275,17 +433,23 @@ O projeto deve manter os seguintes critérios:
 - padronização de código;
 - logs e métricas para monitoramento;
 - documentação atualizada junto com mudanças relevantes.
-Testes
-A estratégia de testes será definida por camada:
-Camada	Tipo de Teste
-Backend	Testes unitários e de integração
-Frontend	Testes de componentes e fluxos principais
-Banco de Dados	Validação de migrations e integridade
-Integrações	Testes com mocks ou ambiente sandbox
-Pipeline	Execução automatizada em Pull Requests
 
+---
+
+## Testes
+
+A estratégia de testes será definida por camada:
+
+| Camada | Tipo de Teste |
+|---|---|
+| Backend | Testes unitários e de integração |
+| Frontend | Testes de componentes e fluxos principais |
+| Banco de Dados | Validação de migrations e integridade |
+| Integrações | Testes com mocks ou ambiente sandbox |
+| Pipeline | Execução automatizada em Pull Requests |
 
 Regras críticas devem ter prioridade nos testes:
+
 - autenticação e autorização;
 - abertura de ordem de serviço;
 - aprovação de orçamento;
@@ -293,10 +457,18 @@ Regras críticas devem ter prioridade nos testes:
 - bloqueio de uso de peça sem estoque;
 - cálculo de fechamento financeiro;
 - registro de pagamento.
-Variáveis de Ambiente
-As variáveis devem ficar no arquivo .env, criado localmente a partir do .env.example.
-O arquivo .env não deve ser versionado.
+
+---
+
+## Variáveis de Ambiente
+
+As variáveis devem ficar no arquivo `.env`, criado localmente a partir do `.env.example`.
+
+O arquivo `.env` não deve ser versionado.
+
 Exemplo de variáveis esperadas:
+
+```env
 POSTGRES_DB=oficinapro
 POSTGRES_USER=oficinapro
 POSTGRES_PASSWORD=oficinapro123
@@ -308,18 +480,30 @@ RABBITMQ_USER=garageops
 RABBITMQ_PASSWORD=garageops123
 RABBITMQ_PORT=5672
 RABBITMQ_MANAGEMENT_PORT=15672
-Segurança
+```
+
+---
+
+## Segurança
+
 Cuidados mínimos obrigatórios:
-- não versionar .env;
+
+- não versionar `.env`;
 - não commitar senhas reais;
 - não expor tokens em logs;
 - usar hash seguro para senhas;
 - validar permissões por perfil;
 - revisar Pull Requests antes de merge;
 - usar ambiente sandbox para integrações de pagamento.
-Observabilidade
+
+---
+
+## Observabilidade
+
 O projeto deverá evoluir para expor métricas operacionais dos serviços.
+
 Métricas esperadas:
+
 - tempo de resposta das APIs;
 - quantidade de requisições;
 - taxa de erro;
@@ -327,12 +511,20 @@ Métricas esperadas:
 - consumo de recursos;
 - status de filas;
 - eventos de negócio relevantes.
+
 Ferramentas planejadas:
+
 - Prometheus para coleta de métricas;
 - Grafana para dashboards.
-Status Atual
+
+---
+
+## Status Atual
+
 Projeto em fase inicial de estruturação técnica.
+
 Prioridades imediatas:
+
 1. estruturar ambiente local com Docker Compose;
 2. configurar PostgreSQL e Adminer;
 3. configurar RabbitMQ;
@@ -340,5 +532,9 @@ Prioridades imediatas:
 5. criar base do backend;
 6. criar base do frontend;
 7. configurar pipeline inicial de CI.
-Observação
+
+---
+
+## Observação
+
 Este repositório é privado e destinado aos integrantes do grupo GarageOps. O acesso deve ser concedido apenas aos membros do grupo e, se necessário, ao professor orientador.
