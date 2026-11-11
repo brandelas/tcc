@@ -174,12 +174,16 @@ O sistema não deve permitir a utilização ou baixa de quantidade superior ao s
 
 **Status:** 🟢 Definida
 
-### RN-EST-003 — Baixa de Peças na Aprovação do Orçamento
+### RN-EST-003 — Baixa de Peças na Aprovação do Orçamento e Tratamento de Estorno
 
-A baixa física das peças vinculadas ao orçamento deve ocorrer de forma automatizada no momento em que o cliente aprovar formalmente o orçamento (`APROVADA`).
+A baixa das peças vinculadas ao orçamento deve ocorrer de forma automatizada no momento em que o cliente aprovar formalmente o orçamento (`APROVADA`).
 
 A movimentação de saída deve estar vinculada à respectiva ordem de serviço e ao orçamento aprovado, permitindo rastrear a origem da baixa.
 
+Em caso de cancelamento da OS após a aprovação do orçamento, o tratamento das peças deve considerar sua condição física:
+
+- **Peças ainda não instaladas ou consumidas:** realizar o estorno da movimentação de saída e devolver a quantidade correspondente ao estoque disponível para utilização.
+- **Peças já instaladas ou consumidas:** não devolver os itens ao estoque comercializável. A movimentação deve ser registrada como perda operacional ou descarte, conforme o tratamento adotado pela oficina.
 
 O sistema deve:
 
@@ -187,7 +191,7 @@ O sistema deve:
 - Registrar a movimentação de saída das peças, identificando a OS e o orçamento correspondente.
 - Impedir que a mesma aprovação gere mais de uma baixa para as mesmas peças, evitando duplicidade de movimentações.
 - Impedir a aprovação do orçamento quando não houver quantidade suficiente de peças em estoque.
-- Em caso de cancelamento da OS após a aprovação do orçamento, realizar o estorno da movimentação de saída das peças no estoque, independentemente do momento em que ocorrer o cancelamento, preservando o registro da movimentação original e do respectivo estorno para garantir a rastreabilidade das operações.
+- Preservar o registro da movimentação original e de qualquer estorno, perda ou descarte relacionado, garantindo a rastreabilidade das operações.
 
 **Status:** 🟢 Definida
 
