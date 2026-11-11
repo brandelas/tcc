@@ -1,396 +1,151 @@
-# MVP — OficinaPro
+# MVP (Minimum Viable Product) — OficinaPro
 
-> **Status:** 🟡 Em discussão
-> **Responsável pela análise:** Product Owner / Requirements Analyst
-> **Objetivo:** definir uma proposta inicial de escopo mínimo viável para o OficinaPro.
->
-> Este documento apresenta uma **proposta de MVP**, não uma definição definitiva do escopo do projeto. Os itens poderão ser ajustados após discussão com a equipe e validação com o professor.
+> **Status:** 🟢 Definido pelo grupo GarageOps  
+> **Responsável pela análise:** Eloísa Brandão (Product Owner)  
+> **Objetivo:** Estabelecer o escopo mínimo viável e obrigatório para a primeira entrega e validação do sistema OficinaPro no Projeto Experimental (5º Semestre ADS - UniFAAT).
 
 ---
 
 ## 1. Objetivo do MVP
 
-O MVP (Minimum Viable Product) do OficinaPro tem como objetivo disponibilizar um fluxo funcional de gestão de serviços de uma oficina mecânica, permitindo acompanhar uma ordem de serviço desde o cadastro do cliente e veículo até a conclusão do serviço e registro do pagamento.
+O MVP do OficinaPro tem como objetivo entregar um fluxo operacional ponta a ponta funcional para oficinas mecânicas de pequeno e médio porte.
 
-A proposta é priorizar o fluxo operacional principal, evitando que funcionalidades complementares aumentem o escopo antes que o fluxo central esteja funcionando de ponta a ponta.
+O sistema deve suportar toda a jornada do cliente e do veículo, desde a abertura da ordem de serviço até a quitação financeira e atualização do histórico de manutenção, garantindo consistência transacional e aderência aos requisitos técnicos exigidos pela disciplina.
 
 ---
 
-## 2. Fluxo principal proposto
+## 2. Fluxo Principal do MVP
 
-O fluxo principal considerado para o MVP é:
+O fluxo central que o sistema obrigatoriamente deve executar de forma integrada é:
 
 ```text
 Cliente
    ↓
 Veículo
    ↓
-Ordem de Serviço
+Ordem de Serviço (ABERTA)
    ↓
-Diagnóstico
+Diagnóstico Técnico (EM_DIAGNOSTICO)
    ↓
-Orçamento
+Elaboração do Orçamento (AGUARDANDO_APROVACAO)
    ↓
-Aprovação / Recusa
+Aprovação ou Recusa (APROVADA / RECUSADA)
    ↓
-Execução do Serviço
+Execução do Serviço (EM_EXECUCAO)
    ↓
-Movimentação de Estoque
+Baixa de Peças no Estoque (Inventory Service)
    ↓
-Conclusão da OS
+Quitação Financeira (AGUARDANDO_PAGAMENTO → CONCLUIDA)
    ↓
-Pagamento
-   ↓
-Histórico de Manutenção
+Atualização do Histórico de Manutenção do Veículo
 ```
-
-Esse fluxo representa a principal jornada operacional que o sistema deverá suportar.
 
 ---
 
-## 3. Funcionalidades propostas para o MVP
+## 3. Funcionalidades Essenciais (Escopo do MVP)
 
 ### 3.1 Clientes
 
-O sistema deverá permitir:
-
-* cadastrar cliente;
-* consultar cliente;
-* atualizar dados do cliente;
-* identificar o cliente relacionado às ordens de serviço.
-
-**Prioridade:** 🔴 Essencial
-
----
+- Cadastro obrigatório com nome, CPF (único e validado), telefone, e-mail e endereço.
+- Consulta e atualização de dados cadastrais.
+- **Prioridade:** 🔴 Essencial (Definido).
 
 ### 3.2 Veículos
 
-O sistema deverá permitir:
+- Cadastro vinculado obrigatoriamente a um cliente.
+- Utilização da **placa** como identificador único.
+- Registro de marca, modelo, ano, cor e quilometragem.
+- Preservação do histórico de manutenção em caso de mudança de proprietário.
+- **Prioridade:** 🔴 Essencial (Definido).
 
-* cadastrar veículo;
-* relacionar veículo a um cliente;
-* consultar dados do veículo;
-* identificar o veículo relacionado à OS;
-* consultar informações básicas necessárias para o atendimento.
+### 3.3 Ordem de Serviço (OS)
 
-**Prioridade:** 🔴 Essencial
+- Abertura de OS vinculando cliente e veículo.
+- Acompanhamento por meio da esteira oficial de status:
 
----
+  `ABERTA` → `EM_DIAGNOSTICO` → `AGUARDANDO_APROVACAO` → `APROVADA` / `RECUSADA` → `EM_EXECUCAO` → `AGUARDANDO_PAGAMENTO` → `CONCLUIDA`.
 
-### 3.3 Ordem de Serviço
-
-O sistema deverá permitir:
-
-* abrir uma ordem de serviço;
-* relacionar a OS a um cliente e veículo;
-* registrar informações iniciais do atendimento;
-* consultar a OS;
-* acompanhar o status da OS;
-* atualizar o status conforme o andamento do serviço.
-
-### Status propostos
-
-```text
-ABERTA
-↓
-EM_DIAGNOSTICO
-↓
-AGUARDANDO_APROVACAO
-↓
-APROVADA
-↓
-EM_EXECUCAO
-↓
-AGUARDANDO_PAGAMENTO
-↓
-CONCLUIDA
-```
-
-Também deverá existir a possibilidade de encerramento por recusa:
-
-```text
-AGUARDANDO_APROVACAO
-↓
-RECUSADA
-```
-
-> Os status e suas transições são uma proposta inicial e deverão ser validados pela equipe.
-
-**Prioridade:** 🔴 Essencial
-
----
+- **Prioridade:** 🔴 Essencial (Definido).
 
 ### 3.4 Diagnóstico
 
-O sistema deverá permitir:
-
-* registrar o diagnóstico do veículo;
-* associar o diagnóstico à OS;
-* consultar o diagnóstico posteriormente;
-* utilizar as informações do diagnóstico como base para o orçamento.
-
-**Prioridade:** 🔴 Essencial
-
----
+- Registro da avaliação técnica realizada pelo mecânico, associada à OS.
+- **Prioridade:** 🔴 Essencial (Definido).
 
 ### 3.5 Orçamento
 
-O sistema deverá permitir:
+- Composição de serviços e peças com cálculo automático do valor total: `(Serviços + Peças) - Descontos`.
+- Registro de aprovação ou recusa por parte do cliente.
+- **Prioridade:** 🔴 Essencial (Definido).
 
-* criar orçamento relacionado à OS;
-* registrar serviços;
-* registrar peças;
-* calcular o valor total;
-* apresentar o orçamento para aprovação;
-* registrar aprovação ou recusa.
+### 3.6 Execução e Estoque
 
-**Prioridade:** 🔴 Essencial
+- Controle de peças cadastradas com quantidade disponível.
+- Registro de entradas e saídas (movimentações).
+- Baixa automática de peças no estoque vinculada à aprovação/início da execução da OS.
+- Bloqueio de saída caso o estoque seja insuficiente.
+- **Prioridade:** 🔴 Essencial (Definido).
 
----
+### 3.7 Financeiro e Pagamento
 
-### 3.6 Execução do serviço
+- Registro de pagamento associado à OS para quitação e encerramento (`CONCLUIDA`).
+- **Prioridade:** 🔴 Essencial (Definido).
 
-Após a aprovação do orçamento, o sistema deverá permitir:
+### 3.8 Histórico de Manutenção
 
-* iniciar a execução do serviço;
-* acompanhar o andamento da OS;
-* registrar informações necessárias para a conclusão;
-* finalizar o serviço.
+- Consulta consolidada de todos os atendimentos anteriores vinculados ao veículo.
+- **Prioridade:** 🔴 Essencial (Definido).
 
-**Prioridade:** 🔴 Essencial
+### 3.9 Autenticação e Permissões
 
----
-
-### 3.7 Estoque
-
-O MVP deverá possuir uma versão básica de controle de estoque.
-
-A proposta inclui:
-
-* cadastro de peças;
-* quantidade disponível;
-* entrada de peças;
-* saída de peças;
-* associação da saída de peças à execução de uma OS;
-* atualização do saldo de estoque.
-
-### Regra principal proposta
-
-Quando uma peça for utilizada em uma OS, sua quantidade deverá ser descontada do estoque.
-
-Caso não exista quantidade suficiente disponível, o sistema deverá impedir ou sinalizar a operação, conforme regra que será definida pela equipe.
-
-**Prioridade:** 🔴 Essencial
+- Autenticação via Auth Service com hash seguro de senha.
+- Controle de acesso baseado em perfis (Atendente, Mecânico, Estoque e Financeiro).
+- **Prioridade:** 🔴 Essencial (Definido).
 
 ---
 
-### 3.8 Pagamento
+## 4. Funcionalidades Fora do Escopo Inicial (Pós-MVP / Secundárias)
 
-O sistema deverá permitir:
+Para evitar estouro de escopo e garantir a entrega dentro do semestre, os itens abaixo ficam classificados como opcionais ou secundários:
 
-* calcular o valor final da OS;
-* registrar o pagamento;
-* identificar a situação do pagamento;
-* relacionar o pagamento à OS.
-
-A forma de pagamento e possíveis regras de pagamento deverão ser definidas posteriormente.
-
-**Prioridade:** 🔴 Essencial
+- Notificações avançadas por canais externos (SMS/WhatsApp).
+- Relatórios gerenciais complexos e dashboards analíticos avançados.
+- Pagamentos parciais / parcelados complexos.
+- Integrações com gateways de pagamento reais (simulado localmente).
 
 ---
 
-### 3.9 Histórico de manutenção
+## 5. Matriz de Priorização Consolidada
 
-O sistema deverá permitir consultar o histórico de serviços realizados para determinado veículo.
-
-O histórico deverá possibilitar a visualização, conforme o modelo definido pela equipe, de informações como:
-
-* data do atendimento;
-* número da OS;
-* diagnóstico;
-* serviços realizados;
-* peças utilizadas;
-* valor;
-* situação da OS.
-
-**Prioridade:** 🟡 Importante
-
----
-
-### 3.10 Autenticação e permissões
-
-A proposta inicial inclui:
-
-* autenticação de usuários;
-* controle de acesso;
-* diferenciação de permissões conforme perfil.
-
-Os perfis e suas permissões ainda precisam ser definidos pela equipe.
-
-**Prioridade:** 🟡 Importante
+| Funcionalidade | Prioridade | Status |
+|---|---|---|
+| Cadastro de Clientes (CPF único) | Essencial | 🟢 Definido |
+| Cadastro de Veículos (Placa única) | Essencial | 🟢 Definido |
+| Abertura e Gestão de OS (Esteira de Status) | Essencial | 🟢 Definido |
+| Diagnóstico Técnico | Essencial | 🟢 Definido |
+| Orçamento (Cálculo automático) | Essencial | 🟢 Definido |
+| Aprovação / Recusa de Orçamento | Essencial | 🟢 Definido |
+| Controle de Estoque e Baixa Automática | Essencial | 🟢 Definido |
+| Financeiro (Quitação e Fechamento) | Essencial | 🟢 Definido |
+| Histórico de Manutenção | Essencial | 🟢 Definido |
+| Autenticação e Perfis (Auth Service) | Essencial | 🟢 Definido |
+| Notificações / Alertas | Secundário | 🔵 Validar com Professor |
+| Relatórios Gerenciais | Pós-MVP | ⚪ Pós-MVP |
 
 ---
 
-## 4. Funcionalidades que podem ficar fora do MVP
+## 6. Critérios de Sucesso do MVP
 
-Para evitar aumento excessivo de escopo, as seguintes funcionalidades podem ser tratadas como complementares ou pós-MVP:
+O MVP será considerado concluído com sucesso quando o grupo GarageOps conseguir demonstrar a execução integrada de ponta a ponta:
 
-### 4.1 Notificações
-
-Possíveis funcionalidades:
-
-* aviso de orçamento aguardando aprovação;
-* aviso de aprovação ou recusa;
-* aviso de serviço concluído;
-* notificações relacionadas ao pagamento.
-
-**Status:** 🔵 Validar com professor
+1. Ambiente local rodando via Docker Compose (PostgreSQL, Adminer, RabbitMQ).
+2. Backend em NestJS estruturado em microsserviços comunicando-se de forma consistente.
+3. Frontend em React consumindo as APIs.
+4. Testes automatizados atingindo a meta de cobertura (≥ 60%) nas regras críticas.
+5. Pipeline de CI/CD configurado no GitHub Actions e infraestrutura modelada via Terraform.
 
 ---
 
-### 4.2 Relatórios
+**Última atualização:** 27/10/2026
 
-Possíveis relatórios:
-
-* faturamento;
-* serviços realizados;
-* peças utilizadas;
-* estoque;
-* quantidade de OS por período;
-* histórico financeiro.
-
-**Status:** 🔵 Validar com professor
-
----
-
-### 4.3 Funcionalidades adicionais
-
-Também poderão ser consideradas posteriormente:
-
-* dashboard gerencial;
-* indicadores;
-* exportação de dados;
-* integração com serviços externos;
-* funcionalidades avançadas para clientes;
-* recursos adicionais de comunicação.
-
-**Status:** ⚪ Pós-MVP / conforme disponibilidade de tempo
-
----
-
-## 5. Priorização inicial
-
-| Funcionalidade             | Prioridade | Status                   |
-| -------------------------- | ---------- | ------------------------ |
-| Cadastro de clientes       | Essencial  | 🟡 Em discussão          |
-| Cadastro de veículos       | Essencial  | 🟡 Em discussão          |
-| Ordem de serviço           | Essencial  | 🟡 Em discussão          |
-| Diagnóstico                | Essencial  | 🟡 Em discussão          |
-| Orçamento                  | Essencial  | 🟡 Em discussão          |
-| Aprovação/recusa           | Essencial  | 🟡 Em discussão          |
-| Execução do serviço        | Essencial  | 🟡 Em discussão          |
-| Controle básico de estoque | Essencial  | 🟡 Em discussão          |
-| Pagamento                  | Essencial  | 🟡 Em discussão          |
-| Histórico de manutenção    | Importante | 🟡 Em discussão          |
-| Autenticação               | Importante | 🟡 Em discussão          |
-| Notificações               | A definir  | 🔵 Validar com professor |
-| Relatórios                 | A definir  | 🔵 Validar com professor |
-| Dashboard                  | Pós-MVP    | ⚪ Pós-MVP                |
-| Integrações externas       | Pós-MVP    | ⚪ Pós-MVP                |
-
----
-
-## 6. Critérios gerais para considerar o MVP funcional
-
-A proposta é considerar o MVP funcional quando o sistema conseguir executar o fluxo principal de forma integrada:
-
-```text
-Cliente
-→ Veículo
-→ OS
-→ Diagnóstico
-→ Orçamento
-→ Aprovação
-→ Execução
-→ Estoque
-→ Conclusão
-→ Pagamento
-→ Histórico
-```
-
-Além do fluxo funcional, deverão ser considerados:
-
-* persistência dos dados;
-* validação das informações;
-* controle de acesso;
-* tratamento de erros;
-* testes automatizados definidos pelo projeto;
-* documentação mínima necessária;
-* execução do ambiente de desenvolvimento;
-* integração entre os componentes necessários.
-
----
-
-## 7. Dependências do MVP
-
-A implementação do MVP depende da definição e/ou implementação de:
-
-* modelo de dados;
-* relacionamento entre clientes, veículos e OS;
-* regras de negócio;
-* arquitetura dos serviços;
-* autenticação;
-* comunicação entre serviços;
-* banco de dados;
-* ambiente de desenvolvimento;
-* estratégia de testes;
-* pipeline de CI/CD;
-* infraestrutura de execução.
-
-Esses itens poderão ser refinados conforme a equipe avançar na arquitetura técnica.
-
----
-
-## 8. Questões que precisam de validação
-
-Antes de considerar o MVP definido, recomenda-se discutir:
-
-* O histórico de manutenção fará parte obrigatoriamente do MVP?
-* Autenticação e diferentes perfis serão obrigatórios no MVP?
-* Notificações fazem parte do MVP ou serão pós-MVP?
-* Relatórios fazem parte do MVP?
-* O pagamento será apenas um registro ou haverá alguma integração externa?
-* Quais formas de pagamento serão suportadas?
-* Quais perfis de usuário existirão?
-* Quais permissões cada perfil terá?
-* Quais status de OS serão obrigatórios?
-* Uma OS recusada poderá ser reaberta?
-* O estoque poderá ficar negativo?
-* Como será tratada a falta de uma peça durante a execução?
-* Quais funcionalidades são obrigatórias para a avaliação do TCC?
-* Quais requisitos técnicos o professor espera que estejam efetivamente implementados?
-
----
-
-## 9. Limite de escopo
-
-A prioridade do projeto deverá ser entregar um fluxo principal funcional antes de ampliar o sistema com funcionalidades complementares.
-
-Caso surjam novas funcionalidades durante o desenvolvimento, recomenda-se classificá-las como:
-
-* 🔴 Necessária para o MVP;
-* 🟡 Importante, mas pode aguardar;
-* ⚪ Pós-MVP;
-* 🔵 Necessita validação do professor.
-
-Isso permite controlar o crescimento do escopo sem impedir novas ideias.
-
----
-
-## 10. Histórico de alterações
-
-| Data       | Alteração                          | Responsável   |
-| ---------- | ---------------------------------- | ------------- |
-| 2026-09-26 | Criação da proposta inicial de MVP | Product Owner |
-
-> Este documento deverá ser atualizado conforme as decisões da equipe e as orientações recebidas durante as reuniões com o professor.
+**Responsável:** Heloísa Brandão (Product Owner)
