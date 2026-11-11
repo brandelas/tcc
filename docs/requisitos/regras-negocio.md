@@ -1,960 +1,250 @@
-\# Regras de Negócio — OficinaPro
+# Regras de Negócio — OficinaPro
 
-
-
-> \*\*Documento de trabalho — sujeito à validação do grupo e do professor.\*\*
-
+> **Documento oficial de trabalho — Grupo GarageOps**
 >
+> Este documento consolida as regras de negócio que regem o comportamento e as validações do sistema OficinaPro para o MVP do Projeto Experimental (5º Semestre ADS - UniFAAT).
 
-> As regras abaixo representam o levantamento inicial das regras de negócio identificadas para o OficinaPro. Regras marcadas como proposta ou em discussão ainda não são decisões definitivas do grupo.
+---
 
+## 1. Legenda de Status
 
+| Status | Significado |
+| ---------------------------- | ----------------------------------------------- |
+| 🟢 **Definida** | Regra validada e adotada pelo grupo para o MVP. |
+| 🟡 **Em discussão** | Proposta em análise. |
+| 🔵 **Validar com professor** | Depende de orientação acadêmica. |
+| ⚪ **Pós-MVP** | Regra ou funcionalidade futura. |
 
-\---
+---
 
+## 2. Clientes
 
+### RN-CLI-001 — Identificação Única por CPF
 
-\# 1. Legenda
+Todo cliente cadastrado no sistema deve possuir um CPF válido e obrigatório, que atua como chave de negócio única para evitar duplicidade de cadastros.
 
+**Status:** 🟢 Definida
 
+### RN-CLI-002 — Prevenção de Duplicidade
 
-| Status                   | Significado                                |
+O sistema deve validar os dados informados no momento do cadastro e recusar a persistência caso o CPF já exista na base de dados.
 
-| ------------------------ | ------------------------------------------ |
+**Status:** 🟢 Definida
 
-| 🟢 Definida              | Regra validada pelo grupo                  |
+### RN-CLI-003 — Inativação de Cliente
 
-| 🟡 Em discussão          | Proposta ainda não validada                |
+Caso um cliente possua ordens de serviço ou histórico vinculado, ele não deve ser excluído fisicamente do banco de dados, devendo ser aplicada a inativação lógica quando necessário.
 
-| 🔵 Validar com professor | Depende de orientação acadêmica            |
+**Status:** 🟢 Definida
 
-| 🔴 Pendente              | Informação necessária para definir a regra |
+---
 
-| ⚪ Pós-MVP                | Regra relacionada a funcionalidade futura  |
+## 3. Veículos
 
+### RN-VEI-001 — Associação Obrigatória
 
+Todo veículo cadastrado deve estar obrigatoriamente vinculado a um cliente cadastrado no sistema.
 
-\---
+**Status:** 🟢 Definida
 
+### RN-VEI-002 — Placa como Identificador
 
+A **placa** do veículo é o identificador único de negócio, sendo de preenchimento obrigatório e validada pelo sistema.
 
-\# 2. Clientes
+**Status:** 🟢 Definida
 
+### RN-VEI-003 — Preservação do Histórico
 
+As informações de manutenção e ordens de serviço concluídas devem permanecer permanentemente associadas ao veículo.
 
-\## RN-CLI-001 — Identificação do cliente
+**Status:** 🟢 Definida
 
+### RN-VEI-004 — Transferência de Propriedade
 
+Caso um veículo mude de proprietário, o vínculo com o cliente anterior pode ser atualizado para o novo cliente, mantendo intacto todo o histórico de manutenções anteriores do veículo.
 
-Cada cliente deve possuir uma identificação única no sistema.
+**Status:** 🟢 Definida
 
+---
 
+## 4. Ordem de Serviço (OS)
 
-\*\*Proposta:\*\* utilizar CPF como identificador de negócio.
+### RN-OS-001 — Identificador Único da OS
 
+Cada ordem de serviço gerada deve possuir um identificador único e sequencial no sistema.
 
+**Status:** 🟢 Definida
 
-\*\*Status:\*\* 🟡 Em discussão
+### RN-OS-002 — Vínculo de Origem
 
+Uma ordem de serviço deve obrigatoriamente estar vinculada a um cliente e a um veículo existente.
 
+**Status:** 🟢 Definida
 
-\*\*Pendência:\*\* validar se CPF será obrigatório e se poderá ser utilizado como identificador único.
+### RN-OS-003 — Esteira de Status e Tratamento de Recusa
 
+A OS deve seguir o fluxo operacional definido para o MVP, respeitando as transições permitidas entre seus estados.
 
-
-\---
-
-
-
-\## RN-CLI-002 — Cadastro duplicado
-
-
-
-O sistema não deve permitir a criação de cadastros duplicados conforme os critérios de identificação definidos.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\*\*Pendência:\*\* definir quais campos serão utilizados para identificar duplicidade.
-
-
-
-\---
-
-
-
-\## RN-CLI-003 — Inativação de cliente
-
-
-
-Caso um cliente não possa ser excluído devido à existência de histórico de atendimentos, deverá ser avaliada a utilização de inativação em vez de exclusão física.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\# 3. Veículos
-
-
-
-\## RN-VEI-001 — Associação entre veículo e cliente
-
-
-
-Todo veículo cadastrado deve estar associado a um cliente.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-VEI-002 — Identificação do veículo
-
-
-
-A placa poderá ser utilizada como identificador de negócio do veículo.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\*\*Pendência:\*\* validar tratamento de placas inválidas, antigas ou alterações cadastrais.
-
-
-
-\---
-
-
-
-\## RN-VEI-003 — Histórico do veículo
-
-
-
-As informações de manutenção devem permanecer associadas ao veículo para permitir a consulta de atendimentos anteriores.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-VEI-004 — Alteração de proprietário
-
-
-
-Caso um veículo seja associado a outro proprietário, o histórico de manutenção deverá ser preservado.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\*\*Pendência:\*\* definir como a alteração será registrada.
-
-
-
-\---
-
-
-
-\# 4. Ordem de Serviço
-
-
-
-\## RN-OS-001 — Identificação da OS
-
-
-
-Cada ordem de serviço deve possuir um identificador único.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-OS-002 — Associação da OS
-
-
-
-Uma ordem de serviço deve estar vinculada a um cliente e a um veículo.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-OS-003 — Status da OS
-
-
-
-A ordem de serviço deve possuir um status que represente sua etapa atual no processo.
-
-
-
-\### Status inicialmente propostos
-
-
+O fluxo principal deve seguir a sequência:
 
 ```text
-
 ABERTA
-
-EM\_DIAGNOSTICO
-
-AGUARDANDO\_APROVACAO
-
+  ↓
+EM_DIAGNOSTICO
+  ↓
+AGUARDANDO_APROVACAO
+  ↓
 APROVADA
-
-EM\_EXECUCAO
-
-AGUARDANDO\_PAGAMENTO
-
+  ↓
+EM_EXECUCAO
+  ↓
+AGUARDANDO_PAGAMENTO
+  ↓
 CONCLUIDA
-
-RECUSADA
-
 ```
 
+Quando o cliente recusar o orçamento (`RECUSADA`), a OS não deve ser encerrada automaticamente. Nesse caso, poderá ocorrer uma das seguintes situações:
 
+- **Revisão do orçamento:** um novo orçamento poderá ser gerado e vinculado à mesma OS, preservando o histórico da tratativa anterior. Após a negociação, a OS poderá retornar ao estado `AGUARDANDO_APROVACAO` para uma nova apreciação do cliente.
+- **Encerramento definitivo:** caso o cliente desista do serviço, a OS poderá ser encerrada como `CANCELADA` ou `RECUSADA`, conforme o tratamento adotado pelo sistema.
 
-\*\*Status:\*\* 🟡 Em discussão
+**Status:** 🟢 Definida
 
+### RN-OS-004 — Bloqueio de Transições Inválidas
 
+O sistema deve impedir a alteração arbitrária de status, permitindo apenas as transições lógicas mapeadas na esteira oficial do MVP, incluindo o retorno para `AGUARDANDO_APROVACAO` quando houver um novo orçamento revisado.
 
-\---
+**Status:** 🟢 Definida
 
+---
 
+## 5. Diagnóstico
 
-\## RN-OS-004 — Transição de status
+### RN-DIA-001 — Vínculo Obrigatório com a OS
 
+Todo laudo de diagnóstico técnico registrado pelo mecânico deve estar atrelado diretamente a uma ordem de serviço.
 
+**Status:** 🟢 Definida
 
-A OS não deve poder assumir qualquer status de forma arbitrária. As mudanças deverão respeitar as transições permitidas pelo fluxo definido.
+---
 
+## 6. Orçamento
 
+### RN-ORC-001 — Composição Automática do Valor
 
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\*\*Pendência:\*\* definir a matriz de transições válida.
-
-
-
-\---
-
-
-
-\## RN-OS-005 — Registro de alterações
-
-
-
-Alterações relevantes no estado da OS deverão ser registradas para permitir rastreabilidade.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\# 5. Diagnóstico
-
-
-
-\## RN-DIA-001 — Diagnóstico associado à OS
-
-
-
-Todo diagnóstico registrado deve estar associado a uma ordem de serviço.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-DIA-002 — Responsável pelo diagnóstico
-
-
-
-O sistema poderá registrar o usuário responsável pelo diagnóstico.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\# 6. Orçamento
-
-
-
-\## RN-ORC-001 — Orçamento associado à OS
-
-
-
-Um orçamento deve estar associado a uma ordem de serviço.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-ORC-002 — Composição do orçamento
-
-
-
-O valor do orçamento deve considerar os serviços e as peças relacionadas à OS.
-
-
-
-\*\*Regra proposta:\*\*
-
-
+O valor total do orçamento deve ser calculado automaticamente pelo sistema aplicando a fórmula oficial:
 
 ```text
-
-Total = Serviços + Peças - Descontos
-
+Valor Total = (Soma dos Serviços + Soma das Peças) - Descontos Autorizados
 ```
 
+**Status:** 🟢 Definida
 
+### RN-ORC-002 — Dependência de Aprovação
 
-\*\*Status:\*\* 🟡 Em discussão
+A execução física dos serviços na oficina (`EM_EXECUCAO`) e a baixa de estoque das peças vinculadas ao orçamento dependem obrigatoriamente da aprovação formal do orçamento pelo cliente (`APROVADA`).
 
+O sistema não deve permitir o início da execução nem realizar a baixa das peças antes da aprovação formal.
 
+**Status:** 🟢 Definida
 
-\---
+### RN-ORC-003 — Tratamento de Recusa
 
+Quando um orçamento for recusado (`RECUSADA`), a OS poderá ser encerrada definitivamente ou ter um novo orçamento revisado gerado para nova apreciação do cliente, sem perder o histórico da tratativa anterior.
 
+O novo orçamento deve permanecer vinculado à mesma OS, preservando o registro do orçamento recusado e da decisão anterior do cliente.
 
-\## RN-ORC-003 — Aprovação do orçamento
+Caso o cliente desista definitivamente do serviço, a OS poderá ser encerrada como `CANCELADA` ou `RECUSADA`, conforme o tratamento adotado pelo sistema.
 
+**Status:** 🟢 Definida
 
+---
 
-A execução dos serviços deverá depender da aprovação do orçamento, conforme o fluxo definido para o sistema.
+## 7. Estoque
 
+### RN-EST-001 — Existência Prévia da Peça
 
+Nenhuma peça pode ser utilizada em uma OS sem estar previamente cadastrada no módulo de estoque (`Inventory Service`).
 
-\*\*Status:\*\* 🟡 Em discussão
+**Status:** 🟢 Definida
 
+### RN-EST-002 — Bloqueio por Estoque Insuficiente
 
+O sistema não deve permitir a utilização ou baixa de quantidade superior ao saldo disponível em estoque, bloqueando a operação em caso de ruptura.
 
-\---
+**Status:** 🟢 Definida
 
+### RN-EST-003 — Baixa de Peças na Aprovação do Orçamento
 
+A baixa física das peças vinculadas ao orçamento deve ocorrer de forma automatizada no momento em que o cliente aprovar formalmente o orçamento (`APROVADA`).
 
-\## RN-ORC-004 — Recusa do orçamento
+A movimentação de saída deve estar vinculada à respectiva ordem de serviço e ao orçamento aprovado, permitindo rastrear a origem da baixa.
 
 
+O sistema deve:
 
-Quando um orçamento for recusado, a decisão deverá ser registrada e a OS deverá assumir o comportamento definido pelo grupo.
+- Atualizar a quantidade disponível em estoque no momento da aprovação.
+- Registrar a movimentação de saída das peças, identificando a OS e o orçamento correspondente.
+- Impedir que a mesma aprovação gere mais de uma baixa para as mesmas peças, evitando duplicidade de movimentações.
+- Impedir a aprovação do orçamento quando não houver quantidade suficiente de peças em estoque.
+- Em caso de cancelamento da OS após a aprovação do orçamento, realizar o estorno da movimentação de saída das peças no estoque, independentemente do momento em que ocorrer o cancelamento, preservando o registro da movimentação original e do respectivo estorno para garantir a rastreabilidade das operações.
 
+**Status:** 🟢 Definida
 
+---
 
-\*\*Status:\*\* 🟡 Em discussão
+## 8. Financeiro
 
+### RN-FIN-001 — Vínculo com a OS
 
+Todo registro de pagamento ou quitação financeira deve estar associado obrigatoriamente a uma ordem de serviço válida.
 
-\*\*Pendência:\*\* definir se a OS será encerrada, cancelada, revisada ou permanecerá aguardando alguma ação.
+**Status:** 🟢 Definida
 
+### RN-FIN-002 — Quitação para Conclusão
 
+Para que uma OS atinja o status final de `CONCLUIDA`, o valor total devido deve ser integralmente quitado e registrado no Billing Service.
 
-\---
+**Status:** 🟢 Definida
 
+---
 
+## 9. Histórico de Manutenção
 
-\## RN-ORC-005 — Alteração após aprovação
+### RN-HIS-001 — Imutabilidade dos Registros
 
+Os dados consolidados no histórico de manutenção de um veículo não devem ser apagados ou corrompidos por alterações cadastrais secundárias, garantindo auditoria completa.
 
+**Status:** 🟢 Definida
 
-Alterações em um orçamento aprovado deverão respeitar uma regra específica de revisão ou nova aprovação.
+---
 
+## 10. Autenticação e Permissões
 
+### RN-AUT-001 — Autenticação Obrigatória
 
-\*\*Status:\*\* 🟡 Em discussão
+O acesso a qualquer funcionalidade operacional do sistema exige autenticação prévia via Auth Service utilizando credenciais válidas e hash seguro de senha.
 
+**Status:** 🟢 Definida
 
+### RN-AUT-002 — Controle por Perfis
 
-\*\*Pendência:\*\* definir se será permitido alterar diretamente um orçamento aprovado ou se será necessária uma nova versão.
+O sistema deve restringir o acesso a telas e rotas de API com base nas permissões atribuídas aos perfis do MVP: **Atendente, Mecânico, Estoque e Financeiro**.
 
+**Status:** 🟢 Definida
 
+---
 
-\---
+## 11. Integridade e Rastreabilidade
 
+### RN-DAT-001 — Integridade Referencial
 
+O banco de dados relacional (PostgreSQL) deve garantir restrições de integridade referencial (`Foreign Keys` e `Constraints`) entre Clientes, Veículos, Ordens de Serviço, Estoque e Pagamentos.
 
-\# 7. Estoque
+**Status:** 🟢 Definida
 
+---
 
+**Última atualização:** 11/11/2026
 
-\## RN-EST-001 — Quantidade disponível
-
-
-
-O estoque deve manter a quantidade disponível de cada peça.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-EST-002 — Saída superior ao estoque
-
-
-
-O sistema não deve permitir uma saída de peças superior à quantidade disponível.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-EST-003 — Registro de movimentações
-
-
-
-Entradas e saídas de peças devem gerar registros de movimentação.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-EST-004 — Baixa de peças utilizadas
-
-
-
-As peças utilizadas em uma OS devem ser descontadas do estoque no momento definido pela regra de negócio.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\*\*Pendência:\*\* definir se a baixa ocorre:
-
-
-
-\* na aprovação do orçamento;
-
-\* no início da execução;
-
-\* durante a execução;
-
-\* na conclusão da OS.
-
-
-
-\---
-
-
-
-\# 8. Financeiro
-
-
-
-\## RN-FIN-001 — Valor total
-
-
-
-O valor total da OS deve corresponder à soma dos serviços e peças, descontados eventuais descontos autorizados.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-FIN-002 — Registro de pagamento
-
-
-
-Um pagamento deve estar associado a uma ordem de serviço.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-FIN-003 — Valor pago
-
-
-
-O sistema deve registrar o valor efetivamente pago.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-FIN-004 — Pagamento parcial
-
-
-
-Caso pagamentos parciais sejam permitidos, o sistema deverá controlar o valor pago e o saldo restante.
-
-
-
-\*\*Status:\*\* 🔵 Validar com professor
-
-
-
-\*\*Pendência:\*\* confirmar se pagamento parcial fará parte do MVP.
-
-
-
-\---
-
-
-
-\## RN-FIN-005 — Parcelamento
-
-
-
-Caso o parcelamento seja permitido, o sistema deverá registrar as informações necessárias para acompanhamento das parcelas.
-
-
-
-\*\*Status:\*\* ⚪ Pós-MVP
-
-
-
-\*\*Pendência:\*\* validar necessidade para o MVP.
-
-
-
-\---
-
-
-
-\# 9. Histórico de manutenção
-
-
-
-\## RN-HIS-001 — Preservação do histórico
-
-
-
-Os atendimentos concluídos devem permanecer associados ao veículo para consulta futura.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-HIS-002 — Integridade histórica
-
-
-
-Alterações cadastrais posteriores não devem apagar indevidamente informações históricas das ordens de serviço já registradas.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\# 10. Usuários e permissões
-
-
-
-\## RN-AUT-001 — Autenticação
-
-
-
-Usuários devem ser autenticados antes de acessar funcionalidades protegidas.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-AUT-002 — Controle de acesso
-
-
-
-O acesso às funcionalidades deve respeitar as permissões associadas ao perfil do usuário.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-AUT-003 — Perfis
-
-
-
-Perfis inicialmente propostos:
-
-
-
-\* Administrador
-
-\* Atendente
-
-\* Mecânico
-
-\* Estoque
-
-\* Financeiro
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\*\*Pendência:\*\* definir quais funcionalidades cada perfil poderá acessar.
-
-
-
-\---
-
-
-
-\# 11. Notificações
-
-
-
-\## RN-NOT-001 — Eventos notificáveis
-
-
-
-Eventos relevantes do sistema poderão gerar notificações.
-
-
-
-Exemplos:
-
-
-
-\* Orçamento aguardando aprovação.
-
-\* Orçamento aprovado.
-
-\* Orçamento recusado.
-
-\* OS concluída.
-
-\* Pagamento pendente.
-
-
-
-\*\*Status:\*\* 🔵 Validar com professor
-
-
-
-\---
-
-
-
-\# 12. Integridade dos dados
-
-
-
-\## RN-DAT-001 — Relacionamentos
-
-
-
-Os registros relacionados devem manter integridade entre suas entidades.
-
-
-
-Exemplos:
-
-
-
-```text
-
-Cliente
-
-&#x20; └── Veículos
-
-&#x20;      └── Ordens de Serviço
-
-&#x20;           ├── Diagnóstico
-
-&#x20;           ├── Orçamento
-
-&#x20;           ├── Serviços
-
-&#x20;           ├── Peças
-
-&#x20;           └── Pagamentos
-
-```
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-DAT-002 — Identificadores
-
-
-
-Entidades principais devem possuir identificadores únicos.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## RN-DAT-003 — Dados obrigatórios
-
-
-
-O sistema deve impedir o registro de entidades quando informações obrigatórias não forem fornecidas.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\# 13. Rastreabilidade
-
-
-
-\## RN-TRA-001 — Registro de alterações importantes
-
-
-
-Operações relevantes deverão permitir identificar o momento e, quando aplicável, o usuário responsável pela alteração.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\# 14. Regras ainda não definidas
-
-
-
-As seguintes decisões deverão ser discutidas pelo grupo:
-
-
-
-1\. Campos obrigatórios de cliente.
-
-2\. Critério de identificação única do cliente.
-
-3\. Exclusão ou inativação de clientes.
-
-4\. Critério de identificação única do veículo.
-
-5\. Tratamento de alteração de proprietário.
-
-6\. Status oficiais da OS.
-
-7\. Transições permitidas entre status.
-
-8\. Comportamento após recusa do orçamento.
-
-9\. Alteração de orçamento aprovado.
-
-10\. Momento da baixa do estoque.
-
-11\. Pagamento parcial.
-
-12\. Parcelamento.
-
-13\. Perfis de usuário.
-
-14\. Permissões de cada perfil.
-
-15\. Notificações no MVP.
-
-16\. Relatórios no MVP.
-
-17\. Regras adicionais necessárias para o funcionamento dos microserviços.
-
-
-
-\---
-
-
-
-\# 15. Validação pelo grupo
-
-
-
-As regras deste documento deverão ser revisadas pelo grupo antes de serem consideradas definitivas.
-
-
-
-Quando uma regra for aprovada, seu status poderá ser alterado de:
-
-
-
-```text
-
-🟡 Em discussão
-
-```
-
-
-
-para:
-
-
-
-```text
-
-🟢 Definida
-
-```
-
-
-
-Quando depender de orientação do professor:
-
-
-
-```text
-
-🔵 Validar com professor
-
-```
-
-
-
-\---
-
-
-
-\# 16. Observação
-
-
-
-Este documento tem como objetivo apoiar a análise de requisitos e a comunicação entre os integrantes do projeto.
-
-
-
-A Product Owner/Analista de Requisitos é responsável pelo levantamento e organização das regras, mas decisões que impactem o escopo, arquitetura, desenvolvimento ou entregas acadêmicas devem ser discutidas pelo grupo e, quando necessário, validadas pelo professor.
-
-
-
-\*\*Última atualização:\*\* 26/09/2026
-
-\*\*Responsável pelo levantamento:\*\* Heloísa Brandão
-
-
-
+**Responsável:** Eloísa Brandão (Product Owner)
