@@ -1,544 +1,269 @@
 # Glossário — OficinaPro
 
-> **Status:** 🟡 Em discussão
+> **Documento de trabalho — Grupo GarageOps**
+>
 > **Objetivo:** padronizar os principais termos utilizados no projeto OficinaPro.
 >
-> Este documento serve como referência para requisitos, código, documentação, reuniões e comunicação entre os integrantes da equipe. Termos poderão ser ajustados conforme decisões do grupo e orientações do professor.
+> Este documento serve como referência para requisitos, código, documentação, reuniões e comunicação entre os integrantes da equipe. As definições representam as regras de domínio já estabelecidas pelo grupo. Detalhes técnicos ainda sujeitos à validação do professor devem ser tratados como propostas.
 
 ---
 
 ## 1. Cliente
 
-Pessoa que solicita ou contrata serviços da oficina.
-
-Um cliente pode possuir um ou mais veículos cadastrados no sistema.
-
----
+Pessoa que contrata os serviços da oficina, identificada pelo CPF, que deve ser único no sistema. Um cliente pode possuir um ou mais veículos associados.
 
 ## 2. Veículo
 
-Automóvel pertencente ou associado a um cliente.
-
-O cadastro poderá conter informações como:
-
-* placa;
-* marca;
-* modelo;
-* ano;
-* quilometragem;
-* informações adicionais.
-
-Os campos obrigatórios ainda deverão ser definidos pela equipe.
-
----
+Automóvel pertencente ou associado a um cliente. É identificado de forma única pela placa e possui um histórico de manutenções vinculado aos atendimentos registrados na oficina.
 
 ## 3. Ordem de Serviço (OS)
 
-Registro principal utilizado para controlar um atendimento ou serviço realizado pela oficina.
-
-A OS relaciona informações como:
-
-* cliente;
-* veículo;
-* diagnóstico;
-* orçamento;
-* serviços;
-* peças;
-* pagamento;
-* status;
-* histórico do atendimento.
-
----
+Registro principal utilizado para controlar o ciclo de vida de um atendimento na oficina. Relaciona cliente, veículo, diagnóstico, orçamento, peças, serviços, pagamentos e o status atual do atendimento.
 
 ## 4. Status da OS
 
-Indica a etapa atual da ordem de serviço dentro do fluxo operacional.
+Indica a etapa atual da ordem de serviço dentro do fluxo operacional do MVP.
 
-### Status propostos
+| Status | Significado |
+| --- | --- |
+| `ABERTA` | OS criada pelo atendente, vinculando cliente, veículo e problema relatado. |
+| `EM_DIAGNOSTICO` | Veículo sob avaliação técnica do mecânico. |
+| `AGUARDANDO_APROVACAO` | Orçamento enviado e aguardando decisão formal do cliente. |
+| `EM_EXECUCAO` | Orçamento aprovado e serviços mecânicos em realização. |
+| `AGUARDANDO_PAGAMENTO` | Serviços concluídos, aguardando a quitação financeira. |
+| `CONCLUIDA` | Pagamento integral registrado e atendimento encerrado. |
+| `CANCELADA` | Atendimento cancelado, respeitando as regras de movimentação de estoque e preservação do histórico. |
 
-| Status                 | Significado                                  |
-| ---------------------- | -------------------------------------------- |
-| `ABERTA`               | OS criada e aguardando início do diagnóstico |
-| `EM_DIAGNOSTICO`       | Veículo está em processo de diagnóstico      |
-| `AGUARDANDO_APROVACAO` | Orçamento aguardando decisão do cliente      |
-| `APROVADA`             | Orçamento aprovado                           |
-| `RECUSADA`             | Orçamento recusado                           |
-| `EM_EXECUCAO`          | Serviço sendo realizado                      |
-| `AGUARDANDO_PAGAMENTO` | Serviço concluído e aguardando pagamento     |
-| `CONCLUIDA`            | Atendimento finalizado                       |
-
-> **Status:** 🟡 Proposta. As transições e estados definitivos deverão ser validados pela equipe.
-
----
+**Observação:** `APROVADA` e `RECUSADA` representam decisões sobre o orçamento, não status da OS. A aprovação permite a continuidade do atendimento; a recusa pode resultar no encerramento da OS ou na elaboração de um orçamento revisado vinculado à mesma OS.
 
 ## 5. Diagnóstico
 
-Avaliação técnica realizada sobre o veículo para identificar problemas, necessidades de manutenção ou serviços recomendados.
-
-O diagnóstico serve como base para a elaboração do orçamento.
-
----
+Avaliação técnica registrada pelo mecânico e associada a uma OS. Descreve os problemas identificados no veículo e serve de base para a elaboração do orçamento.
 
 ## 6. Orçamento
 
-Documento ou registro que apresenta os serviços e peças necessários para realizar o atendimento, juntamente com seus respectivos valores.
+Composição financeira dos serviços e das peças necessários para o atendimento. Seu valor é calculado pela fórmula:
 
-O orçamento deverá estar associado a uma OS.
+`(Serviços + Peças) - Descontos`
 
----
+O orçamento fica vinculado à OS e deve ser submetido à decisão formal do cliente antes do início da execução.
 
-## 7. Aprovação
+## 7. Aprovação e Recusa de Orçamento
 
-Registro da decisão do cliente em relação ao orçamento apresentado.
+Registro da decisão formal do cliente sobre um orçamento.
 
-Na proposta atual, o orçamento poderá ser:
+- **Aprovado:** autoriza a execução dos serviços e dispara a baixa automática das quantidades correspondentes no saldo disponível do estoque.
+- **Recusado:** impede a execução daquele orçamento. A OS pode ser encerrada ou receber um orçamento revisado, mantendo o vínculo com a mesma OS e preservando o histórico das versões e decisões anteriores.
 
-* aprovado;
-* recusado.
-
-A regra para alteração ou reabertura de um orçamento recusado ainda deverá ser definida.
-
----
+Quando um orçamento revisado é enviado, a OS retorna ao status `AGUARDANDO_APROVACAO`.
 
 ## 8. Serviço
 
-Atividade realizada pela oficina durante a execução de uma OS.
-
-Exemplos:
-
-* troca de óleo;
-* alinhamento;
-* troca de pastilhas;
-* revisão;
-* manutenção de componentes.
-
-O cadastro e o detalhamento dos serviços ainda deverão ser definidos pela equipe.
-
----
+Atividade realizada pela oficina durante a execução de uma OS, como troca de óleo, alinhamento ou revisão.
 
 ## 9. Peça
 
-Componente ou item utilizado durante a realização de um serviço.
-
-Uma peça pode estar cadastrada no estoque e ser associada a uma OS quando utilizada.
-
----
+Componente utilizado na manutenção ou no reparo de um veículo, cadastrado e controlado pelo módulo de estoque.
 
 ## 10. Estoque
 
-Controle da quantidade disponível de peças utilizadas pela oficina.
+Módulo responsável pelo controle quantitativo das peças da oficina, registrando entradas, baixas, estornos e demais movimentações.
 
-O estoque deverá considerar, no mínimo:
+O controle deve permitir identificar as quantidades disponíveis e manter a rastreabilidade das movimentações relacionadas às ordens de serviço.
 
-* cadastro da peça;
-* quantidade disponível;
-* entradas;
-* saídas;
-* movimentações relacionadas às OS.
+## 11. Entrada de Estoque
 
----
+Movimentação que aumenta a quantidade disponível de uma peça no inventário, geralmente em razão de novas aquisições ou reposições.
 
-## 11. Entrada de estoque
+## 12. Baixa de Estoque
 
-Movimentação que aumenta a quantidade disponível de determinada peça.
+Movimentação automática que reduz a quantidade disponível de uma peça no inventário no momento da aprovação formal do orçamento.
 
-Pode ocorrer, por exemplo, após a chegada de novas peças à oficina.
+A baixa representa a reserva ou retirada da quantidade do saldo disponível para aquela OS. Não significa, necessariamente, que a peça já tenha sido instalada ou consumida fisicamente.
 
----
+## 13. Estorno de Estoque
 
-## 12. Saída de estoque
+Movimentação que reverte uma baixa anterior e devolve a quantidade ao saldo disponível do estoque.
 
-Movimentação que reduz a quantidade disponível de uma peça.
+É aplicável quando uma OS aprovada é cancelada e as peças baixadas ainda não foram instaladas nem consumidas, permanecendo disponíveis para utilização.
 
-No fluxo principal, a saída poderá ocorrer quando uma peça for utilizada durante a execução de uma OS.
+O estorno deve manter o vínculo com a movimentação original e impedir devoluções duplicadas.
 
----
+## 14. Perda ou Descarte de Peças
 
-## 13. Saldo de estoque
+Registro de peças que foram instaladas, consumidas ou que não podem mais retornar ao estoque comercial após o cancelamento de uma OS.
 
-Quantidade disponível de determinada peça após considerar suas entradas e saídas.
+Nesses casos, não deve ocorrer estorno para o saldo disponível. A movimentação original deve ser preservada, acompanhada do registro correspondente de perda ou descarte.
 
-A regra para permitir ou impedir estoque negativo deverá ser definida pela equipe.
+## 15. Pagamento
 
----
+Registro financeiro associado a uma OS, contendo informações como valor, data e forma de pagamento. A quitação integral é necessária para que o atendimento seja considerado concluído.
 
-## 14. Pagamento
+## 16. Histórico de Manutenção
 
-Registro financeiro associado a uma ordem de serviço.
+Registro consolidado dos atendimentos anteriores de um veículo, incluindo diagnósticos, serviços, peças utilizadas, valores e pagamentos.
 
-A proposta inicial é registrar:
+O histórico deve permanecer vinculado ao veículo, mesmo quando houver alteração de proprietário.
 
-* valor;
-* situação;
-* data;
-* forma de pagamento, caso definida.
+## 17. Usuário
 
-Integrações com sistemas externos de pagamento não fazem parte da proposta inicial do MVP.
+Pessoa que possui credenciais de acesso ao OficinaPro e está vinculada a um perfil de permissões.
 
----
+## 18. Perfil (RBAC)
 
-## 15. Histórico de manutenção
+Conjunto de permissões que determina quais funcionalidades e operações podem ser acessadas por cada usuário.
 
-Registro dos atendimentos e serviços realizados em determinado veículo.
+Os perfis definidos pelo grupo para o MVP são:
 
-O histórico deverá permitir consultar informações relevantes de serviços anteriores.
+- **Atendente:** responsável pelas atividades de atendimento e cadastro relacionadas ao fluxo da OS.
+- **Mecânico:** responsável pelo diagnóstico e pela execução dos serviços autorizados.
+- **Estoque:** responsável pelo controle e pelas movimentações de peças.
+- **Financeiro:** responsável pelos registros e controles de pagamento.
 
----
+Não há um perfil de Administrador definido para o MVP.
 
-## 16. Usuário
+## 19. Autenticação
 
-Pessoa que possui acesso ao sistema OficinaPro.
+Processo de verificação da identidade de um usuário para permitir seu acesso ao sistema. Envolve a validação das credenciais, incluindo o tratamento seguro das senhas.
 
-Um usuário poderá possuir um determinado perfil de acesso.
+## 20. Autorização
 
----
+Mecanismo que verifica se um usuário autenticado possui as permissões necessárias para executar determinada ação ou acessar uma funcionalidade ou endpoint.
 
-## 17. Perfil
+## 21. Permissão
 
-Conjunto de permissões associado a um usuário.
+Regra que define quais ações podem ser executadas por cada perfil, como cadastrar clientes, registrar diagnósticos, movimentar estoque ou registrar pagamentos.
 
-Os perfis definitivos ainda deverão ser definidos pela equipe.
+## 22. Microsserviço
 
-Exemplos possíveis:
+Serviço independente responsável por um domínio específico da aplicação, com responsabilidades delimitadas.
 
-* administrador;
-* atendente;
-* mecânico;
-* gestor.
+Os quatro microsserviços previstos na proposta de arquitetura do MVP são:
 
-> **Status:** 🔵 Validar com a equipe.
+- `Auth Service`: autenticação e controle de perfis.
+- `Work Order Service`: clientes, veículos, ordens de serviço e diagnósticos.
+- `Inventory Service`: cadastro de peças e controle de estoque.
+- `Billing Service`: orçamentos e operações financeiras.
 
----
+A divisão e a comunicação entre os serviços ainda devem considerar as orientações e a validação do professor.
 
-## 18. Autenticação
+## 23. API
 
-Processo utilizado para verificar a identidade de um usuário antes de permitir o acesso ao sistema.
+Interface de comunicação que permite a integração entre diferentes partes do sistema. A proposta do OficinaPro utiliza APIs REST para a comunicação entre o frontend e os serviços do backend.
 
-A implementação técnica poderá utilizar login e senha ou outra estratégia definida pela equipe.
+## 24. Endpoint
 
----
+Rota específica de uma API utilizada para realizar uma operação no sistema.
 
-## 19. Autorização
+Exemplo: `POST /ordens-servico`.
 
-Processo que determina quais funcionalidades e informações um usuário autenticado pode acessar ou modificar.
+## 25. Evento
 
-A autorização deverá estar relacionada aos perfis e permissões definidos no projeto.
+Registro de que uma alteração ou ação ocorreu no sistema e pode ser comunicada a outros serviços.
 
----
+Exemplo: `ORCAMENTO_APROVADO`, evento que pode sinalizar ao serviço de estoque a necessidade de realizar a baixa das peças vinculadas ao orçamento.
 
-## 20. Permissão
+## 26. Mensageria
 
-Regra que determina uma ação que determinado usuário ou perfil pode realizar.
+Mecanismo de comunicação assíncrona utilizado para permitir a troca de mensagens e eventos entre serviços, reduzindo o acoplamento direto entre eles.
 
-Exemplos:
+## 27. RabbitMQ
 
-* visualizar clientes;
-* cadastrar clientes;
-* editar veículos;
-* criar OS;
-* alterar status;
-* consultar estoque;
-* registrar pagamento.
+Message broker considerado na arquitetura do OficinaPro para gerenciar a troca de mensagens assíncronas entre microsserviços.
 
----
+Sua utilização e os fluxos específicos de comunicação ainda dependem da validação técnica do professor.
 
-## 21. Microserviço
+## 28. Banco de Dados
 
-Serviço independente responsável por uma parte específica do domínio da aplicação.
+Sistema responsável pelo armazenamento persistente das informações do OficinaPro. A tecnologia prevista para o projeto é o PostgreSQL.
 
-A arquitetura proposta inicialmente considera:
+## 29. Migração (Migration)
 
-* Auth;
-* Customer Vehicle;
-* Work Order;
-* Inventory;
-* Billing;
-* Notification;
-* Reporting.
+Mecanismo versionado utilizado para controlar alterações na estrutura do banco de dados, como criação ou modificação de tabelas, colunas e relacionamentos.
 
-> **Status:** 🟡 Arquitetura proposta. A divisão definitiva deverá ser validada tecnicamente pela equipe.
+## 30. Frontend
 
----
+Camada de interface com a qual os usuários interagem. A tecnologia prevista para o desenvolvimento é React com TypeScript e Vite.
 
-## 22. API
+## 31. Backend
 
-Interface utilizada para permitir a comunicação entre sistemas ou componentes de software.
+Camada responsável pelo processamento das requisições, aplicação das regras de negócio, comunicação entre serviços e acesso aos dados. A tecnologia prevista é Node.js com NestJS e TypeScript.
 
-No OficinaPro, as APIs poderão ser utilizadas pelo frontend para acessar funcionalidades disponibilizadas pelo backend.
+## 32. Teste Automatizado
 
----
+Teste executado por ferramentas de software para verificar se determinadas funcionalidades ou partes do código apresentam o comportamento esperado.
 
-## 23. Endpoint
+O Jest é a ferramenta prevista para os testes automatizados do projeto.
 
-Endereço específico de uma API utilizado para realizar determinada operação.
+## 33. Cobertura de Testes
 
-Exemplos conceituais:
+Métrica que indica a proporção do código-fonte executada durante os testes automatizados.
 
-```text
-GET    /clientes
-POST   /clientes
-GET    /veiculos
-POST   /ordens-servico
-```
+A meta estabelecida para o projeto é de cobertura mínima de 60%, conforme o escopo de medição definido para a aplicação.
 
-Os endpoints reais serão definidos durante a implementação.
+## 34. CI/CD
 
----
+Práticas de integração e entrega contínuas que automatizam etapas do desenvolvimento, como análise, execução de testes e construção da aplicação.
 
-## 24. Evento
+O projeto prevê o uso do GitHub Actions para automatizar essas etapas.
 
-Registro de que algo aconteceu no sistema e que pode ser relevante para outros componentes.
+## 35. Infraestrutura como Código (IaC)
 
-Exemplos:
+Abordagem de gerenciamento e provisionamento de infraestrutura por meio de arquivos de configuração versionados.
 
-```text
-OS_CRIADA
-ORCAMENTO_APROVADO
-PECA_UTILIZADA
-PAGAMENTO_REGISTRADO
-OS_CONCLUIDA
-```
+O Terraform é a ferramenta prevista para essa finalidade no OficinaPro.
 
-A utilização e o formato definitivo dos eventos ainda deverão ser definidos.
+## 36. Docker e Docker Compose
 
----
+Tecnologias utilizadas para criar e executar ambientes isolados por meio de contêineres.
 
-## 25. Mensageria
-
-Mecanismo utilizado para comunicação assíncrona entre componentes ou serviços.
-
-O projeto prevê o uso de RabbitMQ, mas a necessidade e a forma de utilização deverão ser definidas na arquitetura.
-
----
-
-## 26. RabbitMQ
-
-Sistema de mensageria utilizado para transmitir mensagens entre componentes da aplicação.
-
-No OficinaPro, poderá ser utilizado para comunicação assíncrona entre microserviços e processamento de eventos.
-
----
-
-## 27. Banco de dados
-
-Sistema responsável pelo armazenamento persistente das informações do OficinaPro.
-
-O projeto prevê inicialmente a utilização do PostgreSQL.
-
----
-
-## 28. Migração
-
-Arquivo ou mecanismo utilizado para controlar alterações estruturais no banco de dados.
-
-Exemplos:
-
-* criação de tabela;
-* alteração de coluna;
-* criação de índice;
-* alteração de relacionamento.
-
-As ferramentas utilizadas para migrations serão definidas durante a implementação.
-
----
-
-## 29. Frontend
-
-Parte da aplicação responsável pela interface utilizada pelos usuários.
-
-A proposta técnica prevê:
-
-* React;
-* TypeScript;
-* Vite.
-
----
-
-## 30. Backend
-
-Parte da aplicação responsável pelas regras de negócio, APIs, persistência e comunicação com outros serviços.
-
-A proposta técnica prevê:
-
-* Node.js;
-* TypeScript;
-* NestJS.
-
----
-
-## 31. Teste automatizado
-
-Teste executado por ferramentas de software para verificar se determinada funcionalidade apresenta o comportamento esperado.
-
-O projeto prevê a utilização de ferramentas como:
-
-* Jest;
-* Supertest;
-* React Testing Library.
-
----
-
-## 32. Cobertura de testes
-
-Métrica utilizada para indicar quanto do código está sendo executado pelos testes automatizados.
-
-O README atual apresenta uma meta inicial de **60% de cobertura**.
-
-Essa meta poderá ser revisada conforme orientação do professor e evolução do projeto.
-
----
-
-## 33. CI/CD
-
-Conjunto de práticas e automações relacionadas à integração, validação e entrega do software.
-
-No projeto, está prevista a utilização do GitHub Actions.
-
----
-
-## 34. Infraestrutura como Código (IaC)
-
-Abordagem utilizada para definir e gerenciar infraestrutura por meio de arquivos de configuração.
-
-O projeto prevê a utilização do Terraform.
-
----
-
-## 35. Docker
-
-Tecnologia utilizada para empacotar e executar aplicações em ambientes isolados chamados containers.
-
-No OficinaPro, Docker poderá ser utilizado para facilitar a execução local dos serviços.
-
----
-
-## 36. Docker Compose
-
-Ferramenta utilizada para definir e executar múltiplos containers relacionados a uma aplicação.
-
-A proposta inicial prevê serviços como:
-
-```text
-PostgreSQL
-Adminer
-RabbitMQ
-RabbitMQ Management
-```
-
----
+O Docker Compose permite configurar e orquestrar os serviços necessários ao ambiente local de desenvolvimento, como banco de dados, ferramentas de administração e serviços da aplicação.
 
 ## 37. Adminer
 
-Interface web utilizada para visualizar e administrar bancos de dados.
-
-No ambiente local do OficinaPro, poderá ser utilizado para acessar o PostgreSQL.
-
----
+Ferramenta com interface web utilizada para visualizar e administrar bancos de dados, incluindo o PostgreSQL.
 
 ## 38. Observabilidade
 
-Conjunto de práticas e ferramentas utilizadas para acompanhar o comportamento da aplicação.
+Conjunto de práticas e recursos utilizados para acompanhar o funcionamento e a saúde da aplicação por meio de logs, métricas e outros indicadores.
 
-A proposta técnica menciona:
+A necessidade e o nível de implementação de ferramentas específicas de observabilidade ainda dependem da validação do professor.
 
-* logs;
-* métricas;
-* Prometheus;
-* Grafana.
+## 39. MVP (Minimum Viable Product)
 
-A implementação efetiva deverá ser definida pela equipe.
+Produto Mínimo Viável. Corresponde à versão inicial do OficinaPro que contempla as funcionalidades essenciais para demonstrar e validar o fluxo principal de gestão de uma oficina.
 
----
+## 40. Requisito Funcional e Não Funcional
 
-## 39. MVP
+- **Requisito Funcional (RF):** descreve uma funcionalidade ou comportamento que o sistema deve oferecer, como cadastrar um cliente ou registrar uma ordem de serviço.
+- **Requisito Não Funcional (RNF):** descreve critérios de qualidade ou restrições técnicas, como segurança, desempenho, disponibilidade e cobertura de testes.
 
-**Minimum Viable Product — Produto Mínimo Viável.**
+## 41. História de Usuário (US)
 
-Versão inicial do sistema que contém o conjunto mínimo de funcionalidades necessário para validar o fluxo principal do projeto.
+Descrição de uma necessidade do sistema sob a perspectiva de quem utilizará a funcionalidade.
 
-No OficinaPro, a proposta de MVP está documentada em:
+Formato utilizado:
 
-```text
-docs/requisitos/mvp.md
-```
+`Como [usuário], quero [ação], para [benefício].`
 
----
+## 42. Critério de Aceite (CA)
 
-## 40. Requisito funcional
+Condição objetiva e verificável utilizada para determinar se uma funcionalidade atende ao comportamento esperado e pode ser considerada concluída.
 
-Define algo que o sistema deve ser capaz de realizar.
+## 43. Regra de Negócio (RN)
 
-Exemplo:
+Diretriz ou restrição que determina como o sistema deve se comportar diante de situações específicas do domínio da oficina.
 
-> O sistema deve permitir cadastrar um cliente.
+Exemplo: a execução de serviços depende da aprovação formal do orçamento.
 
----
+## 44. Product Owner (PO)
 
-## 41. Requisito não funcional
-
-Define uma característica, restrição ou condição relacionada ao funcionamento do sistema.
-
-Exemplos:
-
-* segurança;
-* desempenho;
-* disponibilidade;
-* usabilidade;
-* manutenibilidade;
-* observabilidade.
+Papel responsável por organizar e priorizar o backlog, acompanhar as necessidades do produto e promover o alinhamento dos requisitos de negócio com a equipe.
 
 ---
 
-## 42. História de usuário
+**Última atualização:** 12/11/2026
 
-Descrição de uma necessidade do ponto de vista de quem utiliza o sistema.
+**Responsável pela organização do documento:** Eloísa Brandão
 
-Formato adotado:
-
-> Como [tipo de usuário], quero [ação], para [benefício].
-
-As histórias de usuário estão documentadas em:
-
-```text
-docs/requisitos/historias-usuario.md
-```
-
----
-
-## 43. Critério de aceite
-
-Condição utilizada para determinar se uma funcionalidade atende ao comportamento esperado.
-
-Os critérios de aceite estão documentados em:
-
-```text
-docs/requisitos/criterios-aceite.md
-```
-
----
-
-## 44. Regra de negócio
-
-Regra que representa uma condição ou comportamento específico do domínio da oficina.
-
-Exemplo:
-
-> Uma peça utilizada em uma OS deve gerar uma movimentação de saída de estoque.
-
-As regras de negócio estão documentadas em:
-
-```text
-docs/requisitos/regras-negocio.md
-```
-
----
-
-## 45. Product Owner (PO)
-
-Papel responsável por representar e organizar as necessidades do produto, priorizar o backlog e facilitar a comunicação entre necessidades do negócio e equipe de desenvolvimento.
-
-No contexto deste projeto, o papel de Product Owner é exercido pela integrante responsável pela análise e organização dos requisitos.
-
----
-
-##
+**Grupo:** GarageOps
