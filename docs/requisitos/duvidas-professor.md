@@ -1,9 +1,8 @@
 # Dúvidas para validação com o professor — OficinaPro
 
-> **Status:** 🔵 Validar com professor
-> **Objetivo:** organizar dúvidas, decisões acadêmicas e pontos técnicos que precisam de orientação ou validação durante o desenvolvimento do OficinaPro.
+> **Status:** 🔵 Pauta de alinhamento acadêmico — Grupo GarageOps
 >
-> Este documento não representa decisões definitivas. Ele funciona como uma pauta contínua para as reuniões com o professor.
+> **Objetivo:** organizar dúvidas técnicas, critérios de avaliação e decisões acadêmicas que dependem de validação com o professor orientador durante o desenvolvimento do OficinaPro.
 
 ---
 
@@ -13,525 +12,248 @@
 
 **Pergunta:**
 
-Quais funcionalidades são obrigatórias para que o OficinaPro seja considerado um MVP válido para o TCC?
+O fluxo operacional definido pelo grupo para o MVP atende integralmente aos requisitos mínimos esperados para a disciplina?
 
-**Contexto:**
-
-A equipe elaborou uma proposta inicial contendo:
+**Contexto — Fluxo definido pelo grupo:**
 
 ```text
 Cliente
-→ Veículo
-→ Ordem de Serviço
-→ Diagnóstico
-→ Orçamento
-→ Aprovação
-→ Execução
-→ Estoque
-→ Conclusão
-→ Pagamento
-→ Histórico
+  ↓
+Veículo
+  ↓
+Ordem de Serviço (ABERTA)
+  ↓
+Diagnóstico (EM_DIAGNOSTICO)
+  ↓
+Orçamento (AGUARDANDO_APROVACAO)
+  ├── Recusado (RECUSADA)
+  │     ├── Encerramento definitivo da OS
+  │     └── Elaboração de orçamento revisado
+  │             ↓
+  │       AGUARDANDO_APROVACAO
+  │
+  └── Aprovado (APROVADA)
+          ↓
+      Baixa automática das peças no saldo disponível
+          ↓
+      Execução do serviço (EM_EXECUCAO)
+          ↓
+      Aguardando pagamento (AGUARDANDO_PAGAMENTO)
+          ↓
+      Quitação financeira
+          ↓
+      OS concluída (CONCLUIDA)
+          ↓
+      Histórico de manutenção do veículo
 ```
 
-**Status:** 🔵 Pendente de validação
+Em caso de cancelamento após a aprovação, o tratamento das peças dependerá de sua condição física: peças não instaladas ou consumidas poderão retornar ao estoque mediante estorno; peças já instaladas ou consumidas deverão ser registradas como perda operacional ou descarte.
 
----
+**Status:** 🔵 Pendente de validação.
 
 ### 1.2 Funcionalidades complementares
 
-Notificações, relatórios, dashboard e outras funcionalidades deverão fazer parte do MVP ou podem ser consideradas funcionalidades pós-MVP?
+Notificações, relatórios gerenciais e dashboards analíticos podem permanecer classificados como funcionalidades pós-MVP, sem impacto negativo na avaliação da entrega principal?
 
-**Status:** 🔵 Pendente de validação
-
----
-
-### 1.3 Alteração do escopo
-
-Caso novas necessidades sejam identificadas durante o desenvolvimento, qual deverá ser o processo para inclusão ou retirada de funcionalidades do escopo?
-
-**Status:** 🔵 Pendente de validação
+**Status:** 🔵 Pendente de validação.
 
 ---
 
-## 2. Arquitetura
+## 2. Arquitetura e Mensageria
 
-### 2.1 Microserviços
+### 2.1 Divisão de microsserviços
 
-A documentação inicial apresenta uma arquitetura baseada em microserviços:
+A arquitetura planejada contempla os seguintes serviços principais para o MVP:
+
+- `Auth Service` — autenticação e controle de permissões (RBAC).
+- `Work Order Service` — clientes, veículos, ordens de serviço e diagnóstico.
+- `Inventory Service` — cadastro de peças, saldo e movimentações de estoque.
+- `Billing Service` — orçamentos e controle financeiro da OS.
+
+Os serviços de notificações e relatórios serão considerados possibilidades de evolução pós-MVP.
+
+**Pergunta:**
+
+Essa divisão e granularidade de microsserviços atendem adequadamente aos critérios arquiteturais da disciplina?
+
+**Status:** 🔵 Pendente de validação.
+
+### 2.2 Uso de RabbitMQ — Comunicação assíncrona
+
+O grupo definiu o uso do RabbitMQ para desacoplar eventos críticos entre os microsserviços.
+
+Um dos fluxos previstos é:
 
 ```text
-Auth
-Customer Vehicle
-Work Order
-Inventory
-Billing
-Notification
-Reporting
+Billing Service
+      ↓
+Evento: Orçamento aprovado
+      ↓
+RabbitMQ
+      ↓
+Inventory Service
+      ↓
+Baixa automática no saldo disponível
 ```
 
-**Pergunta:**
-
-A utilização de todos esses microserviços é obrigatória ou a equipe pode ajustar a divisão conforme a complexidade e o escopo do MVP?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 2.2 Quantidade de serviços
-
-Existe uma quantidade mínima ou máxima de microserviços esperada para o projeto?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 2.3 Comunicação entre serviços
-
-A comunicação entre os serviços deverá obrigatoriamente utilizar RabbitMQ ou o uso de mensageria poderá ser restrito a determinados fluxos?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 2.4 Comunicação síncrona e assíncrona
-
-É esperado que a equipe demonstre uma combinação de comunicação síncrona por API e comunicação assíncrona por eventos/mensagens?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-## 3. Banco de dados
-
-### 3.1 Modelo de dados
-
-É necessário entregar um diagrama entidade-relacionamento (DER/ERD) como parte da documentação do TCC?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 3.2 Banco por serviço
-
-Considerando a arquitetura de microserviços, é necessário utilizar um banco de dados separado por serviço ou um PostgreSQL compartilhado é aceitável para o projeto acadêmico?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 3.3 Migrations
-
-Existe alguma ferramenta de migrations recomendada ou obrigatória?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-## 4. Testes
-
-### 4.1 Tipos de testes
-
-Quais tipos de testes são obrigatórios?
-
-Possibilidades:
-
-* testes unitários;
-* testes de integração;
-* testes de API;
-* testes de frontend;
-* testes end-to-end.
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 4.2 Cobertura mínima
-
-O README apresenta uma meta inicial de 60% de cobertura.
+Também está previsto o tratamento de eventos relacionados ao cancelamento da OS, considerando a necessidade de estorno de peças ainda não instaladas ou consumidas e o registro de perda ou descarte quando já tiverem sido utilizadas.
 
 **Pergunta:**
 
-A cobertura mínima de 60% deve ser mantida como requisito obrigatório ou essa meta pode ser alterada?
+A combinação de APIs síncronas (REST) com mensageria assíncrona nesses fluxos específicos atende às expectativas de uma arquitetura distribuída e orientada a eventos?
 
-**Status:** 🔵 Pendente de validação
-
----
-
-### 4.3 Testes no CI
-
-Todos os testes deverão obrigatoriamente ser executados no pipeline de CI?
-
-**Status:** 🔵 Pendente de validação
+**Status:** 🔵 Pendente de validação.
 
 ---
 
-## 5. CI/CD
+## 3. Banco de Dados
 
-### 5.1 GitHub Actions
+### 3.1 Estratégia de persistência
 
-O uso do GitHub Actions é obrigatório?
+Considerando o ambiente de desenvolvimento e a entrega acadêmica, é obrigatório isolar uma instância ou database PostgreSQL por microsserviço, ou o uso de schemas separados dentro de uma mesma instância PostgreSQL é aceitável?
 
-**Status:** 🔵 Pendente de validação
+**Status:** 🔵 Pendente de validação.
+
+### 3.2 Artefatos de dados
+
+A entrega do Diagrama Entidade-Relacionamento (DER) e o versionamento do banco de dados por meio de migrations (TypeORM ou Prisma) são requisitos obrigatórios na documentação final?
+
+**Status:** 🔵 Pendente de validação.
 
 ---
 
-### 5.2 Pipeline
+## 4. Testes e Qualidade
 
-Quais etapas mínimas devem existir no pipeline?
+### 4.1 Tipos de testes e cobertura mínima
 
-Proposta inicial:
+O grupo estabeleceu uma meta inicial de **60% de cobertura** de testes automatizados, utilizando Jest e priorizando as regras críticas de negócio.
+
+Os testes deverão ser executados automaticamente no pipeline de CI.
+
+**Pergunta:**
+
+Essa meta de cobertura e o foco em testes unitários e de integração de API são suficientes para a avaliação, ou também serão exigidos testes End-to-End (E2E) no frontend?
+
+**Status:** 🔵 Pendente de validação.
+
+---
+
+## 5. CI/CD, AWS e Infraestrutura
+
+### 5.1 GitHub Actions e pipeline
+
+O pipeline planejado contempla as seguintes etapas:
 
 ```text
-Push / Pull Request
-        ↓
-Instalação das dependências
-        ↓
-Lint / validações
-        ↓
-Testes
-        ↓
+Lint
+  ↓
+Testes automatizados
+  ↓
 Build
 ```
 
-**Status:** 🔵 Pendente de validação
+**Pergunta:**
 
----
+Há alguma etapa adicional obrigatória, como análise estática com SonarQube ou build e publicação automática de imagens Docker?
 
-### 5.3 Deploy
+**Status:** 🔵 Pendente de validação.
 
-É necessário realizar deploy da aplicação em ambiente AWS ou basta demonstrar a infraestrutura e o processo de provisionamento?
+### 5.2 Provisionamento AWS e Terraform
 
-**Status:** 🔵 Pendente de validação
-
----
-
-## 6. AWS e infraestrutura
-
-### 6.1 AWS
-
-A utilização de serviços AWS é obrigatória para a entrega final?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 6.2 Terraform
-
-A infraestrutura deverá obrigatoriamente ser provisionada por Terraform?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 6.3 Ambiente
-
-Quais componentes precisam obrigatoriamente estar disponíveis em ambiente remoto?
-
-Exemplos:
-
-* backend;
-* frontend;
-* banco de dados;
-* RabbitMQ;
-* observabilidade.
-
-**Status:** 🔵 Pendente de validação
-
----
-
-## 7. Segurança
-
-### 7.1 Autenticação
-
-A autenticação deverá fazer parte obrigatoriamente do MVP?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 7.2 Perfis
-
-É necessário implementar diferentes perfis de usuário?
-
-Exemplos:
-
-* administrador;
-* atendente;
-* mecânico;
-* gestor.
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 7.3 Controle de acesso
-
-É esperado que a equipe implemente autorização por perfil/permissão em todas as operações?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-## 8. Mensageria e eventos
-
-### 8.1 RabbitMQ
-
-Quais fluxos devem utilizar RabbitMQ para demonstrar efetivamente o uso de mensageria?
-
-Possibilidades:
-
-```text
-OS criada
-Orçamento aprovado
-Peça utilizada
-Pagamento registrado
-OS concluída
-Notificação enviada
-```
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 8.2 Eventos
-
-É necessário implementar uma arquitetura orientada a eventos ou basta utilizar RabbitMQ em alguns fluxos específicos?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-## 9. Observabilidade
-
-### 9.1 Logs
-
-Qual nível de logging é esperado para a avaliação?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 9.2 Prometheus e Grafana
-
-A utilização de Prometheus e Grafana é obrigatória ou apenas uma sugestão técnica presente no planejamento?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 9.3 Métricas
-
-Quais métricas seriam relevantes ou esperadas para o projeto?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-## 10. Documentação
-
-### 10.1 Documentação técnica
-
-Quais documentos são obrigatórios para a entrega?
-
-Possibilidades:
-
-* arquitetura;
-* requisitos;
-* histórias de usuário;
-* regras de negócio;
-* critérios de aceite;
-* DER;
-* diagramas de sequência;
-* documentação de APIs;
-* manual de execução;
-* manual do usuário.
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 10.2 Diagramas
-
-Quais diagramas deverão ser apresentados?
-
-Possibilidades:
-
-* arquitetura;
-* casos de uso;
-* sequência;
-* entidade-relacionamento;
-* fluxo do sistema;
-* infraestrutura.
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 10.3 Apresentação
-
-Quais evidências deverão ser apresentadas na avaliação final?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-## 11. Processo de desenvolvimento
-
-### 11.1 Branches
-
-A estratégia atual considera:
-
-```text
-main
-develop
-feature/*
-fix/*
-docs/*
-```
+O grupo prevê utilizar Terraform para modelagem da infraestrutura na AWS e Docker Compose para execução do ambiente local de desenvolvimento.
 
 **Pergunta:**
 
-Essa estratégia atende às expectativas do projeto ou existe algum fluxo Git obrigatório?
+É obrigatório manter o ambiente ativo e publicado na AWS no momento da apresentação final, ou a entrega dos scripts de Infraestrutura como Código (Terraform), acompanhada da execução local via Docker Compose, atende aos critérios da disciplina?
 
-**Status:** 🔵 Pendente de validação
-
----
-
-### 11.2 Pull Requests
-
-Todos os trabalhos deverão passar por Pull Request antes de serem integrados à branch principal?
-
-**Status:** 🔵 Pendente de validação
+**Status:** 🔵 Pendente de validação.
 
 ---
 
-### 11.3 Code Review
+## 6. Observabilidade
 
-É necessário que todos os integrantes realizem revisão de código?
+### 6.1 Prometheus e Grafana
 
-**Status:** 🔵 Pendente de validação
+**Pergunta:**
 
----
+A implementação de coleta de métricas com Prometheus e dashboards no Grafana é obrigatória para a avaliação de infraestrutura e DevOps ou configura um diferencial opcional?
 
-## 12. Entregas acadêmicas
-
-### 12.1 Entregas intermediárias
-
-Quais partes do projeto deverão ser apresentadas durante as etapas intermediárias?
-
-**Status:** 🔵 Pendente de validação
+**Status:** 🔵 Pendente de validação.
 
 ---
 
-### 12.2 Critérios de avaliação
+## 7. Documentação e Avaliação Acadêmica
 
-Quais critérios serão utilizados para avaliar:
+### 7.1 Entregáveis obrigatórios
 
-* requisitos;
-* arquitetura;
-* código;
-* testes;
-* infraestrutura;
-* documentação;
-* apresentação?
+Além do código-fonte e da documentação de requisitos já estruturada no repositório, incluindo MVP, Fluxos, Regras de Negócio, Histórias de Usuário e Critérios de Aceite:
 
-**Status:** 🔵 Pendente de validação
+**Pergunta:**
 
----
+Quais diagramas UML e arquiteturais, como arquitetura, sequência, casos de uso e DER, são obrigatórios na entrega final?
 
-### 12.3 Participação individual
+**Status:** 🔵 Pendente de validação.
 
-Como será avaliada a contribuição individual de cada integrante em um projeto desenvolvido em grupo?
+### 7.2 Avaliação individual e processo Git
 
-**Status:** 🔵 Pendente de validação
+O grupo utiliza branches organizadas por contexto (`main`, `develop`, `feature/*`, `fix/*` e `docs/*`), com revisão das alterações por Pull Requests.
 
----
+**Pergunta:**
 
-## 13. Questões sobre o domínio da oficina
+Como será mensurada a contribuição individual de cada integrante na nota final, considerando commits, branches, Pull Requests e participação no desenvolvimento?
 
-### 13.1 Orçamento recusado
-
-Quando o cliente recusar um orçamento, a OS deverá:
-
-* ser encerrada;
-* permanecer aberta;
-* permitir novo orçamento;
-* seguir outro fluxo?
-
-**Status:** 🔵 Pendente de validação da regra com a equipe.
+**Status:** 🔵 Pendente de validação.
 
 ---
 
-### 13.2 Estoque insuficiente
+## 8. Decisões de Domínio já Resolvidas pelo Grupo
 
-Quando uma peça necessária não estiver disponível, o sistema deverá:
+Os pontos abaixo faziam parte do levantamento inicial de dúvidas, mas já foram definidos pelo grupo e incorporados à documentação do OficinaPro. Portanto, não precisam ser apresentados como dúvidas de domínio na orientação.
 
-* impedir a execução;
-* permitir estoque negativo;
-* gerar uma pendência;
-* permitir substituição da peça?
+- [x] **Segurança e perfis (RBAC):** autenticação de usuários e controle de acesso por perfil no MVP. Os perfis definidos são Atendente, Mecânico, Estoque e Financeiro.
+- [x] **CPF único:** todo cliente deve possuir CPF válido e único no sistema, impedindo cadastros duplicados.
+- [x] **Placa única:** todo veículo deve possuir placa única no sistema e estar associado a um cliente cadastrado.
+- [x] **Orçamento recusado:** a OS poderá ser encerrada definitivamente ou receber um novo orçamento revisado, vinculado à mesma OS, sem perder o histórico da tratativa anterior (`RN-ORC-003`).
+- [x] **Estoque insuficiente:** a aprovação do orçamento deverá ser bloqueada quando não houver quantidade suficiente das peças solicitadas no estoque (`RN-EST-002`).
+- [x] **Baixa automática:** a baixa das quantidades previstas no orçamento ocorrerá no saldo disponível do estoque no momento da aprovação (`RN-EST-003`).
+- [x] **Prevenção de duplicidade:** as movimentações de saída deverão estar vinculadas à OS e ao orçamento, impedindo baixas duplicadas para o mesmo item e orçamento.
+- [x] **Cancelamento e estorno:** peças baixadas, mas ainda não instaladas ou consumidas, poderão retornar ao estoque disponível por meio de estorno.
+- [x] **Peças utilizadas:** peças já instaladas ou consumidas não poderão retornar ao estoque comercializável, devendo ser registradas como perda operacional ou descarte.
+- [x] **Rastreabilidade do estoque:** as movimentações originais, os estornos e os registros de perda deverão ser preservados.
+- [x] **Pagamento:** o registro interno do pagamento integral no `Billing Service` será condição para a OS assumir o status `CONCLUIDA` (`RN-FIN-002`).
+- [x] **Revisão do orçamento:** quando houver negociação após uma recusa, um novo orçamento poderá ser elaborado e encaminhado ao cliente, com retorno da OS para `AGUARDANDO_APROVACAO`.
 
-**Status:** 🔵 Pendente de validação da regra com a equipe.
-
----
-
-### 13.3 Pagamento
-
-O projeto precisa integrar algum gateway ou sistema externo de pagamento ou basta registrar o pagamento no sistema?
-
-**Status:** 🔵 Pendente de validação
-
----
-
-### 13.4 Notificações ao cliente
-
-É necessário implementar notificações reais para o cliente ou basta demonstrar o mecanismo internamente?
-
-**Status:** 🔵 Pendente de validação
+**Status:** 🟢 Definido pelo grupo.
 
 ---
 
-## 14. Perguntas prioritárias para a próxima reunião
+## 9. Pauta Prioritária para a Próxima Reunião
 
-Para evitar uma reunião excessivamente extensa, estas são as perguntas que mais impactam o planejamento inicial:
+Resumo das questões que precisam de orientação do professor:
 
-1. **Qual é exatamente o escopo obrigatório do MVP?**
-2. **Quais funcionalidades podem ficar para pós-MVP?**
-3. **A arquitetura de microserviços proposta é obrigatória ou pode ser ajustada?**
-4. **RabbitMQ precisa ser utilizado em quais fluxos?**
-5. **AWS e Terraform precisam estar efetivamente funcionando em produção/homologação?**
-6. **Quais tipos de testes são obrigatórios?**
-7. **A meta de 60% de cobertura é obrigatória?**
-8. **Quais diagramas e documentos precisam ser entregues?**
-9. **Prometheus/Grafana são obrigatórios?**
-10. **Como será avaliada a contribuição individual dos integrantes?**
+1. Validação do escopo do MVP e da divisão dos quatro microsserviços principais.
+2. Obrigatoriedade de implantação ativa na AWS ou possibilidade de demonstração via Terraform e Docker Compose.
+3. Suficiência da meta de 60% de cobertura de testes unitários e de integração no GitHub Actions.
+4. Obrigatoriedade de Prometheus e Grafana.
+5. Lista exata de diagramas e documentos exigidos na entrega final.
+6. Critérios de avaliação da contribuição individual por meio de Git, commits e Pull Requests.
 
 ---
 
-## 15. Registro das respostas
+## 10. Registro das Respostas e Decisões Derivadas
 
-As respostas obtidas nas reuniões deverão ser registradas abaixo.
+As orientações recebidas durante as reuniões deverão ser registradas nesta tabela, indicando seus impactos nos requisitos, na arquitetura e nos demais documentos do projeto.
 
-| Data | Pergunta/tema | Orientação recebida | Impacto no projeto |
-| ---- | ------------- | ------------------- | ------------------ |
-| —    | —             | —                   | —                  |
-
----
-
-## 16. Decisões derivadas das orientações
-
-Quando uma orientação do professor resultar em uma mudança concreta no projeto, registrar aqui.
-
-| Data | Decisão | Origem | Documentos afetados |
-| ---- | ------- | ------ | ------------------- |
-| —    | —       | —      | —                   |
+| Data | Pergunta / Tema | Orientação Recebida | Impacto / Documentos Afetados |
+| --- | --- | --- | --- |
+| — | — | — | — |
 
 ---
 
-## 17. Histórico de alterações
+## 11. Histórico de Alterações
 
-| Data       | Alteração                           | Responsável   |
-| ---------- | ----------------------------------- | ------------- |
-| 2026-09-26 | Criação da lista inicial de dúvidas | Product Owner |
-
-> Este documento deve ser atualizado após cada reunião relevante com o professor.
+| Data | Alteração | Responsável |
+| --- | --- | --- |
+| 26/09/2026 | Criação da lista inicial de dúvidas. | Eloísa Brandão |
+| 27/10/2026 | Consolidação da pauta acadêmica e revisão das dúvidas de domínio já discutidas pelo grupo. | Eloísa Brandão |
+| 12/11/2026 | Atualização e ajustes da documentação: alinhamento das dúvidas acadêmicas à arquitetura e ao fluxo de mensageria definidos, revisão das decisões de domínio, correção dos perfis de acesso e inclusão das regras de baixa, estorno e tratamento de peças instaladas ou consumidas. | Eloísa Brandão |
