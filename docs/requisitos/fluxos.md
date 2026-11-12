@@ -1,512 +1,455 @@
 # Fluxos do Sistema — OficinaPro
 
-**Documento de trabalho — sujeito à validação do grupo e do professor.**
-
-> Este documento representa os fluxos funcionais inicialmente identificados para o OficinaPro. Os fluxos poderão ser alterados conforme as decisões do grupo, os requisitos do MVP e as orientações do professor.
+> **Documento de trabalho — Grupo GarageOps**
+>
+> Este documento consolida os fluxos operacionais e de exceção do MVP do OficinaPro, alinhados à esteira oficial da Ordem de Serviço e às regras de negócio de aprovação de orçamento, movimentação de estoque e rastreabilidade física das peças definidas pelo grupo.
 
 ---
 
-# 1. Fluxo principal da oficina
+## 1. Fluxo principal da oficina (MVP)
 
-O fluxo principal proposto para o OficinaPro é:
+O fluxo operacional principal do OficinaPro segue a sequência abaixo:
 
 ```text
-Cliente
+Cliente (CPF único)
    ↓
-Veículo
+Veículo (Placa única)
    ↓
-Abertura da Ordem de Serviço
+Abertura da Ordem de Serviço (ABERTA)
    ↓
-Diagnóstico
+Diagnóstico Técnico (EM_DIAGNOSTICO)
    ↓
-Elaboração do Orçamento
+Elaboração do Orçamento (AGUARDANDO_APROVACAO)
    ↓
-Aprovação do Orçamento
-   ├── Recusado → OS encerrada/recusada
+Decisão formal do cliente
+   ├── Recusado
+   │      ↓
+   │   Escolher tratativa:
+   │      ├── Encerramento definitivo da OS
+   │      └── Elaboração de orçamento revisado
+   │              ↓
+   │        AGUARDANDO_APROVACAO
    │
    └── Aprovado
           ↓
-     Execução do Serviço
+      Verificar disponibilidade das peças
           ↓
-     Utilização de Peças
+      Baixa lógica das peças no saldo disponível
+      (Inventory Service)
           ↓
-     Atualização do Estoque
+      Execução do serviço (EM_EXECUCAO)
           ↓
-     Finalização da OS
+      Registrar a utilização física das peças
           ↓
-     Pagamento
+      Aguardando pagamento (AGUARDANDO_PAGAMENTO)
           ↓
-     Histórico de Manutenção
+      Quitação financeira integral (Billing Service)
+          ↓
+      OS concluída (CONCLUIDA)
+          ↓
+      Atualização do histórico de manutenção do veículo
 ```
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido pelo grupo
 
-**Pendências:**
-
-- Validar o fluxo com o grupo.
-- Confirmar o momento da baixa de estoque.
-- Confirmar se o pagamento ocorre antes ou depois da conclusão da OS.
-- Definir o comportamento de uma OS com orçamento recusado.
+**Observação:** A aprovação e a recusa são decisões sobre o orçamento, não status da OS. A aprovação permite a continuidade do atendimento e dispara a baixa lógica do estoque. A condição física das peças é registrada separadamente durante a execução. A OS somente é concluída após a quitação integral.
 
 ---
 
-# 2. Fluxo de cadastro de cliente
+## 2. Fluxo de cadastro de cliente
 
 ```text
 Início
   ↓
 Acessar cadastro de cliente
   ↓
-Informar dados
+Informar dados obrigatórios
+(Nome, CPF, Telefone, E-mail e Endereço)
   ↓
-Validar informações
+Validar formato e unicidade do CPF (RN-CLI-001)
   ↓
-Cliente já existe?
-  ├── Sim → Informar/consultar cadastro existente
+CPF já cadastrado?
+  ├── Sim → Bloquear duplicidade e apresentar cadastro existente
   │
   └── Não
        ↓
-    Criar cliente
+   Persistir cliente
        ↓
       Fim
 ```
 
-### Regras propostas
-
-- O sistema deve validar os campos obrigatórios.
-- O sistema deve evitar duplicidade conforme as regras definidas para identificação do cliente.
-- Clientes existentes devem poder ser consultados antes de um novo cadastro.
-
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido pelo grupo
 
 ---
 
-# 3. Fluxo de cadastro de veículo
+## 3. Fluxo de cadastro de veículo
 
 ```text
 Início
   ↓
-Selecionar cliente
-  ↓
-Cadastrar veículo
+Selecionar cliente existente (RN-VEI-001)
   ↓
 Informar dados do veículo
+(Placa, Marca, Modelo, Ano, Cor e Quilometragem)
   ↓
-Validar informações
+Validar unicidade da placa (RN-VEI-002)
   ↓
-Veículo já cadastrado?
-  ├── Sim → Consultar/atualizar veículo
+Placa já cadastrada?
+  ├── Sim → Bloquear duplicidade e consultar o veículo existente
   │
   └── Não
        ↓
-    Criar veículo
+   Persistir veículo vinculado ao cliente
        ↓
       Fim
 ```
 
-### Regras propostas
-
-- O veículo deve estar associado a um cliente.
-- A placa poderá ser utilizada como identificador do veículo, conforme validação da regra pelo grupo.
-- O sistema deve evitar duplicidade de veículos.
-
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido pelo grupo
 
 ---
 
-# 4. Fluxo de abertura de Ordem de Serviço
+## 4. Fluxo de abertura de Ordem de Serviço
 
 ```text
 Início
   ↓
-Selecionar cliente
+Selecionar cliente e veículo cadastrados
   ↓
-Selecionar veículo
+Informar problema relatado e quilometragem atual
   ↓
-Informar problema/solicitação
+Gerar identificador único da OS
   ↓
-Registrar data
+Atribuir status inicial: ABERTA
   ↓
-Criar OS
-  ↓
-Definir status inicial
+Persistir OS
   ↓
 Fim
 ```
 
-### Resultado esperado
-
-A ordem de serviço deve possuir uma identificação própria e ficar disponível para acompanhamento.
-
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido pelo grupo
 
 ---
 
-# 5. Fluxo de diagnóstico
+## 5. Fluxo de diagnóstico
 
 ```text
-OS aberta
+OS com status ABERTA
    ↓
-Veículo encaminhado para diagnóstico
+Mecânico inicia avaliação técnica
    ↓
-Mecânico realiza avaliação
+OS assume status: EM_DIAGNOSTICO
    ↓
-Registrar diagnóstico
+Registrar laudo técnico e observações vinculadas à OS (RN-DIA-001)
    ↓
-Identificar serviços necessários
+Identificar serviços e peças necessários
    ↓
-Identificar peças necessárias
-   ↓
-Encaminhar informações para orçamento
+Encaminhar informações para elaboração do orçamento
 ```
 
-**Status:** 🟡 Em discussão
-
-### Pendências
-
-- Definir se uma OS pode possuir mais de um diagnóstico.
-- Definir se o diagnóstico pode ser alterado após o orçamento.
-- Definir quais usuários podem visualizar ou editar o diagnóstico.
+**Status:** 🟢 Definido pelo grupo
 
 ---
 
-# 6. Fluxo de elaboração do orçamento
+## 6. Fluxo de elaboração do orçamento
 
 ```text
-Diagnóstico
+Diagnóstico registrado
    ↓
-Identificar serviços
+Selecionar serviços e peças com respectivas quantidades
    ↓
-Identificar peças
+Consultar disponibilidade das peças no estoque
    ↓
-Informar quantidades
+Calcular total automaticamente:
+(Serviços + Peças) - Descontos (RN-ORC-001)
    ↓
-Calcular valores
+Vincular orçamento à OS
    ↓
-Aplicar desconto, se permitido
+OS assume status: AGUARDANDO_APROVACAO
    ↓
-Calcular total
-   ↓
-Enviar orçamento para aprovação
+Enviar orçamento para decisão do cliente
 ```
 
-### Cálculo proposto
+**Status:** 🟢 Definido pelo grupo
 
-```text
-Valor dos serviços
-        +
-Valor das peças
-        -
-Descontos
-        =
-Total da OS
-```
-
-**Status:** 🟡 Em discussão
+**Observação:** A consulta de disponibilidade durante a elaboração do orçamento não substitui a validação obrigatória no momento da aprovação. Caso não exista quantidade suficiente, a aprovação deve ser bloqueada (RN-EST-002).
 
 ---
 
-# 7. Fluxo de aprovação do orçamento
+## 7. Fluxo de aprovação ou recusa do orçamento
 
 ```text
-Orçamento criado
+OS em AGUARDANDO_APROVACAO
        ↓
-Aguardando aprovação
-       ↓
-Decisão
+Registrar decisão formal do cliente
   ├── Aprovado
   │      ↓
-  │   OS pode prosseguir
+  │   Verificar novamente a disponibilidade das peças (RN-EST-002)
+  │      ↓
+  │   Estoque suficiente?
+  │      ├── Não → Bloquear aprovação
+  │      └── Sim
+  │           ↓
+  │       Registrar aprovação do orçamento
+  │           ↓
+  │       Disparar baixa lógica do estoque (RN-EST-003)
+  │           ↓
+  │       Registrar movimentação vinculada à OS e ao orçamento (RN-EST-004)
+  │           ↓
+  │       Liberar OS para execução
   │
   └── Recusado
          ↓
-      Registrar recusa
+      Registrar recusa do orçamento
          ↓
-      Definir encerramento/
-      alteração/revisão da OS
+      Escolher tratativa (RN-ORC-003):
+         ├── Encerrar definitivamente a OS
+         └── Elaborar novo orçamento revisado
+                ↓
+             Preservar orçamento e decisão anteriores
+                ↓
+             Vincular novo orçamento à mesma OS
+                ↓
+             OS retorna para AGUARDANDO_APROVACAO
 ```
 
-**Status:** 🟡 Em discussão
-
-### Pendências
-
-- Definir quem pode registrar a aprovação.
-- Definir quem pode registrar a recusa.
-- Definir se um orçamento recusado poderá ser revisado.
-- Definir se uma nova versão do orçamento será criada.
-- Definir o status da OS após a recusa.
+**Status:** 🟢 Definido pelo grupo
 
 ---
 
-# 8. Fluxo de execução do serviço
+## 8. Fluxo de execução do serviço e rastreabilidade física
 
 ```text
-Orçamento aprovado
+OS com orçamento formalmente aprovado
        ↓
-Iniciar execução
+Verificar se a baixa lógica foi realizada
        ↓
-Realizar serviços
+Mecânico inicia o atendimento
        ↓
-Utilizar peças necessárias
+OS assume status: EM_EXECUCAO
        ↓
-Registrar execução
+Identificar as peças vinculadas à OS
        ↓
-Finalizar serviço
+Registrar a condição física de cada peça
+       ├── PENDENTE_INSTALACAO
+       │      ↓
+       │   Peça baixada logicamente,
+       │   mas ainda não instalada ou consumida
+       │
+       └── INSTALADA/CONSUMIDA
+              ↓
+           Peça fisicamente utilizada
+           no serviço ou veículo
+       ↓
+Finalizar execução técnica
+       ↓
+OS assume status: AGUARDANDO_PAGAMENTO
 ```
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido pelo grupo
 
-### Pendências
-
-- Definir como os serviços executados serão registrados.
-- Definir se será necessário registrar o mecânico responsável.
-- Definir quando a OS poderá ser considerada concluída.
+**Observação:** A condição física deve ser acompanhada por peça ou item da movimentação, e não apenas pela OS inteira. Isso permite tratar corretamente situações em que parte das peças foi utilizada e outra parte permaneceu intacta.
 
 ---
 
-# 9. Fluxo de estoque
+## 9. Fluxo de estoque (Entrada, Baixa, Consumo Físico e Estorno)
 
-## Entrada de peças
+### 9.1. Entrada de peças
 
 ```text
 Início
-  ↓
-Registrar entrada
-  ↓
-Informar peça
-  ↓
-Informar quantidade
-  ↓
-Atualizar estoque
-  ↓
-Registrar movimentação
-  ↓
+   ↓
+Informar peça e quantidade
+   ↓
+Validar dados da movimentação
+   ↓
+Incrementar saldo disponível
+   ↓
+Registrar movimentação de entrada
+   ↓
 Fim
 ```
 
-## Saída de peças
+### 9.2. Baixa lógica na aprovação
 
 ```text
-Peça necessária
-  ↓
-Consultar estoque
-  ↓
-Quantidade suficiente?
-  ├── Não → Impedir/alertar saída
-  │
-  └── Sim
-       ↓
-    Registrar saída
-       ↓
-    Atualizar quantidade
-       ↓
-    Registrar movimentação
-```
-
-**Status:** 🟡 Em discussão
-
-### Pendência principal
-
-Definir quando a utilização da peça será efetivamente descontada do estoque:
-
-- Na aprovação do orçamento;
-- No início da execução;
-- Durante a execução;
-- Na conclusão da OS.
-
----
-
-# 10. Fluxo de pagamento
-
-```text
-OS finalizada
+Orçamento submetido à aprovação
    ↓
-Valor total definido
-   ↓
-Registrar pagamento
-   ↓
-Pagamento corresponde ao valor total?
-   ├── Sim → OS pode ser considerada quitada
+Verificar saldo disponível (RN-EST-002)
+   ├── Insuficiente
+   │      ↓
+   │   Bloquear aprovação
    │
-   └── Não → Definir tratamento
-              para pagamento parcial
+   └── Suficiente
+          ↓
+      Registrar aprovação do orçamento
+          ↓
+      Subtrair quantidade do saldo disponível (RN-EST-003)
+          ↓
+      Registrar movimentação de saída
+      vinculada à OS e ao orçamento (RN-EST-004)
+          ↓
+      Registrar condição física inicial:
+      PENDENTE_INSTALACAO
+          ↓
+      Impedir baixa duplicada
 ```
 
-**Status:** 🟡 Em discussão
+**Observação:** A baixa lógica reduz o saldo disponível, mas não confirma que a peça já foi instalada ou consumida fisicamente.
 
-### Pendências
-
-- Definir formas de pagamento.
-- Definir se haverá pagamento parcial.
-- Definir se haverá parcelamento.
-- Definir quando o pagamento será registrado.
-- Definir relação entre pagamento e encerramento da OS.
-
----
-
-# 11. Fluxo de histórico de manutenção
+### 9.3. Atualização da condição física durante a execução
 
 ```text
-OS concluída
-    ↓
-Registrar informações relevantes
-    ↓
-Associar ao veículo
-    ↓
-Atualizar histórico
-    ↓
-Histórico disponível para consulta
+Peça com baixa lógica registrada
+   ↓
+Mecânico utiliza a peça no serviço?
+   ├── Não
+   │    ↓
+   │  Manter condição: PENDENTE_INSTALACAO
+   │
+   └── Sim
+        ↓
+      Atualizar condição:
+      INSTALADA/CONSUMIDA
+        ↓
+      Registrar a utilização vinculada à OS
 ```
 
-**Status:** 🟡 Em discussão
+### 9.4. Estorno e tratamento em caso de cancelamento
 
-O histórico deverá permitir consultar atendimentos anteriores relacionados ao veículo.
+```text
+OS cancelada após aprovação do orçamento
+   ↓
+Consultar condição física de cada peça baixada
+   ├── PENDENTE_INSTALACAO (RN-EST-005)
+   │      ↓
+   │   Verificar se a peça permanece íntegra
+   │      ↓
+   │   Registrar estorno vinculado à saída original
+   │      ↓
+   │   Devolver quantidade ao estoque disponível
+   │
+   └── INSTALADA/CONSUMIDA (RN-EST-006)
+          ↓
+       Bloquear retorno ao estoque comercial
+          ↓
+       Registrar perda operacional ou descarte
+```
+
+**Regras de controle:**
+
+- Toda movimentação deve manter vínculo com a OS e o orçamento correspondentes.
+- A condição física deve ser registrada individualmente para cada peça ou item movimentado.
+- O estorno deve estar relacionado à movimentação de saída original.
+- Uma mesma baixa não pode ser estornada ou tratada como perda mais de uma vez.
+- Peças instaladas ou consumidas não podem retornar ao saldo comercial disponível.
+- Peças ainda não utilizadas somente podem retornar ao estoque disponível se estiverem em condições de reutilização.
+
+**Status:** 🟢 Definido pelo grupo
 
 ---
 
-# 12. Fluxo de autenticação
+## 10. Fluxo de pagamento e quitação
+
+```text
+OS em AGUARDANDO_PAGAMENTO
+   ↓
+Registrar pagamento no Billing Service
+(Valor, Data e Forma de Pagamento)
+   ↓
+O valor acumulado dos pagamentos quita o total da OS? (RN-FIN-002)
+   ├── Não
+   │      ↓
+   │   Manter OS em AGUARDANDO_PAGAMENTO
+   │
+   └── Sim
+          ↓
+      Confirmar quitação financeira integral
+          ↓
+      OS assume status: CONCLUIDA
+          ↓
+      Atualizar histórico de manutenção do veículo
+```
+
+**Status:** 🟢 Definido pelo grupo
+
+---
+
+## 11. Fluxo de histórico de manutenção
+
+```text
+Atendimento encerrado
+(CONCLUIDA ou CANCELADA)
+    ↓
+Consolidar informações do atendimento:
+- Diagnósticos e laudos
+- Orçamentos e decisões do cliente
+- Serviços realizados
+- Peças e movimentações de estoque
+- Condição física das peças
+- Registros financeiros
+- Status final da OS
+    ↓
+Manter vínculo com o veículo
+    ↓
+Disponibilizar informações para consulta futura
+```
+
+**Status:** 🟢 Definido pelo grupo
+
+**Observação:** O histórico deve preservar os registros do atendimento, inclusive quando houver recusa de orçamento, revisão de orçamento ou cancelamento da OS. O encerramento de um atendimento não deve apagar seu histórico.
+
+---
+
+## 12. Fluxo de autenticação e permissões (RBAC)
 
 ```text
 Início
   ↓
-Usuário informa credenciais
+Usuário informa credenciais no Auth Service
   ↓
 Validar credenciais
-  ↓
-Credenciais válidas?
-  ├── Não → Informar erro
+  ├── Inválidas → Rejeitar acesso
   │
-  └── Sim
+  └── Válidas
        ↓
-    Identificar perfil
+   Identificar perfil do usuário
        ↓
-    Liberar funcionalidades
+   Verificar permissões associadas ao perfil
        ↓
-      Sistema
+   Liberar acesso às funcionalidades autorizadas
 ```
 
-**Status:** 🟡 Em discussão
+**Perfis definidos pelo grupo:**
 
-### Pendências
+- Atendente
+- Mecânico
+- Estoque
+- Financeiro
 
-- Definir perfis.
-- Definir permissões por perfil.
-- Definir política de senha.
-- Definir recuperação de acesso.
+**Status:** 🟢 Definido pelo grupo
 
 ---
 
-# 13. Fluxo de notificações
+## 13. Fluxo de notificações (Pós-MVP)
 
 ```text
 Evento relevante
+(ex: Orçamento aprovado ou OS concluída)
       ↓
-Identificar tipo de evento
+Identificar destinatário e canal
       ↓
-Verificar destinatários
+Preparar notificação
       ↓
-Gerar notificação
-      ↓
-Enviar pelo canal definido
+Disparar notificação
 ```
 
-**Status:** 🔵 Validar com professor
-
-### Possíveis eventos
-
-- Orçamento aguardando aprovação.
-- Orçamento aprovado.
-- Orçamento recusado.
-- OS concluída.
-- Pagamento pendente.
-
-### Pendências
-
-- Definir se notificações fazem parte do MVP.
-- Definir canais de comunicação.
-- Definir eventos obrigatórios.
+**Status:** ⚪ Pós-MVP — eventual necessidade mínima a validar com o professor.
 
 ---
 
-# 14. Fluxo de exceções
+## 14. Esteira oficial de status da Ordem de Serviço
 
-Além do fluxo principal, o sistema deverá considerar situações como:
-
-### 14.1 Cliente inexistente
-
-```text
-Tentativa de abrir OS
-        ↓
-Cliente não encontrado
-        ↓
-Cadastrar cliente
-        ↓
-Continuar abertura da OS
-```
-
-**Status:** 🟡 Em discussão
-
-### 14.2 Veículo inexistente
-
-```text
-Tentativa de abrir OS
-        ↓
-Veículo não encontrado
-        ↓
-Cadastrar veículo
-        ↓
-Continuar abertura da OS
-```
-
-**Status:** 🟡 Em discussão
-
-### 14.3 Estoque insuficiente
-
-```text
-Peça necessária
-      ↓
-Consultar estoque
-      ↓
-Quantidade insuficiente
-      ↓
-Informar indisponibilidade
-      ↓
-Definir tratamento
-```
-
-**Status:** 🟡 Em discussão
-
-### 14.4 Orçamento recusado
-
-```text
-Orçamento recusado
-       ↓
-Registrar decisão
-       ↓
-Definir próximo estado da OS
-```
-
-**Status:** 🟡 Em discussão
-
-### 14.5 Pagamento incompleto
-
-```text
-Pagamento registrado
-       ↓
-Valor inferior ao total
-       ↓
-Registrar saldo
-       ↓
-Definir status financeiro
-```
-
-**Status:** 🟡 Em discussão
-
----
-
-# 15. Transições propostas da Ordem de Serviço
-
-A seguinte sequência é uma proposta inicial:
+A esteira principal de status da OS é:
 
 ```text
 ABERTA
@@ -514,95 +457,32 @@ ABERTA
 EM_DIAGNOSTICO
   ↓
 AGUARDANDO_APROVACAO
-  ↓
-APROVADA
-  ↓
-EM_EXECUCAO
-  ↓
-AGUARDANDO_PAGAMENTO
-  ↓
-CONCLUIDA
+  ├── Orçamento recusado
+  │      ├── Encerramento definitivo da OS
+  │      └── Revisão do orçamento
+  │              ↓
+  │        AGUARDANDO_APROVACAO
+  │
+  └── Orçamento aprovado
+         ↓
+      Baixa lógica do estoque
+         ↓
+      EM_EXECUCAO
+         ↓
+      AGUARDANDO_PAGAMENTO
+         ↓
+      CONCLUIDA
 ```
 
-Fluxo alternativo:
+**Fluxo de exceção:** A OS também pode assumir o status `CANCELADA` antes da conclusão, respeitando as regras de estoque aplicáveis:
 
-```text
-AGUARDANDO_APROVACAO
-        ↓
-     RECUSADA
-```
+- `RN-EST-005`: estorno de peças não instaladas e não consumidas, desde que permaneçam em condições de reutilização.
+- `RN-EST-006`: registro de perda operacional ou descarte de peças instaladas ou consumidas.
 
-**Status:** 🟡 Em discussão
-
-As transições definitivas deverão ser validadas pelo grupo.
+**Status:** 🟢 Definido pelo grupo
 
 ---
 
-# 16. Fluxo geral resumido
+**Última atualização:** 12/11/2026
 
-```text
-┌──────────────┐
-│    CLIENTE   │
-└──────┬───────┘
-       ↓
-┌──────────────┐
-│   VEÍCULO    │
-└──────┬───────┘
-       ↓
-┌──────────────┐
-│     OS       │
-└──────┬───────┘
-       ↓
-┌──────────────┐
-│ DIAGNÓSTICO  │
-└──────┬───────┘
-       ↓
-┌──────────────┐
-│  ORÇAMENTO   │
-└──────┬───────┘
-       ↓
-   APROVAÇÃO?
-    ↙     ↘
-  NÃO       SIM
-   ↓         ↓
-RECUSADA  EXECUÇÃO
-             ↓
-          ESTOQUE
-             ↓
-          FINALIZAÇÃO
-             ↓
-          PAGAMENTO
-             ↓
-         HISTÓRICO
-```
-
----
-
-# 17. Pontos que precisam de validação
-
-Os principais pontos que ainda não devem ser considerados decisões definitivas são:
-
-1. Status oficiais da OS.
-2. Transições permitidas entre status.
-3. Momento da baixa de estoque.
-4. Comportamento após recusa do orçamento.
-5. Momento do pagamento.
-6. Possibilidade de pagamento parcial.
-7. Perfis e permissões.
-8. Notificações no MVP.
-9. Relatórios no MVP.
-10. Nível de detalhamento dos microserviços.
-11. Necessidade de mensageria para cada fluxo.
-12. Requisitos técnicos obrigatórios definidos pelo professor.
-
----
-
-# 18. Observação final
-
-Este documento descreve o funcionamento esperado do sistema com base nos requisitos atualmente levantados.
-
-Ele não representa uma decisão unilateral da Product Owner. Alterações que impactem o escopo, arquitetura, implementação ou entregas acadêmicas deverão ser discutidas pelo grupo e, quando necessário, validadas com o professor.
-
-**Última atualização:** 11/11/2026
-
-**Responsável pelo levantamento:** Eloísa Brandão
+**Grupo:** GarageOps
