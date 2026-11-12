@@ -210,34 +210,35 @@ A funcionalidade será considerada aceita quando:
 
 ---
 
-## CA-EST-002 — Baixa automática na aprovação
+## CA-EST-002 — Baixa lógica automática na aprovação e rastreio da condição física
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] A aprovação do orçamento (`APROVADA`) disparar a baixa automática das quantidades de peças previstas no orçamento no saldo disponível do estoque.
+- [ ] A aprovação do orçamento (`APROVADA`) disparar a baixa lógica automática das quantidades de peças previstas no orçamento, reduzindo o saldo disponível do estoque.
 - [ ] A movimentação de saída ficar registrada e vinculada à OS e ao orçamento correspondente.
-- [ ] O sistema impedir baixas duplicadas para o mesmo item e orçamento.
+- [ ] Cada peça ou unidade baixada tiver sua condição física registrada individualmente, inicialmente como `PENDENTE_INSTALACAO`.
+- [ ] O sistema impedir baixas duplicadas para a mesma movimentação, OS e orçamento.
 - [ ] O saldo disponível do inventário for atualizado corretamente após a movimentação.
-- [ ] A movimentação de baixa permitir identificar as peças vinculadas à OS, mesmo que ainda não tenham sido fisicamente instaladas ou consumidas.
-- [ ] A baixa no saldo disponível não for interpretada como confirmação de instalação ou consumo físico da peça.
+- [ ] A baixa no saldo disponível for tratada como uma reserva lógica, não sendo interpretada isoladamente como confirmação de instalação ou consumo físico imediato da peça.
 
 **Status:** 🟢 Definido
 
 ---
 
-## CA-EST-003 — Estorno e tratamento de peças em caso de cancelamento
+## CA-EST-003 — Estorno condicionado ao estado físico e tratamento de perdas em caso de cancelamento
 
 A funcionalidade será considerada aceita quando:
 
 - [ ] O cancelamento de uma OS com orçamento aprovado for identificado pelo sistema.
-- [ ] O sistema permitir verificar a condição física das peças que tiveram baixa no estoque.
-- [ ] Peças que ainda não foram instaladas ou consumidas puderem retornar ao estoque disponível por meio de uma movimentação de estorno.
+- [ ] O sistema consultar obrigatoriamente a condição física registrada para cada peça ou unidade associada à OS.
+- [ ] Peças com condição física `PENDENTE_INSTALACAO` puderem retornar ao estoque disponível por meio de uma movimentação auditável de estorno, desde que estejam intactas e em condições de reutilização.
 - [ ] O estorno atualizar corretamente o saldo disponível do inventário.
-- [ ] Peças que já foram instaladas ou consumidas não retornarem ao estoque disponível para comercialização.
-- [ ] Peças instaladas ou consumidas forem registradas como perda operacional ou descarte, conforme o controle definido para o MVP.
-- [ ] A movimentação original de saída permanecer registrada, sem ser apagada ou sobrescrita.
-- [ ] O estorno ou registro de perda ficar vinculado à movimentação original e à OS correspondente.
-- [ ] O sistema impedir que uma mesma movimentação de saída seja estornada ou tratada como perda mais de uma vez.
+- [ ] Peças cuja condição física esteja marcada como `INSTALADA` tiverem o estorno para comercialização bloqueado pelo sistema.
+- [ ] Peças cuja condição física esteja marcada como `INSTALADA` ou `CONSUMIDA` gerarem obrigatoriamente um registro de perda operacional ou descarte, sem retorno ao estoque comercializável.
+- [ ] A movimentação original de saída permanecer inalterada, mantendo o histórico completo de auditoria, sem exclusão ou sobreposição de registros.
+- [ ] A movimentação de estorno ou o registro de perda operacional ficar vinculado à movimentação original e à OS correspondente.
+- [ ] O sistema impedir que a mesma quantidade de uma movimentação de saída seja estornada e registrada como perda simultaneamente.
+- [ ] O sistema impedir que uma mesma movimentação de saída seja estornada ou registrada como perda mais de uma vez.
 
 **Status:** 🟢 Definido
 
