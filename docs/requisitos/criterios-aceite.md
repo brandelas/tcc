@@ -1,8 +1,8 @@
 # Critérios de Aceite — OficinaPro
 
-> **Documento de trabalho — sujeito à validação do grupo e do professor.**
+> **Documento oficial de trabalho — Grupo GarageOps**
 >
-> Os critérios abaixo representam condições propostas para considerar uma funcionalidade atendida. Eles deverão ser revisados conforme as decisões do grupo e a definição final do MVP.
+> Este documento estabelece as condições objetivas de aceitação para as funcionalidades do MVP do OficinaPro, alinhadas às regras de negócio, às histórias de usuário e ao fluxo operacional definido para o projeto.
 
 ---
 
@@ -12,10 +12,10 @@ Os critérios de aceite têm como objetivo estabelecer condições claras para v
 
 Uma funcionalidade só deverá ser considerada concluída quando:
 
-- atender aos critérios definidos;
+- atender aos critérios de aceite definidos;
 - respeitar as regras de negócio aplicáveis;
 - não apresentar erros conhecidos que impeçam seu uso;
-- possuir os testes definidos para sua implementação;
+- possuir os testes previstos para sua implementação;
 - passar pelas validações estabelecidas pelo grupo.
 
 ---
@@ -26,13 +26,12 @@ Uma funcionalidade só deverá ser considerada concluída quando:
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] for possível informar os dados definidos como obrigatórios;
-- [ ] os dados forem validados;
-- [ ] um cliente válido for persistido;
-- [ ] o cliente puder ser posteriormente consultado;
-- [ ] o sistema impedir duplicidades conforme regra definida.
+- [ ] For obrigatório informar nome, CPF, telefone, e-mail e endereço.
+- [ ] O CPF passar por validação de formato e unicidade no sistema.
+- [ ] O sistema impedir cadastros duplicados com base no CPF.
+- [ ] Um cliente válido for persistido corretamente.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
@@ -40,12 +39,11 @@ A funcionalidade será considerada aceita quando:
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] for possível localizar um cliente;
-- [ ] os dados cadastrados forem exibidos corretamente;
-- [ ] os veículos associados puderem ser identificados;
-- [ ] o sistema tratar corretamente cliente inexistente.
+- [ ] For possível localizar um cliente por nome ou CPF.
+- [ ] Os dados cadastrados forem exibidos corretamente.
+- [ ] Os veículos associados ao cliente puderem ser identificados.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
@@ -53,12 +51,12 @@ A funcionalidade será considerada aceita quando:
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] dados permitidos puderem ser alterados;
-- [ ] validações forem aplicadas;
-- [ ] os dados atualizados forem persistidos;
-- [ ] a alteração puder ser consultada posteriormente.
+- [ ] Dados permitidos puderem ser alterados.
+- [ ] As validações aplicáveis forem executadas durante a atualização.
+- [ ] Os dados atualizados forem persistidos corretamente.
+- [ ] A alteração do CPF respeitar a regra de unicidade.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
@@ -68,13 +66,12 @@ A funcionalidade será considerada aceita quando:
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] for possível cadastrar um veículo;
-- [ ] o veículo estiver associado a um cliente;
-- [ ] os campos obrigatórios forem validados;
-- [ ] o sistema impedir duplicidade conforme regra definida;
-- [ ] o veículo puder ser consultado posteriormente.
+- [ ] O veículo estiver obrigatoriamente associado a um cliente cadastrado.
+- [ ] A placa passar por validação de formato e unicidade no sistema.
+- [ ] O sistema impedir o cadastro de veículos com placas já cadastradas.
+- [ ] Marca, modelo, ano, cor e quilometragem forem registrados corretamente.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
@@ -82,12 +79,11 @@ A funcionalidade será considerada aceita quando:
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] for possível localizar o veículo;
-- [ ] seus dados forem exibidos;
-- [ ] seu cliente associado for identificado;
-- [ ] seu histórico de manutenção puder ser acessado quando aplicável.
+- [ ] For possível localizar o veículo pela placa.
+- [ ] Seus dados e seu cliente associado forem exibidos corretamente.
+- [ ] Seu histórico de manutenção puder ser acessado.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
@@ -97,13 +93,13 @@ A funcionalidade será considerada aceita quando:
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] for possível selecionar cliente e veículo;
-- [ ] os dados obrigatórios forem preenchidos;
-- [ ] a OS receber um identificador único;
-- [ ] a OS receber o status inicial definido;
-- [ ] a OS puder ser consultada posteriormente.
+- [ ] For possível selecionar um cliente e um veículo previamente cadastrados.
+- [ ] O problema relatado pelo cliente for registrado.
+- [ ] A data de abertura e a quilometragem do veículo forem registradas.
+- [ ] A OS receber um identificador único.
+- [ ] A OS iniciar com o status `ABERTA`.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
@@ -111,12 +107,12 @@ A funcionalidade será considerada aceita quando:
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] for possível localizar uma OS;
-- [ ] cliente e veículo forem exibidos;
-- [ ] o status atual for exibido;
-- [ ] diagnóstico, orçamento e informações relacionadas forem exibidos quando existentes.
+- [ ] For possível localizar uma OS pelo seu identificador.
+- [ ] Os dados do cliente, do veículo e o status atual da OS forem exibidos.
+- [ ] As informações de diagnóstico e orçamento vinculadas à OS puderem ser consultadas.
+- [ ] O histórico de alterações e decisões relacionadas à OS puder ser identificado.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
@@ -124,12 +120,14 @@ A funcionalidade será considerada aceita quando:
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] somente transições permitidas forem executadas;
-- [ ] o status atual for atualizado corretamente;
-- [ ] alterações relevantes forem registradas;
-- [ ] usuários sem permissão não possam executar alterações restritas.
+- [ ] O sistema respeitar as transições de status permitidas pelas regras de negócio.
+- [ ] O fluxo principal contemplar as etapas `ABERTA`, `EM_DIAGNOSTICO`, `AGUARDANDO_APROVACAO`, `EM_EXECUCAO`, `AGUARDANDO_PAGAMENTO` e `CONCLUIDA`.
+- [ ] A aprovação ou recusa do orçamento atualizar os estados correspondentes da OS.
+- [ ] Uma OS com orçamento recusado puder ser encerrada definitivamente ou retornar para `AGUARDANDO_APROVACAO` quando houver geração de orçamento revisado.
+- [ ] Uma OS cancelada assumir o status `CANCELADA`.
+- [ ] Transições inválidas forem bloqueadas pelo sistema.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
@@ -139,12 +137,11 @@ A funcionalidade será considerada aceita quando:
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] o diagnóstico puder ser associado a uma OS;
-- [ ] for possível registrar sua descrição;
-- [ ] o responsável puder ser identificado quando essa regra for adotada;
-- [ ] o diagnóstico puder ser consultado posteriormente.
+- [ ] O diagnóstico técnico realizado pelo mecânico puder ser associado à OS correspondente.
+- [ ] As informações registradas puderem ser consultadas posteriormente.
+- [ ] O registro do diagnóstico atualizar o andamento da OS para `EM_DIAGNOSTICO`, conforme o fluxo definido.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
@@ -154,15 +151,18 @@ A funcionalidade será considerada aceita quando:
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] serviços puderem ser adicionados;
-- [ ] peças puderem ser adicionadas;
-- [ ] quantidades puderem ser informadas;
-- [ ] valores forem calculados corretamente;
-- [ ] descontos sejam aplicados conforme regra;
-- [ ] o total seja calculado corretamente;
-- [ ] o orçamento fique associado à OS.
+- [ ] Serviços e peças puderem ser adicionados ao orçamento com suas respectivas quantidades e valores.
+- [ ] O valor total for calculado automaticamente pela fórmula:
 
-**Status:** 🟡 Em discussão
+```text
+Total = Serviços + Peças - Descontos
+```
+
+- [ ] O orçamento ficar associado à OS correspondente.
+- [ ] A OS assumir o status `AGUARDANDO_APROVACAO` após o encaminhamento do orçamento ao cliente.
+- [ ] O orçamento puder ser consultado posteriormente.
+
+**Status:** 🟢 Definido
 
 ---
 
@@ -170,65 +170,76 @@ A funcionalidade será considerada aceita quando:
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] um usuário autorizado puder registrar a aprovação;
-- [ ] a decisão ficar registrada;
-- [ ] a OS assumir o estado correspondente;
-- [ ] a aprovação puder ser consultada posteriormente.
+- [ ] Um usuário autorizado puder registrar a aprovação do orçamento (`APROVADA`).
+- [ ] A decisão de aprovação ficar registrada e vinculada ao orçamento e à OS.
+- [ ] A OS assumir o estado correspondente à aprovação.
+- [ ] A aprovação disparar a baixa automática das quantidades previstas no orçamento no saldo disponível do estoque.
+- [ ] A movimentação de saída ficar vinculada à OS e ao orçamento correspondente.
+- [ ] A execução dos serviços depender de um orçamento formalmente aprovado.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
-## CA-ORC-003 — Recusar orçamento
+## CA-ORC-003 — Recusar orçamento e permitir revisão
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] um usuário autorizado puder registrar a recusa;
-- [ ] a decisão ficar registrada;
-- [ ] a OS assumir o comportamento definido para uma recusa;
-- [ ] a decisão puder ser consultada posteriormente.
+- [ ] A recusa do orçamento (`RECUSADA`) puder ser registrada com o motivo da decisão.
+- [ ] O sistema permitir o encerramento definitivo da OS ou a elaboração de um orçamento revisado.
+- [ ] Um novo orçamento revisado puder ser vinculado à mesma OS.
+- [ ] A OS puder retornar para `AGUARDANDO_APROVACAO` para que o cliente avalie a nova proposta.
+- [ ] O orçamento anterior e sua decisão permanecerem disponíveis no histórico, sem serem sobrescritos.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
 # 7. Estoque
 
-## CA-EST-001 — Cadastrar peça
+## CA-EST-001 — Cadastrar peça e verificar saldo
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] for possível cadastrar uma peça;
-- [ ] quantidade e demais campos obrigatórios forem validados;
-- [ ] a peça puder ser consultada;
-- [ ] sua quantidade disponível estiver correta.
+- [ ] For possível cadastrar peças com suas respectivas quantidades e valores unitários.
+- [ ] O sistema consultar a disponibilidade das peças necessárias para o orçamento.
+- [ ] A aprovação do orçamento for bloqueada quando a quantidade solicitada for superior à disponibilidade no inventário.
+- [ ] O saldo disponível das peças puder ser consultado.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
-## CA-EST-002 — Registrar entrada de estoque
+## CA-EST-002 — Baixa automática na aprovação
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] for possível registrar entrada;
-- [ ] a quantidade disponível for atualizada;
-- [ ] a movimentação ficar registrada.
+- [ ] A aprovação do orçamento (`APROVADA`) disparar a baixa automática das quantidades de peças previstas no orçamento no saldo disponível do estoque.
+- [ ] A movimentação de saída ficar registrada e vinculada à OS e ao orçamento correspondente.
+- [ ] O sistema impedir baixas duplicadas para o mesmo item e orçamento.
+- [ ] O saldo disponível do inventário for atualizado corretamente após a movimentação.
+- [ ] A movimentação de baixa permitir identificar as peças vinculadas à OS, mesmo que ainda não tenham sido fisicamente instaladas ou consumidas.
+- [ ] A baixa no saldo disponível não for interpretada como confirmação de instalação ou consumo físico da peça.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
-## CA-EST-003 — Registrar saída de estoque
+## CA-EST-003 — Estorno e tratamento de peças em caso de cancelamento
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] for possível registrar uma saída válida;
-- [ ] o sistema impedir quantidade superior à disponível;
-- [ ] a quantidade disponível for atualizada;
-- [ ] a movimentação ficar registrada.
+- [ ] O cancelamento de uma OS com orçamento aprovado for identificado pelo sistema.
+- [ ] O sistema permitir verificar a condição física das peças que tiveram baixa no estoque.
+- [ ] Peças que ainda não foram instaladas ou consumidas puderem retornar ao estoque disponível por meio de uma movimentação de estorno.
+- [ ] O estorno atualizar corretamente o saldo disponível do inventário.
+- [ ] Peças que já foram instaladas ou consumidas não retornarem ao estoque disponível para comercialização.
+- [ ] Peças instaladas ou consumidas forem registradas como perda operacional ou descarte, conforme o controle definido para o MVP.
+- [ ] A movimentação original de saída permanecer registrada, sem ser apagada ou sobrescrita.
+- [ ] O estorno ou registro de perda ficar vinculado à movimentação original e à OS correspondente.
+- [ ] O sistema impedir que uma mesma movimentação de saída seja estornada ou tratada como perda mais de uma vez.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
@@ -242,27 +253,24 @@ A funcionalidade será considerada aceita quando:
 Total = Serviços + Peças - Descontos
 ```
 
-e:
+- [ ] Os valores dos serviços e das peças forem considerados no cálculo.
+- [ ] Os descontos aplicáveis forem subtraídos corretamente.
+- [ ] O total for exibido corretamente na OS.
 
-- [ ] os valores forem calculados corretamente;
-- [ ] o total estiver associado à OS;
-- [ ] o valor apresentado corresponder aos itens registrados.
-
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
-## CA-FIN-002 — Registrar pagamento
+## CA-FIN-002 — Registrar pagamento e quitação
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] for possível registrar um pagamento;
-- [ ] o valor pago for armazenado;
-- [ ] a forma de pagamento for armazenada quando aplicável;
-- [ ] a data do pagamento for armazenada;
-- [ ] o status financeiro for atualizado conforme regra.
+- [ ] For possível registrar o pagamento referente à OS.
+- [ ] O valor pago e o status financeiro forem atualizados corretamente.
+- [ ] A OS permanecer em `AGUARDANDO_PAGAMENTO` enquanto houver saldo pendente.
+- [ ] A OS transicionar para `CONCLUIDA` somente após a quitação total.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
@@ -272,40 +280,27 @@ A funcionalidade será considerada aceita quando:
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] for possível acessar o histórico de um veículo;
-- [ ] as OS anteriores forem listadas;
-- [ ] as datas dos atendimentos forem apresentadas;
-- [ ] os serviços realizados puderem ser identificados;
-- [ ] as informações disponíveis sobre peças forem apresentadas.
+- [ ] For possível acessar o histórico de manutenção de um veículo pela placa.
+- [ ] As OS anteriores forem listadas corretamente.
+- [ ] Os diagnósticos, orçamentos, peças utilizadas e valores pagos puderem ser consultados.
+- [ ] As informações históricas forem preservadas mesmo após o encerramento ou cancelamento de uma OS.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
 # 10. Autenticação e Permissões
 
-## CA-AUT-001 — Login
+## CA-AUT-001 — Login e autorização
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] usuários válidos conseguirem autenticar;
-- [ ] credenciais inválidas forem rejeitadas;
-- [ ] o acesso às funcionalidades protegidas exigir autenticação;
-- [ ] a sessão/autenticação seguir a estratégia definida pelo projeto.
+- [ ] Usuários cadastrados puderem realizar autenticação no sistema.
+- [ ] As credenciais forem armazenadas utilizando hash seguro.
+- [ ] O acesso às funcionalidades respeitar os perfis e as permissões estabelecidos: Atendente, Mecânico, Estoque e Financeiro.
+- [ ] Usuários sem permissão forem impedidos de executar ações restritas.
 
-**Status:** 🟡 Em discussão
-
----
-
-## CA-AUT-002 — Controle de permissões
-
-A funcionalidade será considerada aceita quando:
-
-- [ ] o usuário receber o perfil correspondente;
-- [ ] funcionalidades restritas respeitarem as permissões;
-- [ ] usuários sem permissão não conseguirem executar ações restritas.
-
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
@@ -315,10 +310,8 @@ A funcionalidade será considerada aceita quando:
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] um evento configurado gerar a notificação correspondente;
-- [ ] o destinatário correto for identificado;
-- [ ] a notificação utilizar o canal definido;
-- [ ] falhas de envio forem tratadas conforme regra definida.
+- [ ] Os eventos definidos para o MVP gerarem as notificações correspondentes.
+- [ ] As notificações forem associadas ao evento e ao usuário destinatário, quando aplicável.
 
 **Status:** 🔵 Validar com professor
 
@@ -330,79 +323,62 @@ A funcionalidade será considerada aceita quando:
 
 A funcionalidade será considerada aceita quando:
 
-- [ ] o usuário autorizado conseguir acessar o relatório;
-- [ ] os dados apresentados corresponderem aos dados registrados;
-- [ ] os filtros definidos funcionarem corretamente.
+- [ ] Um usuário autorizado puder acessar informações consolidadas da operação.
+- [ ] Os dados apresentados corresponderem aos registros existentes no sistema.
 
 **Status:** 🔵 Validar com professor
 
 ---
 
-# 13. Critérios gerais de qualidade
-
-Além dos critérios específicos, as funcionalidades do MVP deverão observar, quando aplicável:
+# 13. Critérios Gerais de Qualidade
 
 ## CA-GER-001 — Validação de dados
 
-- [ ] Campos obrigatórios devem ser validados.
-- [ ] Formatos inválidos devem ser rejeitados.
-- [ ] Mensagens de erro devem permitir compreender o problema.
+- [ ] Os campos obrigatórios forem validados.
+- [ ] Dados inválidos forem rejeitados pelo sistema.
+- [ ] As mensagens de erro forem compreensíveis para o usuário.
 
----
+## CA-GER-002 — Persistência e integridade
 
-## CA-GER-002 — Persistência
-
-- [ ] Dados válidos devem ser persistidos corretamente.
-- [ ] Dados persistidos devem poder ser recuperados posteriormente.
-- [ ] Relacionamentos devem manter integridade.
-
----
+- [ ] Os dados válidos forem persistidos corretamente no PostgreSQL.
+- [ ] A integridade referencial entre as entidades for mantida.
+- [ ] As operações de atualização e exclusão respeitarem as regras de integridade e rastreabilidade.
 
 ## CA-GER-003 — Autorização
 
-- [ ] Ações restritas devem exigir a permissão adequada.
-- [ ] Usuários não autorizados não devem conseguir executar operações protegidas.
-
----
+- [ ] As ações restritas exigirem permissão adequada conforme o perfil do usuário.
+- [ ] O sistema impedir acessos não autorizados.
 
 ## CA-GER-004 — Testes
 
-- [ ] Funcionalidades críticas devem possuir testes.
-- [ ] Testes devem validar cenários de sucesso.
-- [ ] Testes devem validar cenários de erro quando aplicável.
-
----
+- [ ] As funcionalidades críticas possuírem testes automatizados.
+- [ ] Os testes contemplarem cenários de sucesso e de erro.
+- [ ] Os testes definidos para a funcionalidade forem executados e aprovados.
 
 ## CA-GER-005 — Tratamento de erros
 
-- [ ] Erros previsíveis devem ser tratados.
-- [ ] O sistema não deve expor informações sensíveis.
-- [ ] O usuário deve receber uma resposta adequada para erros esperados.
+- [ ] Erros previsíveis forem tratados adequadamente.
+- [ ] Mensagens de erro não expuserem dados sensíveis.
+- [ ] Falhas em operações críticas não deixarem os registros em estados inconsistentes.
 
 ---
 
-# 14. Definição de Pronto — proposta
+# 14. Definição de Pronto (DoD)
 
-Uma história de usuário poderá ser considerada **pronta para entrega** quando:
+Uma história de usuário será considerada pronta para entrega quando:
 
-- [ ] os critérios de aceite forem atendidos;
-- [ ] a implementação estiver integrada à branch definida pelo grupo;
-- [ ] os testes previstos estiverem passando;
-- [ ] não houver erro bloqueador conhecido;
-- [ ] a documentação necessária estiver atualizada;
-- [ ] a revisão de código definida pelo grupo tiver sido realizada.
+- [ ] Todos os critérios de aceite aplicáveis forem atendidos.
+- [ ] A implementação estiver integrada à branch correspondente do repositório.
+- [ ] Os testes automatizados definidos para a funcionalidade estiverem passando.
+- [ ] A meta de cobertura de testes estabelecida para o projeto (mínimo de 60%) for atendida, conforme o escopo de medição definido.
+- [ ] Não houver erros bloqueadores conhecidos.
+- [ ] A documentação necessária estiver atualizada.
+- [ ] O Pull Request tiver sido revisado pelo grupo GarageOps.
 
-**Status:** 🟡 Em discussão
+**Status:** 🟢 Definido
 
 ---
 
-# 15. Observação
+**Última atualização:** 11/11/2026
 
-Os critérios apresentados neste documento são uma base inicial para orientar desenvolvimento e testes.
-
-Eles deverão ser ajustados quando o grupo definir o escopo definitivo do MVP e quando decisões de negócio ou técnicas forem tomadas.
-
-Nenhum critério marcado como proposta deve ser tratado como requisito definitivo sem validação.
-
-**Última atualização:** 27/10/2026 
-**Responsável pelo levantamento:** Eloísa Brandão
+**Responsável:** Eloísa Brandão — Product Owner
