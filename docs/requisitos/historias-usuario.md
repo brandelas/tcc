@@ -1,954 +1,480 @@
-\# Histórias de Usuário — OficinaPro
+# Histórias de Usuário — OficinaPro
 
-
-
-> \*\*Documento de trabalho — sujeito à validação do grupo e do professor.\*\*
-
+> **Documento de trabalho — validado pelo grupo GarageOps.**
 >
+> Este documento transforma os requisitos levantados no backlog em histórias de usuário que orientam o desenvolvimento do OficinaPro, refletindo as regras de negócio oficiais definidas para o MVP.
 
-> Este documento transforma os requisitos levantados no backlog em histórias de usuário que poderão orientar o desenvolvimento do OficinaPro.
+---
 
->
+## 1. Legenda
 
-> Histórias, critérios e regras marcados como proposta ou pendência não representam decisões definitivas do grupo.
+| Status | Significado |
+| --- | --- |
+| 🟢 **Definido** | Entendimento já estabelecido |
+| 🟡 **Em discussão** | Proposta ainda não validada pelo grupo |
+| 🔵 **Validar com professor** | Depende de orientação/validação acadêmica |
+| 🔴 **Pendente** | Informação ou decisão ainda necessária |
+| ⚪ **Pós-MVP** | Possível funcionalidade futura |
 
+---
 
+## 2. Clientes
 
-\---
+## HU-CLI-001 — Cadastrar cliente
 
+**Como** atendente
 
+**Quero** cadastrar um cliente
 
-\## 1. Legenda
+**Para** manter seus dados disponíveis para utilização no sistema.
 
+### Critérios de aceite
 
+- [ ] Permitir informar nome do cliente.
+- [ ] Permitir informar CPF (obrigatório e único).
+- [ ] Permitir informar telefone.
+- [ ] Permitir informar e-mail.
+- [ ] Permitir informar endereço.
+- [ ] Validar os campos obrigatórios definidos pelo sistema.
+- [ ] Impedir cadastro duplicado com base no CPF.
 
-| Status                   | Significado                               |
+**Status:** 🟢 Definido
 
-| ------------------------ | ----------------------------------------- |
+---
 
-| 🟢 Definido              | Entendimento já estabelecido              |
+## HU-CLI-002 — Consultar cliente
 
-| 🟡 Em discussão          | Proposta ainda não validada pelo grupo    |
+**Como** atendente
 
-| 🔵 Validar com professor | Depende de orientação/validação acadêmica |
+**Quero** consultar os dados de um cliente
 
-| 🔴 Pendente              | Informação ou decisão ainda necessária    |
+**Para** localizar rapidamente suas informações e seus veículos.
 
-| ⚪ Pós-MVP                | Possível funcionalidade futura            |
+### Critérios de aceite
 
+- [ ] Permitir buscar cliente por nome.
+- [ ] Permitir buscar cliente por CPF.
+- [ ] Exibir os dados cadastrados.
+- [ ] Exibir os veículos associados ao cliente.
 
+**Status:** 🟢 Definido
 
-\---
+---
 
+## HU-CLI-003 — Atualizar cliente
 
+**Como** atendente
 
-\# 2. Clientes
+**Quero** atualizar os dados de um cliente
 
+**Para** manter suas informações atualizadas.
 
+### Critérios de aceite
 
-\## HU-CLI-001 — Cadastrar cliente
+- [ ] Permitir alterar dados permitidos.
+- [ ] Manter a identificação do cliente.
+- [ ] Validar os campos alterados.
 
+**Status:** 🟢 Definido
 
+---
 
-\*\*Como\*\* atendente
+## 3. Veículos
 
-\*\*Quero\*\* cadastrar um cliente
+## HU-VEI-001 — Cadastrar veículo
 
-\*\*Para\*\* manter seus dados disponíveis para utilização no sistema.
+**Como** atendente
 
+**Quero** cadastrar um veículo vinculado a um cliente
 
+**Para** registrar os veículos atendidos pela oficina.
 
-\### Critérios de aceite — proposta
+### Critérios de aceite
 
+- [ ] Informar placa (identificador único).
+- [ ] Informar marca.
+- [ ] Informar modelo.
+- [ ] Informar ano.
+- [ ] Informar cor.
+- [ ] Informar quilometragem.
+- [ ] Associar o veículo a um cliente cadastrado.
+- [ ] Validar os campos obrigatórios.
 
+**Status:** 🟢 Definido
 
-\* \[ ] Permitir informar nome do cliente.
+---
 
-\* \[ ] Permitir informar CPF.
+## HU-VEI-002 — Consultar veículo
 
-\* \[ ] Permitir informar telefone.
+**Como** atendente
 
-\* \[ ] Permitir informar e-mail.
+**Quero** consultar os dados de um veículo
 
-\* \[ ] Permitir informar endereço.
+**Para** verificar suas informações e histórico de manutenção.
 
-\* \[ ] Validar os campos obrigatórios definidos pelo sistema.
+### Critérios de aceite
 
-\* \[ ] Impedir cadastro duplicado conforme regra que será definida.
+- [ ] Permitir localizar o veículo pela placa.
+- [ ] Exibir os dados do veículo.
+- [ ] Exibir o proprietário associado.
+- [ ] Permitir acessar o histórico de manutenções.
 
+**Status:** 🟢 Definido
 
+---
 
-\*\*Status:\*\* 🟡 Em discussão
+## 4. Ordem de Serviço
 
+## HU-OS-001 — Abrir ordem de serviço
 
+**Como** atendente
 
-\*\*Pendências:\*\*
+**Quero** abrir uma ordem de serviço para um veículo
 
+**Para** registrar formalmente um atendimento da oficina.
 
+### Critérios de aceite
 
-\* Definir quais campos serão obrigatórios.
+- [ ] Selecionar cliente.
+- [ ] Selecionar veículo.
+- [ ] Registrar data de abertura.
+- [ ] Registrar descrição inicial do problema.
+- [ ] Gerar identificação única da ordem de serviço.
+- [ ] Definir o status inicial como `ABERTA`.
 
-\* Definir regra para CPF duplicado.
+**Status:** 🟢 Definido
 
-\* Definir se cliente poderá ser excluído ou apenas inativado.
+---
 
+## HU-OS-002 — Consultar ordem de serviço
 
+**Como** usuário autorizado
 
-\---
+**Quero** consultar uma ordem de serviço
 
+**Para** acompanhar seu andamento.
 
+### Critérios de aceite
 
-\## HU-CLI-002 — Consultar cliente
+- [ ] Localizar a OS pelo identificador.
+- [ ] Exibir cliente e veículo.
+- [ ] Exibir status atual na esteira de andamento.
+- [ ] Exibir diagnóstico.
+- [ ] Exibir orçamento.
+- [ ] Exibir serviços e peças relacionados.
+- [ ] Exibir informações financeiras pertinentes.
 
+**Status:** 🟢 Definido
 
+---
 
-\*\*Como\*\* atendente
+## HU-OS-003 — Atualizar status da OS
 
-\*\*Quero\*\* consultar os dados de um cliente
+**Como** usuário autorizado
 
-\*\*Para\*\* localizar rapidamente suas informações e seus veículos.
+**Quero** atualizar o status de uma ordem de serviço
 
+**Para** representar corretamente sua etapa atual.
 
-
-\### Critérios de aceite — proposta
-
-
-
-\* \[ ] Permitir buscar cliente por nome.
-
-\* \[ ] Permitir buscar cliente por CPF.
-
-\* \[ ] Exibir os dados cadastrados.
-
-\* \[ ] Exibir os veículos associados ao cliente.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## HU-CLI-003 — Atualizar cliente
-
-
-
-\*\*Como\*\* atendente
-
-\*\*Quero\*\* atualizar os dados de um cliente
-
-\*\*Para\*\* manter suas informações atualizadas.
-
-
-
-\### Critérios de aceite — proposta
-
-
-
-\* \[ ] Permitir alterar dados permitidos.
-
-\* \[ ] Manter a identificação do cliente.
-
-\* \[ ] Validar os campos alterados.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\# 3. Veículos
-
-
-
-\## HU-VEI-001 — Cadastrar veículo
-
-
-
-\*\*Como\*\* atendente
-
-\*\*Quero\*\* cadastrar um veículo vinculado a um cliente
-
-\*\*Para\*\* registrar os veículos atendidos pela oficina.
-
-
-
-\### Critérios de aceite — proposta
-
-
-
-\* \[ ] Informar placa.
-
-\* \[ ] Informar marca.
-
-\* \[ ] Informar modelo.
-
-\* \[ ] Informar ano.
-
-\* \[ ] Informar cor.
-
-\* \[ ] Informar quilometragem.
-
-\* \[ ] Associar o veículo a um cliente.
-
-\* \[ ] Validar os campos obrigatórios.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\*\*Pendências:\*\*
-
-
-
-\* Definir quais campos são obrigatórios.
-
-\* Definir regra de unicidade da placa.
-
-\* Definir como será tratada a mudança de proprietário.
-
-
-
-\---
-
-
-
-\## HU-VEI-002 — Consultar veículo
-
-
-
-\*\*Como\*\* atendente
-
-\*\*Quero\*\* consultar os dados de um veículo
-
-\*\*Para\*\* verificar suas informações e histórico de manutenção.
-
-
-
-\### Critérios de aceite — proposta
-
-
-
-\* \[ ] Permitir localizar o veículo pela placa.
-
-\* \[ ] Exibir os dados do veículo.
-
-\* \[ ] Exibir o proprietário associado.
-
-\* \[ ] Permitir acessar o histórico de manutenções.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\# 4. Ordem de Serviço
-
-
-
-\## HU-OS-001 — Abrir ordem de serviço
-
-
-
-\*\*Como\*\* atendente
-
-\*\*Quero\*\* abrir uma ordem de serviço para um veículo
-
-\*\*Para\*\* registrar formalmente um atendimento da oficina.
-
-
-
-\### Critérios de aceite — proposta
-
-
-
-\* \[ ] Selecionar cliente.
-
-\* \[ ] Selecionar veículo.
-
-\* \[ ] Registrar data de abertura.
-
-\* \[ ] Registrar descrição inicial do problema.
-
-\* \[ ] Gerar identificação da ordem de serviço.
-
-\* \[ ] Definir o status inicial da OS.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\*\*Pendência:\*\*
-
-
-
-\* Definir quais informações serão obrigatórias na abertura.
-
-
-
-\---
-
-
-
-\## HU-OS-002 — Consultar ordem de serviço
-
-
-
-\*\*Como\*\* usuário autorizado
-
-\*\*Quero\*\* consultar uma ordem de serviço
-
-\*\*Para\*\* acompanhar seu andamento.
-
-
-
-\### Critérios de aceite — proposta
-
-
-
-\* \[ ] Localizar a OS pelo identificador.
-
-\* \[ ] Exibir cliente e veículo.
-
-\* \[ ] Exibir status atual.
-
-\* \[ ] Exibir diagnóstico.
-
-\* \[ ] Exibir orçamento.
-
-\* \[ ] Exibir serviços e peças relacionados.
-
-\* \[ ] Exibir informações financeiras pertinentes.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## HU-OS-003 — Atualizar status da OS
-
-
-
-\*\*Como\*\* usuário autorizado
-
-\*\*Quero\*\* atualizar o status de uma ordem de serviço
-
-\*\*Para\*\* representar corretamente sua etapa atual.
-
-
-
-\### Status inicialmente propostos
-
-
+### Status oficiais adotados
 
 ```text
-
 ABERTA
-
-EM\_DIAGNOSTICO
-
-AGUARDANDO\_APROVACAO
-
+EM_DIAGNOSTICO
+AGUARDANDO_APROVACAO
 APROVADA
-
-EM\_EXECUCAO
-
-AGUARDANDO\_PAGAMENTO
-
+EM_EXECUCAO
+AGUARDANDO_PAGAMENTO
 CONCLUIDA
-
 RECUSADA
-
+CANCELADA
 ```
 
+### Critérios de aceite
 
+- [ ] Permitir somente transições de status previstas nas regras de negócio.
+- [ ] Permitir o retorno para `AGUARDANDO_APROVACAO` quando houver um novo orçamento revisado após uma recusa.
+- [ ] Permitir o encerramento definitivo da OS como `CANCELADA` ou `RECUSADA`, conforme o tratamento adotado.
 
-\*\*Status:\*\* 🟡 Em discussão
+**Status:** 🟢 Definido
 
+---
 
+## 5. Diagnóstico
 
-\*\*Pendências:\*\*
+## HU-DIA-001 — Registrar diagnóstico
 
+**Como** mecânico
 
+**Quero** registrar o diagnóstico do veículo
 
-\* Validar os status com o grupo.
+**Para** documentar os problemas identificados e orientar o orçamento.
 
-\* Validar a necessidade de todos os estados.
+### Critérios de aceite
 
-\* Definir quais transições são permitidas.
+- [ ] Permitir registrar descrição do diagnóstico técnico.
+- [ ] Associar o diagnóstico à OS (status muda para `EM_DIAGNOSTICO`).
+- [ ] Registrar o responsável pelo diagnóstico.
+- [ ] Permitir consultar o diagnóstico posteriormente.
 
+**Status:** 🟢 Definido
 
+---
 
-\---
+## 6. Orçamento
 
+## HU-ORC-001 — Elaborar orçamento
 
+**Como** usuário autorizado
 
-\# 5. Diagnóstico
+**Quero** elaborar um orçamento para a OS
 
+**Para** apresentar ao cliente os serviços e peças necessários.
 
+### Critérios de aceite
 
-\## HU-DIA-001 — Registrar diagnóstico
+- [ ] Adicionar serviços.
+- [ ] Adicionar peças.
+- [ ] Informar quantidades.
+- [ ] Calcular valores automaticamente.
+- [ ] Calcular o valor total: `(Serviços + Peças) - Descontos`.
+- [ ] Permitir aplicar desconto conforme regra definida.
+- [ ] Associar o orçamento à OS (status muda para `AGUARDANDO_APROVACAO`).
 
+**Status:** 🟢 Definido
 
+---
 
-\*\*Como\*\* mecânico
+## HU-ORC-002 — Aprovar ou recusar orçamento
 
-\*\*Quero\*\* registrar o diagnóstico do veículo
+**Como** usuário autorizado
 
-\*\*Para\*\* documentar os problemas identificados e orientar o orçamento.
+**Quero** registrar a aprovação ou recusa do orçamento
 
+**Para** definir se o serviço poderá prosseguir.
 
+### Critérios de aceite
 
-\### Critérios de aceite — proposta
+- [ ] Registrar aprovação (`APROVADA`) ou recusa (`RECUSADA`).
+- [ ] Registrar data da decisão.
+- [ ] Atualizar o status da OS com base na decisão.
+- [ ] Em caso de recusa, permitir o encerramento da OS ou a geração de um orçamento revisado vinculado à mesma OS, permitindo seu retorno para `AGUARDANDO_APROVACAO` sem perder o histórico anterior.
+- [ ] Manter o registro detalhado de todas as tratativas.
 
+**Status:** 🟢 Definido
 
+**Pendência:**
 
-\* \[ ] Permitir registrar descrição do diagnóstico.
+- Definir formalmente quem possui permissão de perfil para aprovar orçamentos.
 
-\* \[ ] Associar o diagnóstico à OS.
+---
 
-\* \[ ] Registrar o responsável pelo diagnóstico.
+## 7. Estoque
 
-\* \[ ] Permitir consultar o diagnóstico posteriormente.
+## HU-EST-001 — Cadastrar peça
 
+**Como** responsável pelo estoque
 
+**Quero** cadastrar uma peça
 
-\*\*Status:\*\* 🟡 Em discussão
+**Para** controlar os itens disponíveis na oficina.
 
+### Critérios de aceite
 
+- [ ] Registrar nome/descrição da peça.
+- [ ] Registrar quantidade disponível em estoque.
+- [ ] Registrar valor unitário.
+- [ ] Permitir consultar o estoque.
 
-\---
+**Status:** 🟢 Definido
 
+---
 
+## HU-EST-002 — Atualizar estoque
 
-\# 6. Orçamento
+**Como** responsável pelo estoque
 
+**Quero** registrar entradas e saídas de peças
 
+**Para** manter a quantidade disponível atualizada.
 
-\## HU-ORC-001 — Elaborar orçamento
+### Critérios de aceite
 
+- [ ] Registrar entrada de peça.
+- [ ] Registrar saída de peça.
+- [ ] Atualizar quantidade disponível.
+- [ ] Registrar a movimentação no log de estoque.
+- [ ] Impedir saída superior ao estoque disponível.
 
+**Status:** 🟢 Definido
 
-\*\*Como\*\* usuário autorizado
+---
 
-\*\*Quero\*\* elaborar um orçamento para a OS
+## HU-EST-003 — Baixar peças vinculadas ao orçamento aprovado
 
-\*\*Para\*\* apresentar ao cliente os serviços e peças necessários.
+**Como** sistema
 
+**Quero** registrar a saída e controlar as peças vinculadas a uma OS
 
+**Para** manter o inventário atualizado e garantir a rastreabilidade das movimentações.
 
-\### Critérios de aceite — proposta
+### Critérios de aceite
 
+- [ ] Efetivar a baixa automática das peças no estoque no momento da aprovação formal do orçamento (`APROVADA`).
+- [ ] Registrar cada movimentação de saída vinculando-a à respectiva OS e ao orçamento aprovado.
+- [ ] Atualizar a quantidade disponível em estoque após a baixa.
+- [ ] Bloquear a aprovação do orçamento caso não haja quantidade suficiente de alguma peça em estoque.
+- [ ] Impedir que a mesma aprovação gere mais de uma baixa para as mesmas peças, evitando duplicidade de movimentações.
+- [ ] Em caso de cancelamento da OS após a aprovação, verificar a condição física das peças antes de realizar o estorno.
+- [ ] Quando as peças ainda não tiverem sido instaladas ou consumidas, realizar o estorno da movimentação de saída e devolver as quantidades correspondentes ao estoque disponível.
+- [ ] Quando as peças já tiverem sido instaladas ou consumidas, não devolvê-las ao estoque comercializável. Registrar a ocorrência como perda operacional ou descarte.
+- [ ] Preservar o registro da movimentação de saída original e do respectivo estorno, perda ou descarte, garantindo a rastreabilidade das operações.
 
+**Status:** 🟢 Definido
 
-\* \[ ] Adicionar serviços.
+---
 
-\* \[ ] Adicionar peças.
+## 8. Financeiro
 
-\* \[ ] Informar quantidades.
+## HU-FIN-001 — Calcular valor da OS
 
-\* \[ ] Calcular valores.
+**Como** sistema
 
-\* \[ ] Calcular o valor total.
+**Quero** calcular o valor total da ordem de serviço
 
-\* \[ ] Permitir aplicar desconto conforme regra definida.
+**Para** apresentar corretamente o valor devido.
 
-\* \[ ] Associar o orçamento à OS.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## HU-ORC-002 — Aprovar ou recusar orçamento
-
-
-
-\*\*Como\*\* usuário autorizado
-
-\*\*Quero\*\* registrar a aprovação ou recusa do orçamento
-
-\*\*Para\*\* definir se o serviço poderá prosseguir.
-
-
-
-\### Critérios de aceite — proposta
-
-
-
-\* \[ ] Registrar aprovação ou recusa.
-
-\* \[ ] Registrar data da decisão.
-
-\* \[ ] Atualizar o status da OS.
-
-\* \[ ] Manter o registro da decisão.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\*\*Pendências:\*\*
-
-
-
-\* Definir quem pode aprovar.
-
-\* Definir comportamento da OS após recusa.
-
-\* Definir se o orçamento poderá ser alterado após aprovação.
-
-
-
-\---
-
-
-
-\# 7. Estoque
-
-
-
-\## HU-EST-001 — Cadastrar peça
-
-
-
-\*\*Como\*\* responsável pelo estoque
-
-\*\*Quero\*\* cadastrar uma peça
-
-\*\*Para\*\* controlar os itens disponíveis na oficina.
-
-
-
-\### Critérios de aceite — proposta
-
-
-
-\* \[ ] Registrar nome/descrição da peça.
-
-\* \[ ] Registrar quantidade disponível.
-
-\* \[ ] Registrar valor.
-
-\* \[ ] Permitir consultar o estoque.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## HU-EST-002 — Atualizar estoque
-
-
-
-\*\*Como\*\* responsável pelo estoque
-
-\*\*Quero\*\* registrar entradas e saídas de peças
-
-\*\*Para\*\* manter a quantidade disponível atualizada.
-
-
-
-\### Critérios de aceite — proposta
-
-
-
-\* \[ ] Registrar entrada de peça.
-
-\* \[ ] Registrar saída de peça.
-
-\* \[ ] Atualizar quantidade disponível.
-
-\* \[ ] Registrar a movimentação.
-
-\* \[ ] Impedir saída superior ao estoque disponível.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## HU-EST-003 — Baixar peças utilizadas
-
-
-
-\*\*Como\*\* sistema
-
-\*\*Quero\*\* registrar a saída das peças utilizadas em uma OS
-
-\*\*Para\*\* manter o estoque atualizado.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\*\*Pendência principal:\*\*
-
-
-
-\* Definir em qual momento a baixa do estoque ocorre.
-
-
-
-\---
-
-
-
-\# 8. Financeiro
-
-
-
-\## HU-FIN-001 — Calcular valor da OS
-
-
-
-\*\*Como\*\* sistema
-
-\*\*Quero\*\* calcular o valor total da ordem de serviço
-
-\*\*Para\*\* apresentar corretamente o valor devido.
-
-
-
-\### Regra proposta
-
-
+### Regra aplicada
 
 ```text
-
 Total = Serviços + Peças - Descontos
-
 ```
 
+**Status:** 🟢 Definido
 
+---
 
-\*\*Status:\*\* 🟡 Em discussão
+## HU-FIN-002 — Registrar pagamento
 
+**Como** usuário autorizado
 
+**Quero** registrar o pagamento de uma OS
 
-\---
+**Para** manter o controle financeiro do atendimento.
 
+### Critérios de aceite
 
+- [ ] Registrar valor pago.
+- [ ] Registrar forma de pagamento.
+- [ ] Registrar data do pagamento.
+- [ ] Atualizar o status financeiro e permitir a quitação total para transicionar a OS para `CONCLUIDA`.
+- [ ] Permitir consultar o pagamento registrado.
 
-\## HU-FIN-002 — Registrar pagamento
+**Status:** 🟢 Definido
 
+---
 
+## 9. Histórico de Manutenção
 
-\*\*Como\*\* usuário autorizado
+## HU-HIS-001 — Consultar histórico do veículo
 
-\*\*Quero\*\* registrar o pagamento de uma OS
+**Como** atendente
 
-\*\*Para\*\* manter o controle financeiro do atendimento.
+**Quero** consultar o histórico de manutenção de um veículo
 
+**Para** verificar os serviços realizados anteriormente.
 
+### Critérios de aceite
 
-\### Critérios de aceite — proposta
+- [ ] Listar ordens de serviço anteriores associadas ao veículo.
+- [ ] Exibir datas dos atendimentos.
+- [ ] Exibir serviços realizados.
+- [ ] Exibir informações relevantes sobre peças utilizadas e histórico financeiro.
 
+**Status:** 🟢 Definido
 
+---
 
-\* \[ ] Registrar valor pago.
+## 10. Usuários e permissões
 
-\* \[ ] Registrar forma de pagamento.
+## HU-AUT-001 — Autenticar usuário
 
-\* \[ ] Registrar data do pagamento.
+**Como** usuário do sistema
 
-\* \[ ] Atualizar o status financeiro.
+**Quero** realizar login
 
-\* \[ ] Permitir consultar o pagamento registrado.
+**Para** acessar as funcionalidades permitidas para meu perfil.
 
+**Status:** 🟢 Definido
 
+---
 
-\*\*Status:\*\* 🟡 Em discussão
+## HU-AUT-002 — Controlar permissões
 
+**Como** responsável pela gestão de acessos
 
+**Quero** definir permissões de acesso
 
-\*\*Pendências:\*\*
+**Para** restringir funcionalidades de acordo com o papel de cada usuário.
 
+### Perfis adotados
 
+- Atendente
+- Mecânico
+- Estoque
+- Financeiro
 
-\* Definir formas de pagamento.
+**Status:** 🟢 Definido
 
-\* Definir se haverá pagamento parcial.
+**Pendência:**
 
-\* Definir se haverá parcelamento.
+- Mapear granularmente as permissões exatas de cada tela por perfil.
 
+---
 
+## 11. Notificações
 
-\---
+## HU-NOT-001 — Notificar eventos da OS
 
+**Como** usuário
 
+**Quero** receber notificações sobre eventos relevantes da OS
 
-\# 9. Histórico de Manutenção
+**Para** acompanhar mudanças importantes no atendimento.
 
+**Status:** 🔵 Validar com professor
 
+---
 
-\## HU-HIS-001 — Consultar histórico do veículo
+## 12. Relatórios
 
+## HU-REL-001 — Consultar informações operacionais
 
+**Como** usuário autorizado
 
-\*\*Como\*\* atendente
+**Quero** consultar informações consolidadas da oficina
 
-\*\*Quero\*\* consultar o histórico de manutenção de um veículo
+**Para** acompanhar a operação.
 
-\*\*Para\*\* verificar os serviços realizados anteriormente.
+**Status:** 🔵 Validar com professor
 
+---
 
+## 13. Funcionalidades fora do escopo inicial
 
-\### Critérios de aceite — proposta
+- Integração com sistemas externos de pagamento.
+- Notificações avançadas por canais externos.
+- Relatórios gerenciais complexos.
+- Dashboard analítico avançado.
 
+**Status:** ⚪ Pós-MVP
 
+---
 
-\* \[ ] Listar ordens de serviço anteriores.
+## 14. Observações
 
-\* \[ ] Exibir datas dos atendimentos.
+Este documento reflete as histórias de usuário validadas pelo grupo **GarageOps** para o MVP do OficinaPro.
 
-\* \[ ] Exibir serviços realizados.
+**Última atualização:** 11/11/2026
 
-\* \[ ] Exibir informações relevantes sobre peças utilizadas.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\# 10. Usuários e permissões
-
-
-
-\## HU-AUT-001 — Autenticar usuário
-
-
-
-\*\*Como\*\* usuário do sistema
-
-\*\*Quero\*\* realizar login
-
-\*\*Para\*\* acessar as funcionalidades permitidas para meu perfil.
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\---
-
-
-
-\## HU-AUT-002 — Controlar permissões
-
-
-
-\*\*Como\*\* administrador
-
-\*\*Quero\*\* definir permissões de acesso
-
-\*\*Para\*\* restringir funcionalidades de acordo com o papel de cada usuário.
-
-
-
-\### Perfis inicialmente propostos
-
-
-
-\* Administrador
-
-\* Atendente
-
-\* Mecânico
-
-\* Estoque
-
-\* Financeiro
-
-
-
-\*\*Status:\*\* 🟡 Em discussão
-
-
-
-\*\*Pendência:\*\*
-
-
-
-\* Validar necessidade e permissões de cada perfil.
-
-
-
-\---
-
-
-
-\# 11. Notificações
-
-
-
-\## HU-NOT-001 — Notificar eventos da OS
-
-
-
-\*\*Como\*\* usuário
-
-\*\*Quero\*\* receber notificações sobre eventos relevantes da OS
-
-\*\*Para\*\* acompanhar mudanças importantes no atendimento.
-
-
-
-\### Exemplos de eventos
-
-
-
-\* Orçamento aguardando aprovação.
-
-\* Orçamento aprovado.
-
-\* Orçamento recusado.
-
-\* OS concluída.
-
-\* Pagamento pendente.
-
-
-
-\*\*Status:\*\* 🔵 Validar com professor
-
-
-
-\*\*Pendência:\*\*
-
-
-
-\* Definir quais notificações fazem parte do MVP.
-
-\* Definir canal de notificação.
-
-
-
-\---
-
-
-
-\# 12. Relatórios
-
-
-
-\## HU-REL-001 — Consultar informações operacionais
-
-
-
-\*\*Como\*\* administrador
-
-\*\*Quero\*\* consultar informações consolidadas da oficina
-
-\*\*Para\*\* acompanhar a operação.
-
-
-
-\*\*Status:\*\* 🔵 Validar com professor
-
-
-
-\*\*Pendência:\*\*
-
-
-
-\* Definir se relatórios fazem parte do MVP.
-
-\* Definir quais indicadores serão necessários.
-
-
-
-\---
-
-
-
-\# 13. Funcionalidades fora do escopo inicial
-
-
-
-As funcionalidades abaixo são possibilidades futuras e não devem ser consideradas parte do MVP até validação:
-
-
-
-\* Integração com sistemas externos.
-
-\* Notificações por canais adicionais.
-
-\* Relatórios avançados.
-
-\* Dashboard analítico avançado.
-
-\* Funcionalidades não relacionadas ao fluxo principal da oficina.
-
-
-
-\*\*Status:\*\* ⚪ Pós-MVP
-
-
-
-\---
-
-
-
-\# 14. Observações
-
-
-
-Este documento representa o levantamento inicial das histórias de usuário do OficinaPro.
-
-
-
-As histórias e critérios marcados como proposta deverão ser discutidos e validados pelo grupo. Decisões que dependam de orientação acadêmica deverão ser levadas aos encontros com o professor.
-
-
-
-A implementação deve considerar o MVP validado pelo grupo e pelo professor, evitando desenvolver funcionalidades ainda não priorizadas.
-
-
-
+**Responsável:** Eloísa Brandão (Product Owner)
