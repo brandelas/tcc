@@ -146,6 +146,6 @@ O MVP será considerado concluído com sucesso quando o grupo GarageOps consegui
 
 ---
 
-**Última atualização:** 27/10/2026
+**Última atualização:** 11/11/2026
 
-**Responsável:** Heloísa Brandão (Product Owner)
+**Responsável:** Eloísa Brandão (Product Owner)
