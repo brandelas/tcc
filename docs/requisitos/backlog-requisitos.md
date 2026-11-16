@@ -2,44 +2,53 @@
 
 > **Documento de trabalho da análise de requisitos do OficinaPro — Grupo GarageOps.**
 >
-> Este documento é evolutivo e deve ser atualizado à medida que o projeto avança, novas decisões são tomadas pelo grupo e pontos relevantes são validados com o professor orientador.
+> Este documento é evolutivo e consolida os requisitos funcionais e não funcionais, as regras de negócio, as decisões de escopo e as diretrizes técnicas do OficinaPro.
+>
+> As definições devem permanecer alinhadas às demais documentações do projeto, especialmente às Histórias de Usuário, aos Fluxos, às Regras de Negócio, aos Critérios de Aceite, ao Glossário, ao MVP e aos documentos de arquitetura.
 
 ---
 
 ## 1. Objetivo
 
-O **OficinaPro** é um sistema de gestão operacional para oficinas mecânicas de pequeno e médio porte.
+O **OficinaPro** é um sistema SaaS de gestão operacional destinado a oficinas mecânicas de pequeno e médio porte.
 
-Seu objetivo central é organizar o fluxo operacional da oficina, desde o cadastro de clientes e veículos até a abertura e a conclusão da ordem de serviço (OS), incluindo diagnóstico, orçamento, controle de peças, fechamento financeiro e histórico de manutenção.
+Seu objetivo é organizar o fluxo operacional da oficina, desde o cadastro de clientes e veículos até a abertura, execução e conclusão da ordem de serviço (OS), incluindo diagnóstico, orçamento, aprovação do cliente, reserva e utilização de peças, controle financeiro e histórico de manutenção.
+
+Como plataforma SaaS multiempresa, o sistema deverá permitir que diferentes oficinas utilizem a mesma aplicação, mantendo o isolamento lógico e a confidencialidade dos dados de cada contratante.
 
 Este documento registra:
 
 - requisitos funcionais e não funcionais;
 - regras de negócio;
 - decisões de escopo;
-- pontos em discussão;
-- dúvidas para validação com o professor;
-- funcionalidades planejadas para versões futuras.
+- diretrizes técnicas;
+- funcionalidades previstas para o MVP;
+- funcionalidades planejadas para versões futuras;
+- pontos que ainda dependem de definição ou validação.
 
 ---
 
 ## 2. Legenda de status
 
 | Status | Significado |
-| --- | --- |
-| 🟢 **Definido** | Decisão estabelecida pelo grupo. |
-| 🟡 **Em discussão** | Ponto que precisa ser discutido pelo grupo. |
+|---|---|
+| 🟢 **Definido** | Decisão estabelecida como referência do projeto. |
+| 🟡 **Em discussão** | Proposta que ainda precisa de discussão ou confirmação do grupo. |
 | 🔴 **Pendente** | Informação ou decisão ainda não definida. |
-| 🔵 **Validar com o professor** | Ponto a ser discutido durante a orientação. |
-| ⚪ **Pós-MVP** | Funcionalidade planejada que não deve bloquear o MVP. |
+| 🔵 **Validar com o professor** | Ponto que depende de orientação acadêmica. |
+| ⚪ **Pós-MVP** | Funcionalidade planejada para evolução futura, sem bloquear o MVP. |
 
 ---
 
 ## 3. Escopo inicial do MVP
 
-O fluxo operacional principal definido atualmente é:
+O MVP deverá entregar um fluxo operacional integrado, contemplando:
 
 ```text
+Oficina (Tenant)
+  ↓
+Usuário autenticado e autorizado
+  ↓
 Cliente
   ↓
 Veículo
@@ -49,92 +58,137 @@ Ordem de Serviço (ABERTA)
 Diagnóstico (EM_DIAGNOSTICO)
   ↓
 Orçamento (AGUARDANDO_APROVACAO)
-  ├── Recusado (RECUSADA)
-  │     ├── Encerramento definitivo da OS
+  ↓
+Decisão do cliente
+  ├── RECUSADO
+  │     ├── Encerramento da OS
   │     └── Elaboração de orçamento revisado
   │             ↓
-  │       AGUARDANDO_APROVACAO
+  │       Nova apreciação do cliente
   │
-  └── Aprovado (APROVADA)
+  └── ACEITO
           ↓
-      Baixa automática das peças no saldo disponível
+      Solicitação de reserva de peças
           ↓
-      Execução do serviço (EM_EXECUCAO)
-          ↓
-      Aguardando pagamento (AGUARDANDO_PAGAMENTO)
-          ↓
-      Quitação financeira
-          ↓
-      OS concluída (CONCLUIDA)
-          ↓
-      Histórico de manutenção do veículo
+      Inventory Service valida disponibilidade
+          ├── Reserva recusada
+          │      ↓
+          │   Orçamento permanece sem aprovação definitiva
+          │   e execução bloqueada
+          │
+          └── Reserva confirmada
+                 ↓
+             Orçamento aprovado definitivamente
+                 ↓
+             Execução do serviço
+                 ↓
+             Utilização efetiva das peças
+                 ↓
+             Conversão das reservas em saídas definitivas
+                 ↓
+             Conclusão operacional da OS
+                 ↓
+             Registro e atualização do histórico
+                 ↓
+             Controle financeiro independente
+                 ↓
+             Quitação financeira (quando realizada)
 ```
 
-**Observação sobre o estoque:** a baixa ocorre no momento da aprovação do orçamento, retirando as quantidades correspondentes do saldo disponível. Essa movimentação não significa, necessariamente, que as peças já foram fisicamente instaladas ou consumidas.
+**Regra fundamental do estoque:** a aprovação definitiva do orçamento depende da confirmação da reserva integral das peças necessárias. A reserva reduz a quantidade disponível para novas operações, mas não representa consumo físico ou baixa definitiva.
 
-Em caso de cancelamento posterior à aprovação, o tratamento depende da condição física das peças:
+A baixa definitiva ocorre somente quando a peça é efetivamente utilizada. Peças reservadas e não utilizadas devem ter sua reserva liberada, desde que permaneçam em condições de reutilização.
 
-- peças ainda não instaladas ou consumidas podem retornar ao estoque disponível mediante estorno;
-- peças já instaladas ou consumidas não podem retornar ao estoque comercializável e devem ser registradas como perda operacional ou descarte.
-
-**Status:** 🟢 Definido para o MVP.
+**Status:** 🟢 Definido como referência funcional.
 
 ---
 
-## 4. Gestão de clientes
+## 4. Gestão de oficinas e isolamento multi-tenant
 
-### 4.1 Dados previstos
+### 4.1 Conceito
 
-- [x] Nome completo.
-- [x] CPF — obrigatório e único.
-- [x] Telefone.
-- [x] E-mail.
-- [x] Endereço.
+Cada oficina contratante deverá ser representada por um identificador único de tenant.
 
-### 4.2 Regras de negócio adotadas
+Os dados operacionais de cada oficina deverão estar associados ao respectivo tenant, impedindo que usuários de uma oficina consultem ou alterem informações pertencentes a outra.
 
-- **RN-CLI-001:** Todo cliente deve possuir CPF válido e único no sistema, utilizado como identificador para impedir cadastros duplicados.
-- Clientes com histórico associado não devem ser excluídos fisicamente, mas podem ser inativados, preservando seus registros e vínculos históricos.
+### 4.2 Regras adotadas
 
-**Status:** 🟢 Definido.
+- **RN-TEN-001:** Cada oficina contratante deve possuir um identificador único de tenant.
+- **RN-TEN-002:** Todo registro operacional pertencente a uma oficina deve estar associado ao seu respectivo `tenant_id`.
+- **RN-TEN-003:** O sistema deve aplicar o isolamento dos dados no backend, utilizando o contexto do tenant associado à autenticação e à autorização do usuário.
+- **RN-TEN-004:** O sistema não deve confiar exclusivamente em um `tenant_id` informado pelo frontend ou enviado livremente em uma requisição.
+- **RN-TEN-005:** Consultas, inclusões, alterações, exclusões lógicas e operações de estoque devem respeitar o tenant autenticado.
+- **RN-TEN-006:** Referências entre registros de diferentes serviços devem validar a correspondência do tenant antes de permitir uma operação.
+- **RN-TEN-007:** CPF e placa devem possuir unicidade dentro do tenant, permitindo que diferentes oficinas mantenham cadastros independentes de clientes e veículos.
+
+**Status:** 🟢 Diretriz funcional e de segurança do SaaS.
 
 ---
 
-## 5. Gestão de veículos
+## 5. Gestão de clientes
 
 ### 5.1 Dados previstos
 
-- [x] Placa — identificador único.
-- [x] Marca.
-- [x] Modelo.
-- [x] Ano.
-- [x] Cor.
-- [x] Quilometragem.
+- Nome completo.
+- CPF — obrigatório, válido e único por tenant.
+- Telefone.
+- E-mail.
+- Endereço.
 
 ### 5.2 Regras de negócio adotadas
 
-- **RN-VEI-001:** Todo veículo deve estar obrigatoriamente associado a um cliente cadastrado.
-- **RN-VEI-002:** A placa deve ser única no sistema e utilizada como identificador do veículo.
-- O histórico de manutenção permanece associado ao veículo, mesmo em caso de transferência de propriedade.
+- **RN-CLI-001:** Todo cliente deve possuir CPF válido e obrigatório, único dentro do tenant ao qual está vinculado.
+- **RN-CLI-002:** O sistema deve impedir cadastros duplicados de clientes com o mesmo CPF dentro da mesma oficina.
+- **RN-CLI-003:** Clientes com ordens de serviço ou histórico associado não devem ser excluídos fisicamente; quando necessário, devem ser inativados.
+- Os dados cadastrais devem permanecer vinculados à oficina responsável pelo cadastro.
+- A inativação não deve apagar o histórico de atendimentos.
 
 **Status:** 🟢 Definido.
 
 ---
 
-## 6. Ordem de Serviço
+## 6. Gestão de veículos
 
-### 6.1 Informações previstas
+### 6.1 Dados previstos
 
-- Número da ordem de serviço (identificador único).
+- Placa.
+- Marca.
+- Modelo.
+- Ano.
+- Cor.
+- Quilometragem.
+
+### 6.2 Regras de negócio adotadas
+
+- **RN-VEI-001:** Todo veículo deve estar obrigatoriamente associado a um cliente cadastrado no mesmo tenant.
+- **RN-VEI-002:** A placa deve ser obrigatória e única dentro do tenant.
+- **RN-VEI-003:** O histórico de manutenção deve permanecer associado ao veículo, mesmo após o encerramento de uma OS ou a transferência de propriedade.
+- **RN-VEI-004:** Em caso de transferência de propriedade, o vínculo com o proprietário atual poderá ser atualizado, preservando o histórico dos proprietários e atendimentos anteriores.
+
+**Status:** 🟢 Definido.
+
+---
+
+## 7. Ordem de Serviço
+
+### 7.1 Informações previstas
+
+- Identificador único da OS.
 - Cliente e veículo associados.
-- Data de abertura e quilometragem.
+- Data de abertura.
+- Quilometragem registrada na abertura.
 - Problema relatado pelo cliente.
 - Diagnóstico técnico.
-- Serviços, peças e orçamento.
-- Status atual da OS.
+- Serviços previstos.
+- Orçamentos e respectivas versões.
+- Peças vinculadas.
 - Histórico de alterações e decisões.
+- Situação operacional.
+- Situação financeira relacionada.
 
-### 6.2 Esteira de status oficial do MVP
+### 7.2 Estados operacionais de referência
+
+A OS deverá possuir uma esteira de estados operacionais independente da situação financeira:
 
 ```text
 ABERTA
@@ -142,238 +196,333 @@ ABERTA
 EM_DIAGNOSTICO
   ↓
 AGUARDANDO_APROVACAO
-  ├── RECUSADA
-  │     ├── Encerramento definitivo
-  │     └── Revisão do orçamento
-  │             ↓
-  │       AGUARDANDO_APROVACAO
-  │
-  └── APROVADA
-          ↓
-      EM_EXECUCAO
-          ↓
-      AGUARDANDO_PAGAMENTO
-          ↓
-      CONCLUIDA
+  ↓
+AGUARDANDO_RESERVA
+  ↓
+EM_EXECUCAO
+  ↓
+CONCLUIDA
 ```
 
-A OS também poderá assumir o status `CANCELADA`, conforme as regras de cancelamento aplicáveis.
+A OS também poderá assumir `CANCELADA`, conforme as regras aplicáveis.
 
-### 6.3 Regras de negócio adotadas
+Os estados `APROVADA` e `RECUSADA` representam decisões do orçamento, não estados operacionais da OS.
 
-- **RN-OS-001:** A OS deve possuir identificador único e estar vinculada a um cliente e a um veículo cadastrados.
-- **RN-OS-002:** A OS deve respeitar as transições de status permitidas pelo fluxo operacional definido para o MVP.
-- **RN-OS-003:** Uma OS com orçamento recusado poderá ser encerrada definitivamente ou receber um novo orçamento revisado, mantendo o histórico da tratativa anterior.
-- **RN-OS-004:** A OS poderá retornar para `AGUARDANDO_APROVACAO` quando um orçamento revisado for encaminhado ao cliente.
-- **RN-OS-005:** A OS somente poderá avançar para a execução após a aprovação formal do orçamento.
+A situação financeira deverá ser controlada separadamente pelo Billing Service.
+
+### 7.3 Regras de negócio adotadas
+
+- **RN-OS-001:** Cada OS deve possuir identificador único dentro do contexto da oficina.
+- **RN-OS-002:** A OS deve estar vinculada a um cliente e a um veículo pertencentes ao mesmo tenant.
+- **RN-OS-003:** A OS deve respeitar as transições operacionais permitidas.
+- **RN-OS-004:** Uma OS com orçamento recusado poderá receber um novo orçamento revisado ou ser encerrada, preservando o histórico anterior.
+- **RN-OS-005:** A execução somente poderá começar após a aprovação definitiva do orçamento e a confirmação da reserva de estoque necessária.
+- **RN-OS-006:** A conclusão operacional da OS não deve ser confundida com a quitação financeira. A situação financeira deverá ser registrada independentemente.
+- A OS cancelada deverá preservar os registros de diagnóstico, orçamento, movimentações de estoque e decisões anteriores.
+
+**Status:** 🟢 Definido como referência funcional.
+
+---
+
+## 8. Diagnóstico
+
+### 8.1 Funcionalidades previstas
+
+- Registrar o problema relatado pelo cliente.
+- Registrar o diagnóstico técnico realizado pelo mecânico.
+- Associar o diagnóstico diretamente à OS.
+- Permitir consulta posterior dos dados registrados.
+
+### 8.2 Regra de negócio
+
+- **RN-DIA-001:** Todo diagnóstico técnico deve estar associado à OS correspondente e integrar seu histórico.
+
+O registro deverá respeitar as permissões do usuário e a situação operacional da OS.
 
 **Status:** 🟢 Definido.
 
 ---
 
-## 7. Diagnóstico
+## 9. Orçamento
 
-### 7.1 Funcionalidades previstas
+### 9.1 Composição prevista
 
-- [x] Registrar o problema relatado pelo cliente.
-- [x] Registrar o diagnóstico técnico realizado pelo mecânico.
-- [x] Associar o diagnóstico diretamente à OS.
-- [x] Permitir a consulta posterior das informações registradas.
-
-### 7.2 Regra de negócio adotada
-
-- **RN-DIA-001:** O diagnóstico deve estar associado à OS correspondente e integrar o histórico do atendimento.
-
-O registro do diagnóstico deve respeitar o fluxo de status da OS, permitindo sua identificação na etapa `EM_DIAGNOSTICO`.
-
-**Status:** 🟢 Definido.
-
----
-
-## 8. Orçamento
-
-### 8.1 Composição prevista
-
-O orçamento calcula o valor total da OS considerando serviços, peças e descontos:
+O orçamento deverá calcular o valor total considerando serviços, peças e descontos autorizados:
 
 ```text
-(Serviços + Peças) - Descontos = Valor total
+Valor Total = (Serviços + Peças) - Descontos
 ```
 
-### 8.2 Regras de negócio adotadas
+### 9.2 Regras de negócio
 
-- **RN-ORC-001:** O valor total do orçamento deve ser calculado automaticamente com base nos serviços, nas peças e nos descontos aplicáveis.
-- **RN-ORC-002:** A execução dos serviços e a baixa das peças no estoque dependem da aprovação formal do orçamento (`APROVADA`).
-- **RN-ORC-003:** Quando um orçamento for recusado (`RECUSADA`), a OS poderá ser encerrada definitivamente ou receber um novo orçamento revisado para apreciação do cliente, sem perder o histórico da tratativa anterior.
+- **RN-ORC-001:** O valor total deverá ser calculado automaticamente com base nos serviços, nas peças e nos descontos autorizados.
+- **RN-ORC-002:** A execução dos serviços depende da aprovação definitiva do orçamento, que somente poderá ocorrer após a confirmação da reserva integral das peças necessárias.
+- **RN-ORC-003:** Um orçamento recusado poderá ser encerrado ou revisado, preservando o histórico da versão anterior e da decisão do cliente.
+- **RN-ORC-004:** A decisão de aprovação ou recusa deverá registrar o responsável ou a origem da decisão, a data, o horário e o resultado.
+- **RN-ORC-005:** A aceitação do cliente não representa, isoladamente, aprovação definitiva no sistema. A aprovação definitiva depende do resultado positivo da reserva de estoque.
 
-### 8.3 Revisão de orçamento
+### 9.3 Revisão de orçamento
 
-Quando houver negociação ou alteração dos serviços e peças após uma recusa:
+Quando houver alteração de serviços, peças, quantidades ou valores após uma recusa:
 
-- um novo orçamento deverá ser gerado e vinculado à mesma OS;
-- o orçamento anterior deverá permanecer registrado;
-- a OS deverá retornar para `AGUARDANDO_APROVACAO`;
-- a nova proposta deverá passar por uma nova decisão do cliente.
-
-**Status:** 🟢 Definido.
-
----
-
-## 9. Estoque
-
-### 9.1 Funcionalidades previstas
-
-- Cadastro de peças.
-- Consulta de peças e saldo disponível.
-- Registro de entradas e saídas.
-- Verificação de disponibilidade antes da aprovação do orçamento.
-- Registro das movimentações vinculadas às respectivas OS e orçamentos.
-- Controle de estornos e perdas operacionais.
-
-### 9.2 Regras de negócio adotadas
-
-- **RN-EST-001:** As peças devem possuir cadastro e quantidade controlada no inventário.
-- **RN-EST-002:** O sistema deve bloquear a aprovação do orçamento quando a quantidade solicitada de uma peça for superior ao saldo disponível.
-- **RN-EST-003:** A aprovação do orçamento (`APROVADA`) deve disparar automaticamente a baixa das quantidades previstas no orçamento no saldo disponível do estoque.
-- **RN-EST-004:** As movimentações de saída devem estar vinculadas à OS e ao orçamento correspondente, impedindo baixas duplicadas para o mesmo item e orçamento.
-- **RN-EST-005:** Em caso de cancelamento de uma OS após a aprovação do orçamento, peças ainda não instaladas ou consumidas poderão retornar ao estoque disponível mediante estorno.
-- **RN-EST-006:** Peças já instaladas ou consumidas não poderão retornar ao estoque comercializável. Nesses casos, deverão ser registradas como perda operacional ou descarte.
-- **RN-EST-007:** As movimentações originais de saída, os estornos e os registros de perda devem ser preservados para garantir a rastreabilidade do estoque.
-
-### 9.3 Tratamento do estoque em caso de cancelamento
-
-O sistema deverá diferenciar duas situações:
-
-| Condição da peça | Tratamento |
-| --- | --- |
-| Baixada no momento da aprovação, mas ainda não instalada ou consumida | Estornar a movimentação e devolver a quantidade ao estoque disponível. |
-| Já instalada ou consumida | Não devolver ao estoque comercializável; registrar como perda operacional ou descarte. |
-
-A baixa automática na aprovação representa a retirada da quantidade do saldo disponível, mas não confirma, por si só, o consumo físico da peça.
+- deverá ser gerada uma nova versão do orçamento;
+- a versão anterior deverá permanecer registrada;
+- a nova versão deverá estar vinculada à mesma OS;
+- a nova proposta deverá ser submetida à apreciação do cliente;
+- uma nova aceitação deverá iniciar uma nova tentativa de reserva, quando aplicável.
 
 **Status:** 🟢 Definido.
 
 ---
 
-## 10. Financeiro
+## 10. Estoque
 
 ### 10.1 Funcionalidades previstas
 
-- Cálculo do valor total da OS.
-- Registro do pagamento associado à OS.
-- Controle da quitação financeira.
-- Atualização do status da OS após a confirmação do pagamento integral.
+- Cadastro de peças.
+- Consulta de peças e quantidades.
+- Registro de entradas.
+- Controle de quantidade física, reservada e disponível.
+- Solicitação e confirmação de reservas.
+- Registro de consumo e saídas definitivas.
+- Liberação de reservas não utilizadas.
+- Registro de estornos, perdas e descartes.
+- Consulta do histórico de movimentações.
 
-### 10.2 Regras de negócio adotadas
+### 10.2 Conceitos de estoque
 
-- **RN-FIN-001:** O valor total da OS deve considerar serviços, peças e descontos aplicáveis.
-- **RN-FIN-002:** A OS somente poderá assumir o status `CONCLUIDA` após a confirmação da quitação financeira integral.
+| Conceito | Significado |
+|---|---|
+| Estoque físico | Quantidade de peças efetivamente existente na oficina. |
+| Estoque reservado | Quantidade comprometida com OS que possuem reserva confirmada, mas ainda não foi utilizada. |
+| Estoque disponível | Quantidade que pode ser comprometida em novas operações. |
+| Consumo | Utilização efetiva da peça, convertendo a reserva em saída definitiva. |
+| Liberação de reserva | Retorno de uma quantidade reservada à disponibilidade, sem movimentação de entrada física. |
+| Estorno | Movimentação corretiva que reverte uma saída definitiva, quando o item puder retornar ao estoque comercializável. |
+| Perda operacional | Registro de peça que não pode retornar ao estoque comercializável. |
 
-**Status:** 🟢 Definido.
+A quantidade disponível deverá ser calculada considerando a quantidade física e a quantidade reservada:
+
+```text
+Estoque Disponível = Estoque Físico - Estoque Reservado
+```
+
+### 10.3 Regras de negócio
+
+- **RN-EST-001:** Toda peça utilizada em uma OS deve estar previamente cadastrada no Inventory Service.
+- **RN-EST-002:** O sistema deve impedir reservas ou saídas definitivas superiores à quantidade disponível.
+- **RN-EST-003:** Após a aceitação do orçamento pelo cliente, o sistema deverá solicitar a reserva integral das quantidades previstas. A aprovação definitiva dependerá da confirmação da reserva pelo Inventory Service.
+- **RN-EST-004:** As movimentações de estoque devem estar vinculadas ao tenant, à OS e ao orçamento correspondentes, impedindo duplicidade de operações.
+- **RN-EST-005:** Em caso de cancelamento, as peças reservadas e não utilizadas poderão ter suas reservas liberadas, desde que permaneçam em condições de reutilização.
+- **RN-EST-006:** Peças efetivamente instaladas ou consumidas não poderão retornar ao estoque comercializável por meio de liberação de reserva. Devem permanecer registradas como consumo ou saída definitiva.
+- **RN-EST-007:** As movimentações originais, reservas, consumos, liberações, estornos e perdas devem ser preservados para garantir rastreabilidade.
+- **RN-EST-008:** A reserva deverá ser integral e atômica: se qualquer peça estiver indisponível, nenhuma quantidade da solicitação poderá permanecer reservada parcialmente.
+- **RN-EST-009:** O Inventory Service deverá utilizar mecanismos de controle de concorrência para impedir que solicitações simultâneas comprometam a mesma quantidade disponível.
+- **RN-EST-010:** Cada solicitação de reserva deverá possuir identificador único e mecanismo de idempotência, impedindo que reprocessamentos gerem reservas ou movimentações duplicadas.
+- **RN-EST-011:** A confirmação de uso de uma peça deverá converter sua quantidade reservada em saída definitiva, atualizando o estoque físico e o estoque reservado de forma consistente.
+
+### 10.4 Fluxo de reserva
+
+```text
+Cliente aceita o orçamento
+   ↓
+Billing Service registra a aceitação
+   ↓
+Solicita reserva ao Inventory Service
+   ↓
+Inventory Service valida tenant,
+disponibilidade e concorrência
+   ↓
+Todas as peças disponíveis?
+   ├── Não
+   │    ↓
+   │  Não efetivar reserva parcial
+   │    ↓
+   │  Registrar recusa da solicitação
+   │    ↓
+   │  Manter orçamento sem aprovação definitiva
+   │  e bloquear execução
+   │
+   └── Sim
+        ↓
+      Reservar todas as quantidades
+        ↓
+      Confirmar resultado
+        ↓
+      Billing Service aprova definitivamente
+        ↓
+      Work Order Service libera execução
+```
+
+### 10.5 Tratamento de indisponibilidade
+
+Quando a reserva for recusada, a execução deverá permanecer bloqueada.
+
+A oficina poderá:
+
+- aguardar reposição do estoque;
+- alterar o orçamento e as quantidades;
+- substituir peças, quando tecnicamente adequado;
+- solicitar nova autorização do cliente para a proposta alterada;
+- cancelar o atendimento.
+
+Uma nova tentativa deverá utilizar uma solicitação identificável, sem duplicar reservas anteriores.
+
+### 10.6 Utilização e devolução
+
+Durante a execução:
+
+- cada peça ou unidade deverá possuir rastreabilidade de sua condição;
+- peças efetivamente utilizadas deverão ser convertidas em saídas definitivas;
+- peças reservadas e não utilizadas deverão ter suas reservas liberadas;
+- peças danificadas ou sem condição de reutilização deverão gerar registro de perda ou descarte;
+- nenhuma operação poderá estornar ou liberar a mesma quantidade mais de uma vez.
+
+**Status:** 🟢 Definido como referência funcional.
 
 ---
 
-## 11. Histórico de manutenção
+## 11. Financeiro
 
-### 11.1 Informações previstas
+### 11.1 Funcionalidades previstas
 
-O histórico do veículo deverá consolidar as informações das ordens de serviço anteriores, incluindo:
+- Cálculo do valor total da OS.
+- Registro de pagamentos associados à OS.
+- Consulta de pagamentos.
+- Controle do saldo pendente.
+- Atualização da situação financeira.
+
+### 11.2 Regras de negócio
+
+- **RN-FIN-001:** Todo pagamento deve estar associado a uma OS válida e ao tenant correspondente.
+- **RN-FIN-002:** A situação financeira deverá ser controlada independentemente do estado operacional da OS.
+- O sistema deverá distinguir pagamentos pendentes, parciais e quitados.
+- A quitação deverá ocorrer quando o total dos pagamentos válidos corresponder ao valor devido.
+- Registros de pagamento deverão preservar valor, data, forma de pagamento e histórico de alterações.
+- O cancelamento ou estorno financeiro deverá possuir registro próprio e rastreável.
+
+### 11.3 Separação entre financeiro da oficina e assinatura SaaS
+
+Os pagamentos realizados pelos clientes da oficina referem-se às ordens de serviço e pertencem ao domínio do Billing Service.
+
+A cobrança da assinatura do OficinaPro pela utilização da plataforma é uma operação comercial distinta e não deverá ser confundida com os pagamentos das OS.
+
+**Status:** 🟢 Definido como diretriz de domínio.
+
+---
+
+## 12. Histórico de manutenção
+
+### 12.1 Informações previstas
+
+O histórico do veículo deverá consolidar:
 
 - identificadores das OS;
 - datas dos atendimentos;
 - diagnósticos e laudos;
-- orçamentos e decisões do cliente;
+- orçamentos e suas versões;
+- decisões do cliente;
 - serviços realizados;
-- peças utilizadas;
+- peças efetivamente utilizadas;
+- movimentações relevantes de estoque;
 - valores e informações de pagamento;
-- status e encerramento das ordens de serviço.
+- estados operacionais e financeiros.
 
-O histórico deverá permanecer associado ao veículo e disponível para consulta, inclusive após o encerramento ou cancelamento de uma OS.
+### 12.2 Regra de negócio
+
+- **RN-HIS-001:** Os registros históricos não devem ser apagados ou corrompidos por alterações cadastrais secundárias, garantindo rastreabilidade e preservação do histórico do veículo.
+
+O histórico deverá respeitar o tenant responsável pelo registro e as permissões do usuário autenticado.
 
 **Status:** 🟢 Definido.
 
 ---
 
-## 12. Usuários, autenticação e permissões
+## 13. Usuários, autenticação e permissões
 
-### 12.1 Perfis adotados no MVP
+### 13.1 Perfis previstos no MVP
 
 - Atendente.
 - Mecânico.
 - Estoque.
 - Financeiro.
 
-### 12.2 Regras de acesso
+Não está previsto um perfil operacional genérico denominado Administrador da Oficina. As permissões deverão ser distribuídas de acordo com as responsabilidades dos perfis definidos.
 
-- O sistema deverá autenticar os usuários cadastrados.
-- O acesso às funcionalidades deverá respeitar as permissões atribuídas a cada perfil.
+### 13.2 Regras de acesso
+
+- O sistema deverá autenticar os usuários antes de permitir acesso às funcionalidades operacionais.
+- As permissões deverão ser verificadas no backend.
+- O acesso deverá considerar o perfil e o tenant ao qual o usuário está vinculado.
 - Usuários não autorizados não poderão executar ações restritas.
-- As credenciais deverão ser armazenadas utilizando hash seguro.
-
-O controle de acesso será realizado por meio do Auth Service e de permissões baseadas em perfil (RBAC).
+- As senhas deverão ser armazenadas utilizando algoritmo de hash apropriado para senhas.
+- Credenciais, tokens e informações sensíveis não deverão ser registrados em logs.
+- O sistema deverá permitir identificar o usuário responsável por operações relevantes.
 
 **Status:** 🟢 Definido.
 
 ---
 
-## 13. Requisitos não funcionais
+## 14. Requisitos não funcionais
 
-### 13.1 Segurança
+### 14.1 Segurança
 
-- Armazenamento de senhas utilizando hash seguro.
-- Controle de acesso baseado em perfis (RBAC).
-- Validação de entradas e proteção de informações sensíveis.
-- Tratamento adequado de erros, sem exposição de dados sensíveis.
+- Armazenamento de senhas com hash seguro e mecanismo adequado de proteção.
+- Controle de acesso baseado em permissões (RBAC).
+- Isolamento dos dados entre tenants.
+- Validação de entradas e proteção contra operações não autorizadas.
+- Proteção de informações sensíveis.
+- Uso de variáveis de ambiente ou mecanismos seguros de gerenciamento de segredos.
+- Registro de operações relevantes para auditoria, sem exposição de credenciais.
 
-### 13.2 Qualidade e DevOps
+### 14.2 Integridade e confiabilidade
+
+- Transações locais consistentes em cada microsserviço.
+- Controle de concorrência nas operações de reserva de estoque.
+- Idempotência nas solicitações e no consumo de eventos.
+- Uso de Transactional Outbox para assegurar a publicação confiável de eventos relacionados a alterações persistidas.
+- Uso de Inbox ou mecanismo equivalente para evitar processamento duplicado.
+- Tratamento de falhas, retentativas e mensagens não processadas.
+- Ausência de dependências por chaves estrangeiras entre bancos de microsserviços distintos.
+
+### 14.3 Qualidade e DevOps
 
 - Revisão de código por Pull Requests.
 - Testes automatizados.
-- Meta de cobertura de testes de pelo menos 60%, conforme o escopo de medição definido para o projeto.
+- Cobertura mínima de testes de 60% sobre o código-fonte total do projeto, considerando globalmente os microsserviços, conforme o critério acadêmico.
 - Versionamento de banco de dados via migrations.
 - Pipeline de CI/CD configurado no GitHub Actions.
-- Infraestrutura modelada via Terraform e hospedada na AWS.
+- Infraestrutura como Código utilizando Terraform.
+- Implantação em ambiente de nuvem, conforme os requisitos da disciplina.
+- Monitoramento por Prometheus e Grafana.
+- Logs e indicadores que permitam acompanhar a saúde dos serviços.
 
-**Status:** 🟢 Definido como diretriz técnica do projeto.
+### 14.4 Disponibilidade e evolução
 
----
+- Separação de responsabilidades por domínio.
+- Comunicação síncrona por APIs REST quando houver necessidade de resposta imediata.
+- Comunicação assíncrona por RabbitMQ para eventos e processos desacoplados.
+- Possibilidade de evolução independente dos microsserviços.
+- Tratamento de indisponibilidade de dependências externas sem corromper os dados já persistidos.
 
-## 14. Regras de negócio consolidadas
-
-| ID | Regra | Status |
-| --- | --- | --- |
-| RN-CLI-001 | Todo cliente deve possuir CPF válido e único no sistema. | 🟢 |
-| RN-VEI-001 | Todo veículo deve estar associado a um cliente cadastrado. | 🟢 |
-| RN-VEI-002 | A placa deve ser única no sistema. | 🟢 |
-| RN-OS-001 | A OS deve possuir identificador único e estar vinculada a cliente e veículo. | 🟢 |
-| RN-OS-002 | A OS deve respeitar as transições de status permitidas. | 🟢 |
-| RN-OS-003 | Orçamentos recusados podem ser encerrados ou revisados, preservando o histórico. | 🟢 |
-| RN-OS-004 | A OS pode retornar para `AGUARDANDO_APROVACAO` após a elaboração de orçamento revisado. | 🟢 |
-| RN-OS-005 | A execução depende da aprovação formal do orçamento. | 🟢 |
-| RN-DIA-001 | O diagnóstico deve estar associado à OS correspondente. | 🟢 |
-| RN-ORC-001 | O valor total do orçamento deve ser calculado automaticamente. | 🟢 |
-| RN-ORC-002 | A execução e a baixa de peças dependem da aprovação formal do orçamento. | 🟢 |
-| RN-ORC-003 | A recusa permite encerramento ou revisão do orçamento, mantendo o histórico. | 🟢 |
-| RN-EST-001 | As peças devem possuir cadastro e quantidade controlada no inventário. | 🟢 |
-| RN-EST-002 | A aprovação deve ser bloqueada quando não houver quantidade suficiente em estoque. | 🟢 |
-| RN-EST-003 | A baixa automática ocorre na aprovação do orçamento. | 🟢 |
-| RN-EST-004 | As baixas devem ser vinculadas à OS e ao orçamento, sem duplicidade. | 🟢 |
-| RN-EST-005 | Peças não instaladas ou consumidas podem retornar ao estoque mediante estorno. | 🟢 |
-| RN-EST-006 | Peças instaladas ou consumidas não retornam ao estoque comercializável. | 🟢 |
-| RN-EST-007 | As movimentações de estoque devem preservar a rastreabilidade. | 🟢 |
-| RN-FIN-001 | O total da OS considera serviços, peças e descontos. | 🟢 |
-| RN-FIN-002 | A OS somente será concluída após a quitação financeira integral. | 🟢 |
+**Status:** 🟢 Diretrizes técnicas do projeto e requisitos acadêmicos.
 
 ---
 
 ## 15. Funcionalidades fora do escopo inicial do MVP
 
-As funcionalidades abaixo estão planejadas para versões futuras e não devem bloquear a entrega do MVP:
+As funcionalidades abaixo poderão ser desenvolvidas em versões futuras:
 
-- Sistema avançado de notificações externas (SMS e WhatsApp).
-- Relatórios gerenciais e dashboards analíticos avançados.
+- Notificações avançadas por SMS e WhatsApp.
 - Portal completo do cliente.
-- Integração com gateways de pagamento reais, além de eventuais simulações locais.
+- Relatórios gerenciais e dashboards analíticos avançados.
+- Integrações com gateways de pagamento reais.
+- Gestão avançada de assinaturas e planos comerciais.
+- Automação de cobrança recorrente.
+- Mecanismos avançados de escalabilidade e recuperação.
+- Aplicativo móvel dedicado.
+
+**Observação:** o fato de uma funcionalidade estar fora do MVP não elimina a necessidade de considerar sua compatibilidade com a arquitetura SaaS.
 
 **Status:** ⚪ Pós-MVP.
 
@@ -381,63 +530,142 @@ As funcionalidades abaixo estão planejadas para versões futuras e não devem b
 
 ## 16. Arquitetura e decisões técnicas
 
-As tecnologias e ferramentas previstas para o projeto são:
+### 16.1 Tecnologias previstas
 
 - PostgreSQL como banco de dados relacional.
-- Docker Compose para o ambiente local de desenvolvimento.
-- RabbitMQ para mensageria assíncrona entre microsserviços.
-- Arquitetura de microsserviços com NestJS e TypeScript.
-- Frontend em React com Vite.
-- GitHub Actions para integração e entrega contínuas.
-- Terraform para modelagem da infraestrutura.
+- Docker e Docker Compose para ambiente local.
+- RabbitMQ para mensageria assíncrona.
+- NestJS e TypeScript para os serviços de backend.
+- React, TypeScript e Vite para o frontend.
+- GitHub Actions para CI/CD.
+- Terraform para infraestrutura como código.
 - AWS como plataforma de hospedagem.
 
-**Status:** 🟢 Definido como direcionamento técnico do projeto.
+### 16.2 Microsserviços de referência do MVP
+
+O escopo arquitetural funcional do MVP deverá considerar quatro serviços principais:
+
+| Serviço | Responsabilidade |
+|---|---|
+| Auth Service | Autenticação, usuários, tenants, perfis e permissões. |
+| Work Order Service | Clientes, veículos, histórico, ordens de serviço e diagnóstico. |
+| Inventory Service | Cadastro de peças, estoque, reservas, consumo e movimentações. |
+| Billing Service | Orçamentos, decisões, pagamentos e situação financeira. |
+
+O README do projeto também apresenta Notification Service, Reporting Service e Customer Vehicle Service como serviços previstos na evolução da arquitetura.
+
+Para evitar divergência documental, esses serviços adicionais deverão ser identificados como decomposição ou evolução futura, caso não façam parte da implantação dos quatro serviços principais do MVP.
+
+### 16.3 Estratégia de dados
+
+- Cada microsserviço deverá ser responsável pelos próprios dados.
+- Será adotada a diretriz Database-per-Service.
+- Os bancos poderão compartilhar a mesma infraestrutura física no MVP, mantendo separação lógica por serviço.
+- Não deverão existir chaves estrangeiras físicas entre bancos de microsserviços diferentes.
+- Referências entre serviços deverão ser validadas por contratos de API ou eventos.
+- Os registros operacionais deverão possuir `tenant_id`.
+
+### 16.4 Comunicação e eventos
+
+RabbitMQ será utilizado para comunicação assíncrona entre serviços.
+
+O fluxo de reserva deverá considerar, no mínimo, os eventos:
+
+- `RESERVA_SOLICITADA`;
+- `RESERVA_CONFIRMADA`;
+- `RESERVA_RECUSADA`;
+- `ORCAMENTO_APROVADO`;
+- eventos de consumo, liberação ou estorno de estoque, conforme os contratos definidos.
+
+Os eventos deverão conter identificadores de correlação e o contexto do tenant, além dos dados necessários ao processamento.
+
+### 16.5 Confiabilidade
+
+As operações que alteram o estado do banco e precisam publicar eventos deverão utilizar o padrão Transactional Outbox.
+
+Os consumidores deverão possuir mecanismos de idempotência, tratamento de duplicidade e recuperação de falhas.
+
+O processamento de reserva deverá ocorrer em uma transação local no Inventory Service, sem depender de transações distribuídas entre serviços.
+
+**Status:** 🟢 Diretrizes técnicas de referência do MVP.
 
 ---
 
-## 17. Dúvidas para os encontros com o professor
+## 17. Integração com API externa
 
-### Encontro 01 — Validação acadêmica e técnica
+A disciplina exige uma integração com serviço externo relevante ao negócio.
 
-- [ ] O nível de microsserviços e mensageria adotado atende às expectativas da disciplina?
-- [ ] A meta de cobertura de testes de pelo menos 60% está alinhada ao rigor acadêmico esperado?
-- [ ] A divisão das funcionalidades entre os microsserviços está adequada ao escopo do MVP?
+A integração deverá:
 
-**Status:** 🔵 Validar com o professor.
+- possuir finalidade funcional claramente documentada;
+- ser consumida pelo backend, quando envolver credenciais ou regras de negócio;
+- possuir tratamento de indisponibilidade e erros;
+- validar os dados retornados antes de persistir informações;
+- evitar dependência que impeça o funcionamento das funcionalidades essenciais.
 
----
+**Definição da API e funcionalidade correspondente:** 🔴 Pendente de formalização.
 
-## 18. Backlog de decisões
-
-| ID | Decisão | Status | Responsável | Observação |
-| --- | --- | --- | --- | --- |
-| DEC-001 | Obrigatoriedade e unicidade do CPF. | 🟢 | Grupo | Definido. |
-| DEC-002 | Inativação lógica de clientes com histórico. | 🟢 | Grupo | Definido. |
-| DEC-003 | Associação do histórico de manutenção ao veículo. | 🟢 | Grupo | Definido. |
-| DEC-004 | Placa única para identificação do veículo. | 🟢 | Grupo | Definido. |
-| DEC-005 | Tratamento de orçamento recusado, com possibilidade de revisão ou encerramento. | 🟢 | Grupo | Definido. |
-| DEC-006 | Baixa automática de estoque no momento da aprovação do orçamento. | 🟢 | Grupo | Definido. |
-| DEC-007 | Estorno de peças não instaladas ou consumidas após cancelamento. | 🟢 | Grupo | Definido. |
-| DEC-008 | Registro de perda ou descarte para peças já instaladas ou consumidas. | 🟢 | Grupo | Definido. |
-| DEC-009 | Perfis de acesso do MVP: Atendente, Mecânico, Estoque e Financeiro. | 🟢 | Grupo | Definido. |
+A escolha da API deverá considerar utilidade real para a oficina e viabilidade de implementação no MVP. Não deverá ser registrada como concluída antes de sua definição e integração comprovada.
 
 ---
 
-## 19. Histórico de alterações deste documento
+## 18. Dúvidas e pontos para validação acadêmica
+
+Os pontos abaixo deverão ser levados ao professor quando não estiverem esclarecidos pelos documentos oficiais da disciplina:
+
+- [ ] A organização dos quatro serviços principais do MVP e a evolução futura dos demais serviços está adequada?
+- [ ] A integração externa escolhida atende ao critério acadêmico de relevância?
+- [ ] A estratégia de demonstração da cobertura global de testes está adequada ao critério de 60%?
+- [ ] A documentação de arquitetura e os diagramas atendem ao nível de detalhamento esperado?
+
+**Status:** 🔵 Validar com o professor, quando necessário.
+
+---
+
+## 19. Backlog de decisões
+
+| ID | Decisão | Status | Observação |
+|---|---|---|---|
+| DEC-001 | Obrigatoriedade e unicidade do CPF por oficina. | 🟢 | Definido. |
+| DEC-002 | Inativação lógica de clientes com histórico. | 🟢 | Definido. |
+| DEC-003 | Associação do histórico de manutenção ao veículo. | 🟢 | Definido. |
+| DEC-004 | Placa única por oficina para identificação do veículo. | 🟢 | Definido. |
+| DEC-005 | Tratamento de orçamento recusado, com possibilidade de revisão ou encerramento. | 🟢 | Definido. |
+| DEC-006 | Reserva integral após aceitação do cliente, com aprovação definitiva condicionada à confirmação da reserva. | 🟢 | Referência funcional validada. |
+| DEC-007 | Liberação de reservas de peças não utilizadas, quando estiverem em condições de reutilização. | 🟢 | Definido. |
+| DEC-008 | Registro de consumo, perda ou descarte de peças efetivamente utilizadas ou sem condição de reutilização. | 🟢 | Definido. |
+| DEC-009 | Perfis de acesso do MVP: Atendente, Mecânico, Estoque e Financeiro. | 🟢 | Definido. |
+| DEC-010 | Isolamento lógico dos dados por tenant. | 🟢 | Diretriz de segurança do SaaS. |
+| DEC-011 | Separação entre estado operacional da OS e situação financeira. | 🟢 | Referência de domínio. |
+| DEC-012 | Quatro microsserviços principais no escopo arquitetural do MVP. | 🟢 | Os serviços adicionais permanecem como evolução prevista. |
+
+---
+
+## 20. Histórico de alterações deste documento
 
 | Data | Alteração | Responsável |
-| --- | --- | --- |
+|---|---|---|
 | 26/09/2026 | Criação inicial do backlog de requisitos. | Eloísa Brandão |
 | 27/10/2026 | Atualização do escopo do MVP e consolidação de regras de negócio e decisões técnicas. | Eloísa Brandão |
-| 12/11/2026 | Revisão do fluxo operacional, padronização dos perfis, atualização das regras de orçamento e detalhamento da baixa, do estorno e do tratamento de peças consumidas ou instaladas. | Eloísa Brandão |
+| 12/11/2026 | Revisão do fluxo operacional, padronização dos perfis e detalhamento do estoque. | Eloísa Brandão |
+| 16/11/2026 | Revisão da reserva integral de estoque, separação entre consumo e reserva, estados operacionais e financeiros, isolamento multi-tenant e diretrizes de confiabilidade do SaaS. | Eloísa Brandão |
 
 ---
 
-## Observação
+## Observação final
 
-Este documento não substitui, por si só, a documentação acadêmica oficial do TCC.
+Este documento é a base viva de requisitos e decisões do OficinaPro. Ele não substitui os entregáveis acadêmicos formais exigidos pela disciplina.
 
-Seu objetivo é servir como **documento vivo de trabalho do desenvolvimento**, permitindo que o grupo acompanhe as decisões, as pendências e a evolução dos requisitos do OficinaPro.
+Os requisitos aqui registrados deverão ser rastreáveis nas Histórias de Usuário, nos Fluxos, nas Regras de Negócio, nos Critérios de Aceite, no Glossário, no MVP e nos documentos de arquitetura.
 
-As decisões registradas como definidas representam o entendimento consolidado no documento e devem permanecer alinhadas às demais documentações do projeto, especialmente às Regras de Negócio, às Histórias de Usuário e aos Critérios de Aceite.
+A documentação deverá distinguir claramente:
+
+- decisões funcionais adotadas;
+- diretrizes técnicas;
+- requisitos acadêmicos;
+- funcionalidades do MVP;
+- funcionalidades futuras;
+- integrações ainda não definidas;
+- implementação efetivamente comprovada.
+
+A existência de uma diretriz neste documento não significa que sua implementação já tenha sido concluída ou validada por testes.
