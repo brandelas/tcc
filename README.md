@@ -1,540 +1,344 @@
 # OficinaPro
 
-Sistema de gestão operacional para oficinas mecânicas, desenvolvido pelo grupo **GarageOps** como parte do Projeto Experimental do curso de Análise e Desenvolvimento de Sistemas da UniFAAT.
-
-Este repositório é destinado ao desenvolvimento técnico do sistema: código-fonte, ambiente local, banco de dados, infraestrutura, testes automatizados, pipelines e configurações de execução.
-
-A documentação acadêmica oficial do TCC fica no fork do repositório institucional do professor.
-
----
-
-## Visão Geral
-
-O **OficinaPro** tem como objetivo centralizar o fluxo operacional de oficinas mecânicas de pequeno e médio porte.
-
-O sistema cobre o processo desde a chegada do cliente até o fechamento financeiro da ordem de serviço:
-
-1. cadastro do cliente;
-2. cadastro do veículo;
-3. abertura da ordem de serviço;
-4. registro de diagnóstico;
-5. criação e aprovação de orçamento;
-6. execução do serviço;
-7. baixa de peças no estoque;
-8. fechamento financeiro;
-9. registro de pagamento;
-10. histórico de manutenção do veículo.
-
-A proposta do sistema não é criar apenas cadastros isolados. O foco é representar um fluxo real de oficina, com regras de negócio, rastreabilidade, consistência de dados, integração externa e ambiente preparado para evolução em microsserviços.
+**Grupo:** GarageOps  
+**Curso:** Análise e Desenvolvimento de Sistemas — UniFAAT  
+**Projeto Experimental:** 2027/1  
+**Status:** Documentação técnica em elaboração e revisão; implementação do MVP a desenvolver.
 
 ---
 
-## Grupo GarageOps
+## 1. Visão Geral
 
-| Integrante | Responsabilidade Principal |
-|---|---|
-| Heloisa | Product Owner e Analista de Requisitos |
-| Thiago | Desenvolvedor Backend e Integrações |
-| Matheus | Desenvolvedor Frontend e UX |
-| Gabriel | DevOps, Banco de Dados e Qualidade |
+O **OficinaPro** é uma plataforma SaaS de gestão operacional destinada a oficinas mecânicas de pequeno e médio porte.
 
----
+O sistema tem como objetivo centralizar e organizar o fluxo de atendimento das oficinas, desde o cadastro de clientes e veículos até a abertura da Ordem de Serviço (OS), diagnóstico, elaboração de orçamento, aprovação, execução dos serviços, controle de estoque, pagamentos e histórico de manutenção.
 
-## Escopo Técnico do Repositório
+A proposta busca reduzir problemas comuns em oficinas que utilizam papel, planilhas, mensagens avulsas e controles separados, como perda de informações, inconsistências financeiras, falta de rastreabilidade e descontrole de peças.
 
-Este repositório deve conter:
+O diferencial técnico do projeto está na implementação de regras de negócio integradas, arquitetura baseada em microsserviços, isolamento de dados por oficina, comunicação assíncrona, infraestrutura como código, testes automatizados e monitoramento.
 
-- código-fonte do backend;
-- código-fonte do frontend;
-- scripts e migrations de banco de dados;
-- configuração de ambiente local;
-- arquivos Docker;
-- configurações de mensageria;
-- testes automatizados;
-- pipelines de CI/CD;
-- infraestrutura como código;
-- documentação técnica de execução.
+## 2. Integrantes
 
-Este repositório não substitui os documentos acadêmicos obrigatórios. Alterações nos documentos oficiais devem ser feitas no repositório de documentação.
+| # | Nome Completo | RA | Papel Principal |
+|---|---|---|---|
+| 1 | Gabriel Carneiro da Silva | 6325300 | A definir pelo grupo |
+| 2 | Thiago Marques Bueno | 6325304 | A definir pelo grupo |
+| 3 | Matheus Gabriel Correa Braga Viana | 6325053 | A definir pelo grupo |
+| 4 | Eloisa do Santos Brandão | 2325096 | A definir pelo grupo |
 
----
+A distribuição de papéis e responsabilidades será formalizada pelo grupo no planejamento de sprints.
 
-## Arquitetura Planejada
+## 3. Escopo do Projeto
 
-O OficinaPro será estruturado em microsserviços, separando responsabilidades por domínio de negócio.
+O OficinaPro será desenvolvido para atender às principais necessidades operacionais de uma oficina mecânica.
+
+### Funcionalidades centrais
+
+- Gestão de oficinas e isolamento de dados por tenant.
+- Cadastro e consulta de clientes.
+- Cadastro e consulta de veículos.
+- Abertura e acompanhamento de ordens de serviço.
+- Registro de diagnósticos.
+- Elaboração, revisão e decisão de orçamentos.
+- Reserva integral de peças.
+- Controle de estoque físico, reservado e disponível.
+- Registro de consumo, liberação e perdas de peças.
+- Registro de pagamentos e acompanhamento da situação financeira.
+- Histórico de manutenção por veículo.
+- Autenticação e controle de permissões por perfil.
+
+### Funcionalidades previstas para evolução
+
+Notificações avançadas, relatórios gerenciais, dashboards analíticos e gestão de assinaturas SaaS poderão ser desenvolvidos em etapas posteriores, conforme priorização do grupo.
+
+## 4. Arquitetura Planejada
+
+O projeto utilizará arquitetura de microsserviços, com responsabilidades separadas por domínio de negócio.
+
+Para o MVP, estão previstos quatro serviços principais:
 
 | Serviço | Responsabilidade |
 |---|---|
-| Auth Service | Autenticação, usuários, perfis e permissões |
-| Customer Vehicle Service | Clientes, veículos e histórico de manutenção |
-| Work Order Service | Ordens de serviço, diagnóstico, orçamento, aprovação e execução |
-| Inventory Service | Peças, estoque, movimentações e alertas de reposição |
-| Billing Service | Fechamento financeiro, pagamentos e status financeiro |
-| Notification Service | Notificações relacionadas a orçamento, conclusão e cobrança |
-| Reporting Service | Indicadores operacionais e relatórios gerenciais |
+| **Auth Service** | Autenticação, usuários, tenants, perfis e permissões. |
+| **Work Order Service** | Clientes, veículos, ordens de serviço, diagnósticos e informações operacionais. |
+| **Inventory Service** | Peças, saldos de estoque, reservas, movimentações, consumo e perdas. |
+| **Billing Service** | Orçamentos, itens de orçamento, decisões, pagamentos e situação financeira. |
 
-A separação em serviços será evoluída de forma incremental. No início, o foco é validar o domínio, a modelagem, o ambiente local e o fluxo principal do MVP.
+Os limites dos serviços poderão ser revisados pelo grupo conforme a evolução do projeto, mantendo a propriedade dos dados e a separação das responsabilidades.
 
----
+### 4.1 Comunicação entre serviços
 
-## Fluxo Principal do Sistema
+A estratégia planejada combina:
+
+- **REST/JSON:** comunicação síncrona para consultas e operações que necessitam de resposta imediata.
+- **RabbitMQ/AMQP:** comunicação assíncrona para eventos e integração entre serviços.
+
+Para confiabilidade, estão previstos mecanismos como:
+
+- Transactional Outbox;
+- Inbox ou mecanismo equivalente de deduplicação;
+- Chaves de idempotência;
+- Retentativas controladas;
+- Dead Letter Queue (DLQ);
+- Identificadores de correlação e rastreabilidade.
+
+### 4.2 Banco de dados
+
+O banco de dados escolhido é o **PostgreSQL**, devido às necessidades transacionais e relacionais do sistema.
+
+A arquitetura prevê a estratégia **Database-per-Service**, na qual cada microsserviço é responsável exclusivamente por seus próprios dados.
+
+Para o MVP, está sendo considerada a utilização de bancos lógicos separados em uma mesma instância gerenciada, sujeita à validação técnica e acadêmica. Não serão utilizadas chaves estrangeiras físicas entre bancos pertencentes a microsserviços diferentes.
+
+## 5. Fluxo Principal do Sistema
+
+O fluxo operacional principal foi definido da seguinte maneira:
 
 ```text
-Cliente chega na oficina
-        ↓
-Atendente cadastra cliente e veículo
-        ↓
-Atendente abre uma ordem de serviço
-        ↓
-Mecânico registra diagnóstico
-        ↓
-Sistema gera orçamento
-        ↓
-Cliente aprova ou recusa o orçamento
-        ↓
-Se aprovado, serviço é executado
-        ↓
-Peças utilizadas baixam do estoque
-        ↓
-Ordem de serviço é concluída
-        ↓
-Financeiro registra pagamento
-        ↓
-Histórico do veículo é atualizado
+Cliente
+   ↓
+Cadastro ou consulta do cliente e veículo
+   ↓
+Abertura da Ordem de Serviço
+   ↓
+Diagnóstico
+   ↓
+Elaboração do orçamento
+   ↓
+Decisão do cliente
+   ├── Recusa
+   │     ↓
+   │   Encerramento ou revisão do orçamento
+   │
+   └── Aceitação
+         ↓
+       Solicitação de reserva das peças
+         ↓
+       Inventory verifica a disponibilidade integral
+         ├── Reserva recusada
+         │     ↓
+         │   Execução bloqueada
+         │
+         └── Reserva confirmada
+               ↓
+             Aprovação operacional
+               ↓
+             Execução do serviço
+               ↓
+             Consumo definitivo das peças utilizadas
+               ↓
+             Liberação das reservas não utilizadas
+               ↓
+             Conclusão operacional da OS
+               ↓
+             Atualização do histórico do veículo
+               ↓
+             Acompanhamento financeiro e pagamentos
 ```
 
----
+### 5.1 Regras fundamentais do fluxo
 
-## Tecnologias Planejadas
+- A aceitação do orçamento pelo cliente não representa, sozinha, a aprovação operacional definitiva.
+- A execução depende da confirmação da reserva integral das peças necessárias.
+- A reserva não representa consumo definitivo nem reduz imediatamente a quantidade física do estoque.
+- A saída definitiva ocorre quando a peça é efetivamente utilizada.
+- Peças reservadas e não utilizadas podem ter sua reserva liberada.
+- Peças perdidas ou inutilizadas devem ser registradas como perda ou descarte.
+- A situação operacional da OS é independente da situação financeira.
+
+### 5.2 Estados operacionais e financeiros
+
+Estados operacionais previstos para a OS:
+
+- `ABERTA`
+- `EM_DIAGNOSTICO`
+- `AGUARDANDO_APROVACAO`
+- `AGUARDANDO_RESERVA`
+- `EM_EXECUCAO`
+- `CONCLUIDA`
+- `CANCELADA`
+
+Estados financeiros previstos:
+
+- `PENDENTE`
+- `PARCIAL`
+- `QUITADA`
+
+As decisões `APROVADA` e `RECUSADA` pertencem ao orçamento, e não representam estados operacionais da OS.
+
+## 6. Tecnologias Planejadas
 
 | Área | Tecnologia |
 |---|---|
-| Backend | Node.js, TypeScript, NestJS |
-| Frontend | React, TypeScript, Vite |
-| Banco de Dados | PostgreSQL |
+| Backend | Node.js, TypeScript e NestJS |
+| Frontend | React, TypeScript e Vite |
+| Banco de dados | PostgreSQL |
 | Mensageria | RabbitMQ |
-| Containers | Docker, Docker Compose |
-| Testes Backend | Jest, Supertest |
-| Testes Frontend | React Testing Library |
+| Containers | Docker e Docker Compose |
+| Testes backend | Jest e Supertest |
+| Testes frontend | React Testing Library |
 | CI/CD | GitHub Actions |
-| Infraestrutura | Terraform |
+| Infraestrutura como código | Terraform |
 | Cloud | AWS |
-| Monitoramento | Prometheus, Grafana |
+| Monitoramento | Prometheus e Grafana |
 
----
+As tecnologias representam a arquitetura planejada. Sua implementação e validação prática deverão ser registradas conforme o desenvolvimento avançar.
 
-## Decisão de Banco de Dados
+## 7. Integração Externa
 
-O banco principal escolhido para o OficinaPro é o **PostgreSQL**.
+O Termo de Requisitos e Aceite do Projeto Experimental exige pelo menos uma API externa relevante ao domínio do sistema.
 
-A escolha foi feita porque o sistema possui um núcleo transacional forte, com dados altamente relacionados e regras que exigem consistência.
+As alternativas inicialmente consideradas são:
 
-Exemplos:
-
-- uma ordem de serviço precisa estar vinculada a um cliente e a um veículo;
-- um orçamento precisa estar vinculado a uma ordem de serviço;
-- uma peça utilizada precisa existir no estoque;
-- a baixa de estoque precisa ocorrer de forma consistente;
-- um pagamento precisa estar vinculado a uma ordem de serviço;
-- o histórico de manutenção do veículo não pode ficar inconsistente;
-- o fechamento financeiro depende da soma correta de serviços, peças, descontos e pagamentos.
-
-Por esses motivos, o PostgreSQL é mais adequado para o núcleo principal do sistema do que uma solução NoSQL. O modelo relacional oferece integridade referencial, transações ACID, constraints, relacionamentos, índices e consultas estruturadas.
-
-Soluções NoSQL podem ser úteis em cenários de grande volume documental, dados pouco estruturados ou leitura altamente distribuída, mas não são a melhor escolha para o núcleo operacional e financeiro do OficinaPro.
-
----
-
-## Ambiente Local
-
-O ambiente local deve ser padronizado com Docker Compose para garantir que todos os integrantes trabalhem com a mesma configuração.
-
-Serviços previstos no ambiente local:
-
-| Serviço | Finalidade |
+| API | Finalidade |
 |---|---|
-| PostgreSQL | Banco de dados principal |
-| Adminer | Interface web para acesso ao banco |
-| RabbitMQ | Mensageria entre serviços |
-| RabbitMQ Management | Interface web para visualizar filas e mensagens |
+| FIPE | Consulta de informações e valores de referência de veículos. |
+| ViaCEP | Consulta de endereço a partir do CEP, auxiliando o cadastro de clientes. |
 
----
+**Status:** escolha pendente de formalização pelo grupo e validação da integração.
 
-## Pré-requisitos
+A documentação não considera essas integrações implementadas até que existam código, testes e evidências de funcionamento.
 
-Antes de rodar o projeto, instale:
+## 8. Documentação do Projeto
 
-- Git;
-- Docker Desktop;
-- Node.js LTS;
-- npm ou pnpm;
-- VS Code ou IDE equivalente.
+A documentação está organizada em duas áreas.
 
-Verifique as instalações:
+### 8.1 Documentos técnicos obrigatórios
 
-```bash
-git --version
-docker --version
-docker compose version
-node --version
-npm --version
-```
+Localização: `docs/arquitetura/`
 
----
+| Arquivo | Documento |
+|---|---|
+| [01-solicitacao-do-sistema.md](docs/arquitetura/01-solicitacao-do-sistema.md) | Solicitação do Sistema |
+| [02-requisitos-funcionais-nao-funcionais.md](docs/arquitetura/02-requisitos-funcionais-nao-funcionais.md) | Requisitos Funcionais e Não Funcionais |
+| [03-diagrama-fluxo-de-dados.md](docs/arquitetura/03-diagrama-fluxo-de-dados.md) | Diagrama de Fluxo de Dados |
+| [04-modelo-entidade-relacionamento.md](docs/arquitetura/04-modelo-entidade-relacionamento.md) | Modelo Entidade-Relacionamento |
+| [05-arquitetura-nuvem.md](docs/arquitetura/05-arquitetura-nuvem.md) | Desenho de Arquitetura em Nuvem |
+| [06-c4-model.md](docs/arquitetura/06-c4-model.md) | C4 Model |
+| [07-registro-decisoes-arquitetonicas-adr.md](docs/arquitetura/07-registro-decisoes-arquitetonicas-adr.md) | Registro de Decisões Arquitetônicas |
+| [08-planejamento-sprints-tarefas.md](docs/arquitetura/08-planejamento-sprints-tarefas.md) | Planejamento de Sprints e Tarefas |
 
-## Configuração Inicial
+### 8.2 Documentação complementar
 
-Clone o repositório:
+Localização: `docs/requisitos/`
 
-```bash
-git clone URL_DO_REPOSITORIO
-cd NOME_DO_REPOSITORIO
-```
+| Arquivo | Finalidade |
+|---|---|
+| [backlog-requisitos.md](docs/requisitos/backlog-requisitos.md) | Organização dos requisitos e funcionalidades. |
+| [criterios-aceite.md](docs/requisitos/criterios-aceite.md) | Critérios verificáveis para validação das funcionalidades. |
+| [duvidas-professor.md](docs/requisitos/duvidas-professor.md) | Questões pendentes de orientação acadêmica. |
+| [fluxos.md](docs/requisitos/fluxos.md) | Detalhamento dos fluxos de negócio. |
+| [glossario.md](docs/requisitos/glossario.md) | Definições dos termos utilizados no projeto. |
+| [historias-usuario.md](docs/requisitos/historias-usuario.md) | Histórias de usuário e critérios de aceite. |
+| [mvp.md](docs/requisitos/mvp.md) | Escopo funcional e técnico do MVP. |
+| [regras-negocio.md](docs/requisitos/regras-negocio.md) | Regras que orientam o comportamento do sistema. |
 
-Crie o arquivo de ambiente local:
+Os documentos complementares apoiam a especificação e a rastreabilidade do projeto. Eles não substituem os oito documentos técnicos exigidos pelo professor.
 
-```bash
-cp .env.example .env
-```
+## 9. Requisitos Acadêmicos e Qualidade
 
-No Windows PowerShell:
+Conforme o Termo de Requisitos e Aceite do Projeto Experimental, o desenvolvimento deverá contemplar:
 
-```powershell
-Copy-Item .env.example .env
-```
+- Arquitetura baseada em microsserviços.
+- Pelo menos uma API externa relevante integrada.
+- Aplicação implantada em provedor de nuvem de grande porte.
+- Infraestrutura provisionada por Terraform.
+- CI/CD com GitHub Actions, incluindo automação de build e deploy dos microsserviços.
+- Testes automatizados unitários ou de integração.
+- Cobertura mínima global de 60% sobre o código-fonte dos microsserviços.
+- Prometheus para coleta de métricas.
+- Grafana para dashboards e acompanhamento operacional.
+- Docker e Docker Compose para ambiente local e contingência de demonstração.
 
-Suba os containers:
+A stack de monitoramento deverá estar funcional e acessível no momento da defesa.
 
-```bash
-docker compose up -d
-```
+## 10. Organização do Repositório de Trabalho
 
-Verifique se os serviços estão ativos:
-
-```bash
-docker compose ps
-```
-
----
-
-## Serviços Locais
-
-| Serviço | Endereço | Usuário | Senha |
-|---|---|---|---|
-| PostgreSQL | localhost:5432 | oficinapro | definida no `.env` |
-| Adminer | http://localhost:8080 | oficinapro | definida no `.env` |
-| RabbitMQ | localhost:5672 | garageops | definida no `.env` |
-| RabbitMQ Management | http://localhost:15672 | garageops | definida no `.env` |
-
----
-
-## Acesso ao Banco pelo Adminer
-
-Acesse:
-
-```text
-http://localhost:8080
-```
-
-Use os seguintes dados:
-
-```text
-Sistema: PostgreSQL
-Servidor: postgres
-Usuário: oficinapro
-Senha: definida no arquivo .env
-Banco de dados: oficinapro
-```
-
-Observação: no Adminer, o servidor deve ser `postgres`, pois esse é o nome do serviço dentro da rede do Docker Compose. Para acessar o banco diretamente pela máquina local, use `localhost`.
-
----
-
-## Comandos Úteis
-
-Subir o ambiente:
-
-```bash
-docker compose up -d
-```
-
-Parar o ambiente:
-
-```bash
-docker compose down
-```
-
-Listar containers:
-
-```bash
-docker compose ps
-```
-
-Ver logs do PostgreSQL:
-
-```bash
-docker compose logs postgres
-```
-
-Ver logs do RabbitMQ:
-
-```bash
-docker compose logs rabbitmq
-```
-
-Reiniciar os serviços:
-
-```bash
-docker compose restart
-```
-
-Apagar volumes locais e recriar o ambiente:
-
-```bash
-docker compose down -v
-docker compose up -d
-```
-
-Use `docker compose down -v` com cuidado, pois ele apaga os dados locais do banco.
-
----
-
-## Estrutura Planejada do Repositório
+A estrutura atual de documentação está organizada da seguinte maneira:
 
 ```text
 .
-├── backend/
-│   ├── auth-service/
-│   ├── customer-vehicle-service/
-│   ├── work-order-service/
-│   ├── inventory-service/
-│   ├── billing-service/
-│   └── notification-service/
-├── frontend/
-├── database/
-│   ├── migrations/
-│   ├── seeds/
-│   └── init.sql
-├── infra/
-│   ├── terraform/
-│   └── monitoring/
-├── docs/
-├── docker-compose.yml
-├── .env.example
-└── README.md
+├── README.md
+└── docs/
+    ├── arquitetura/
+    │   ├── 01-solicitacao-do-sistema.md
+    │   ├── 02-requisitos-funcionais-nao-funcionais.md
+    │   ├── 03-diagrama-fluxo-de-dados.md
+    │   ├── 04-modelo-entidade-relacionamento.md
+    │   ├── 05-arquitetura-nuvem.md
+    │   ├── 06-c4-model.md
+    │   ├── 07-registro-decisoes-arquitetonicas-adr.md
+    │   └── 08-planejamento-sprints-tarefas.md
+    └── requisitos/
+        ├── backlog-requisitos.md
+        ├── criterios-aceite.md
+        ├── duvidas-professor.md
+        ├── fluxos.md
+        ├── glossario.md
+        ├── historias-usuario.md
+        ├── mvp.md
+        └── regras-negocio.md
 ```
 
-A estrutura pode evoluir conforme o projeto amadurecer, mas alterações relevantes devem ser discutidas pelo grupo antes de serem aplicadas.
+### 10.1 Estrutura exigida no repositório oficial do professor
 
----
+Para a submissão no repositório oficial `UniFAAT-projeto-experimental-2027-1`, o grupo deverá organizar os entregáveis na pasta `GarageOps/`, conforme as instruções do README oficial.
 
-## Padrão de Branches
-
-A branch principal deve permanecer estável.
-
-Padrão recomendado:
+A estrutura de submissão deverá conter o README do grupo e os oito documentos numerados diretamente dentro da pasta:
 
 ```text
-main
-develop
-feature/nome-da-tarefa
-fix/nome-do-ajuste
-docs/nome-da-documentacao
+GarageOps/
+├── README.md
+├── 01-solicitacao-do-sistema.md
+├── 02-requisitos-funcionais-nao-funcionais.md
+├── 03-diagrama-fluxo-de-dados.md
+├── 04-modelo-entidade-relacionamento.md
+├── 05-arquitetura-nuvem.md
+├── 06-c4-model.md
+├── 07-registro-decisoes-arquitetonicas-adr.md
+└── 08-planejamento-sprints-tarefas.md
 ```
 
-Exemplos:
+Os documentos complementares poderão permanecer organizados em `docs/requisitos/` no repositório de trabalho e ser incluídos na pasta oficial caso o grupo considere adequado ou o professor solicite.
 
-```text
-feature/docker-compose
-feature/modelagem-banco
-feature/auth-service
-feature/work-order-service
-feature/frontend-login
-fix/correcao-env
-docs/atualiza-readme
-```
+**Importante:** o README da raiz do repositório oficial do professor, o termo de aceite e os templates originais não devem ser alterados. As Pull Requests para o repositório oficial devem modificar somente a pasta `GarageOps/`.
 
----
+## 11. Status Atual do Projeto
 
-## Fluxo de Trabalho
+<badge color="success">Documentação numerada elaborada</badge>
 
-1. Atualizar a branch local:
-
-```bash
-git pull origin develop
-```
-
-2. Criar uma branch para a tarefa:
-
-```bash
-git checkout -b feature/nome-da-tarefa
-```
-
-3. Fazer as alterações.
-
-4. Verificar os arquivos modificados:
-
-```bash
-git status
-```
-
-5. Criar commit com mensagem objetiva:
-
-```bash
-git add .
-git commit -m "Adiciona configuração inicial do Docker Compose"
-```
-
-6. Enviar a branch:
-
-```bash
-git push origin feature/nome-da-tarefa
-```
-
-7. Abrir Pull Request para revisão do grupo.
-
----
-
-## Padrão de Commits
-
-Use mensagens claras e no presente.
-
-Exemplos:
-
-```text
-Adiciona configuração inicial do Docker Compose
-Cria estrutura inicial de migrations
-Implementa autenticação com JWT
-Corrige conexão com PostgreSQL
-Atualiza documentação de setup local
-```
-
-Evite mensagens vagas como:
-
-```text
-ajustes
-update
-arrumando coisas
-teste
-```
-
----
-
-## Qualidade
-
-O projeto deve manter os seguintes critérios:
-
-- código revisado via Pull Request;
-- ambiente local documentado;
-- banco de dados versionado por migrations;
-- testes automatizados para regras de negócio;
-- cobertura mínima de 60%;
-- pipeline de CI com build e testes;
-- padronização de código;
-- logs e métricas para monitoramento;
-- documentação atualizada junto com mudanças relevantes.
-
----
-
-## Testes
-
-A estratégia de testes será definida por camada:
-
-| Camada | Tipo de Teste |
+| Frente | Situação |
 |---|---|
-| Backend | Testes unitários e de integração |
-| Frontend | Testes de componentes e fluxos principais |
-| Banco de Dados | Validação de migrations e integridade |
-| Integrações | Testes com mocks ou ambiente sandbox |
-| Pipeline | Execução automatizada em Pull Requests |
+| Oito documentos técnicos | Arquivos criados e em revisão. |
+| Documentação complementar | Arquivos criados e em revisão. |
+| Arquitetura de microsserviços | Proposta documentada. |
+| Modelo de dados | Proposta documentada. |
+| Fluxo de reserva de estoque | Regras consolidadas na documentação. |
+| API externa | Escolha e integração pendentes. |
+| Distribuição de responsabilidades | Pendente de definição pelo grupo. |
+| Estimativa de custos AWS | Pendente de dimensionamento. |
+| Ambiente Docker Compose | Configuração a implementar e validar. |
+| Backend e frontend | Implementação a desenvolver. |
+| Infraestrutura Terraform | Implementação e validação pendentes. |
+| CI/CD | Configuração pendente. |
+| Testes automatizados | Implementação e medição pendentes. |
+| Prometheus e Grafana | Configuração pendente. |
+| Pasta oficial `GarageOps/` | Organização e submissão no repositório do professor pendentes. |
 
-Regras críticas devem ter prioridade nos testes:
+A existência de documentação arquitetural não representa comprovação de que os serviços, recursos de nuvem ou funcionalidades já estejam implementados.
 
-- autenticação e autorização;
-- abertura de ordem de serviço;
-- aprovação de orçamento;
-- baixa de estoque;
-- bloqueio de uso de peça sem estoque;
-- cálculo de fechamento financeiro;
-- registro de pagamento.
+## 12. Próximas Atividades
 
----
-
-## Variáveis de Ambiente
-
-As variáveis devem ficar no arquivo `.env`, criado localmente a partir do `.env.example`.
-
-O arquivo `.env` não deve ser versionado.
-
-Exemplo de variáveis esperadas:
-
-```env
-POSTGRES_DB=oficinapro
-POSTGRES_USER=oficinapro
-POSTGRES_PASSWORD=oficinapro123
-POSTGRES_PORT=5432
-
-DATABASE_URL=postgresql://oficinapro:oficinapro123@localhost:5432/oficinapro
-
-RABBITMQ_USER=garageops
-RABBITMQ_PASSWORD=garageops123
-RABBITMQ_PORT=5672
-RABBITMQ_MANAGEMENT_PORT=15672
-```
+1. Revisar a consistência entre os oito documentos e a documentação complementar.
+2. Confirmar com o grupo a distribuição de responsabilidades.
+3. Formalizar a escolha da API externa.
+4. Validar a arquitetura, a persistência e a viabilidade dos recursos AWS.
+5. Atualizar as estimativas e o cronograma das sprints.
+6. Preparar a estrutura de entrega `GarageOps/` no repositório oficial.
+7. Iniciar a implementação e registrar evidências de testes e funcionamento.
 
 ---
 
-## Segurança
-
-Cuidados mínimos obrigatórios:
-
-- não versionar `.env`;
-- não commitar senhas reais;
-- não expor tokens em logs;
-- usar hash seguro para senhas;
-- validar permissões por perfil;
-- revisar Pull Requests antes de merge;
-- usar ambiente sandbox para integrações de pagamento.
-
----
-
-## Observabilidade
-
-O projeto deverá evoluir para expor métricas operacionais dos serviços.
-
-Métricas esperadas:
-
-- tempo de resposta das APIs;
-- quantidade de requisições;
-- taxa de erro;
-- saúde dos serviços;
-- consumo de recursos;
-- status de filas;
-- eventos de negócio relevantes.
-
-Ferramentas planejadas:
-
-- Prometheus para coleta de métricas;
-- Grafana para dashboards.
-
----
-
-## Status Atual
-
-Projeto em fase inicial de estruturação técnica.
-
-Prioridades imediatas:
-
-1. estruturar ambiente local com Docker Compose;
-2. configurar PostgreSQL e Adminer;
-3. configurar RabbitMQ;
-4. definir modelagem inicial do banco;
-5. criar base do backend;
-6. criar base do frontend;
-7. configurar pipeline inicial de CI.
-
----
-
-## Observação
-
-Este repositório é privado e destinado aos integrantes do grupo GarageOps. O acesso deve ser concedido apenas aos membros do grupo e, se necessário, ao professor orientador.
+**Grupo GarageOps — OficinaPro**  
+Projeto Experimental — Análise e Desenvolvimento de Sistemas  
+UniFAAT — 2027/1
