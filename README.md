@@ -21,10 +21,10 @@ O diferencial técnico do projeto está na implementação de regras de negócio
 
 | # | Nome Completo | RA | Papel Principal |
 |---|---|---|---|
-| 1 | Gabriel Carneiro da Silva | 6325300 | A definir pelo grupo |
-| 2 | Thiago Marques Bueno | 6325304 | A definir pelo grupo |
-| 3 | Matheus Gabriel Correa Braga Viana | 6325053 | A definir pelo grupo |
-| 4 | Eloisa do Santos Brandão | 2325096 | A definir pelo grupo |
+| 1 | Gabriel Carneiro da Silva | 6325300 | DevOps, Banco de Dados e Qualidade |
+| 2 | Thiago Marques Bueno | 6325304 | Desenvolvedor Backend e Integrações |
+| 3 | Matheus Gabriel Correa Braga Viana | 6325053 | Desenvolvedor Frontend e UX |
+| 4 | Eloisa do Santos Brandão | 2325096 | Product Owner e Analista de Requisitos |
 
 A distribuição de papéis e responsabilidades será formalizada pelo grupo no planejamento de sprints.
 
