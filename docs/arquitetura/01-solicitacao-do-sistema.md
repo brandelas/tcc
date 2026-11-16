@@ -158,9 +158,9 @@ As integrações externas que forem necessárias ao MVP deverão ser selecionada
 | # | Nome Completo | RA | Papel Principal |
 |---|---|---|---|
 | 1 | Eloisa dos Santos Brandão | 2325096 | Product Owner e Analista de Requisitos |
-| 2 | Thiago — nome completo a confirmar | A confirmar | Desenvolvedor Backend e Integrações |
-| 3 | Matheus — nome completo a confirmar | A confirmar | Desenvolvedor Frontend e UX |
-| 4 | Gabriel — nome completo a confirmar | A confirmar | DevOps, Banco de Dados e Qualidade |
+| 2 | Thiago Marques Bueno  | 6325304 | Desenvolvedor Backend e Integrações |
+| 3 | Matheus Gabriel Correa Braga Viana | 6325053 | Desenvolvedor Frontend e UX |
+| 4 | Gabriel Carneiro da Silva | 6325300 | DevOps, Banco de Dados e Qualidade |
 
 ---
 
