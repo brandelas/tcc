@@ -1,5 +1,7 @@
 # MVP (Minimum Viable Product) — OficinaPro
 
+> **Documento histórico — não usar na entrega.** Este arquivo foi escrito para o modelo anterior do OficinaPro, com controle de estoque, reserva de peças e perfil de estoque, retirados do escopo pelo grupo em 13/11/2026. Ele não reflete os serviços, papéis e fluxos atuais. A versão vigente está em [`entrega/Projetos/OficinaPro/`](../../entrega/Projetos/OficinaPro/README.md) (Documento 01 (seção 5)). Mantido apenas como registro do levantamento.
+
 > **Status:** 🟢 Definido pelo grupo GarageOps  
 > **Responsável pela análise:** Eloísa Brandão (Product Owner)  
 > **Objetivo:** Estabelecer o escopo mínimo viável e obrigatório para a primeira entrega e validação do sistema OficinaPro no Projeto Experimental (5º Semestre ADS - UniFAAT).

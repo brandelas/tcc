@@ -1,5 +1,7 @@
 # Diagrama de Fluxo de Dados (DFD) e Comunicação — OficinaPro
 
+> **Documento histórico — não usar na entrega.** Este arquivo foi escrito para o modelo anterior do OficinaPro, com controle de estoque, reserva de peças e perfil de estoque, retirados do escopo pelo grupo em 13/11/2026. Ele não reflete os serviços, papéis e fluxos atuais. A versão vigente está em [`entrega/Projetos/OficinaPro/`](../../entrega/Projetos/OficinaPro/README.md) (Documento 03). Mantido apenas como registro do levantamento.
+
 > **Documento oficial de trabalho — Grupo GarageOps**
 >
 > Este documento apresenta a visão geral do fluxo de dados do OficinaPro, identificando os atores, os microsserviços, os bancos de dados e os mecanismos de comunicação entre os componentes.

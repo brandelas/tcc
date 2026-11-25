@@ -1,5 +1,7 @@
 # Critérios de Aceite — OficinaPro
 
+> **Documento histórico — não usar na entrega.** Este arquivo foi escrito para o modelo anterior do OficinaPro, com controle de estoque, reserva de peças e perfil de estoque, retirados do escopo pelo grupo em 13/11/2026. Ele não reflete os serviços, papéis e fluxos atuais. A versão vigente está em [`entrega/Projetos/OficinaPro/`](../../entrega/Projetos/OficinaPro/README.md) (Documento 02). Mantido apenas como registro do levantamento.
+
 > **Documento oficial de trabalho — Grupo GarageOps**
 >
 > Este documento estabelece as condições objetivas de aceitação para as funcionalidades do MVP do OficinaPro, alinhadas às regras de negócio, às histórias de usuário e ao fluxo operacional definido para o projeto.

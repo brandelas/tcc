@@ -1,5 +1,7 @@
 # Histórias de Usuário — OficinaPro
 
+> **Documento histórico — não usar na entrega.** Este arquivo foi escrito para o modelo anterior do OficinaPro, com controle de estoque, reserva de peças e perfil de estoque, retirados do escopo pelo grupo em 13/11/2026. Ele não reflete os serviços, papéis e fluxos atuais. A versão vigente está em [`entrega/Projetos/OficinaPro/`](../../entrega/Projetos/OficinaPro/README.md) (Documento 02). Mantido apenas como registro do levantamento.
+
 > **Documento de trabalho — validado pelo grupo GarageOps.**
 >
 > Este documento transforma os requisitos levantados no backlog em histórias de usuário que orientam o desenvolvimento do OficinaPro, refletindo as regras de negócio oficiais definidas para o MVP.

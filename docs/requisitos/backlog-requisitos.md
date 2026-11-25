@@ -1,5 +1,7 @@
 # Backlog de Requisitos — OficinaPro
 
+> **Documento histórico — não usar na entrega.** Este arquivo foi escrito para o modelo anterior do OficinaPro, com controle de estoque, reserva de peças e perfil de estoque, retirados do escopo pelo grupo em 13/11/2026. Ele não reflete os serviços, papéis e fluxos atuais. A versão vigente está em [`entrega/Projetos/OficinaPro/`](../../entrega/Projetos/OficinaPro/README.md) (Documento 02 e 08). Mantido apenas como registro do levantamento.
+
 > **Documento de trabalho da análise de requisitos do OficinaPro — Grupo GarageOps.**
 >
 > Este documento é evolutivo e deve ser atualizado à medida que o projeto avança, novas decisões são tomadas pelo grupo e pontos relevantes são validados com o professor orientador.

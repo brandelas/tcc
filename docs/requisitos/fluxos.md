@@ -1,5 +1,7 @@
 # Fluxos do Sistema — OficinaPro
 
+> **Documento histórico — não usar na entrega.** Este arquivo foi escrito para o modelo anterior do OficinaPro, com controle de estoque, reserva de peças e perfil de estoque, retirados do escopo pelo grupo em 13/11/2026. Ele não reflete os serviços, papéis e fluxos atuais. A versão vigente está em [`entrega/Projetos/OficinaPro/`](../../entrega/Projetos/OficinaPro/README.md) (Documento 03). Mantido apenas como registro do levantamento.
+
 > **Documento de trabalho — Grupo GarageOps**
 >
 > Este documento consolida os fluxos operacionais e de exceção do MVP do OficinaPro, alinhados à esteira oficial da Ordem de Serviço e às regras de negócio de aprovação de orçamento, movimentação de estoque e rastreabilidade física das peças definidas pelo grupo.

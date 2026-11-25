@@ -1,5 +1,7 @@
 # Glossário — OficinaPro
 
+> **Documento histórico — não usar na entrega.** Este arquivo foi escrito para o modelo anterior do OficinaPro, com controle de estoque, reserva de peças e perfil de estoque, retirados do escopo pelo grupo em 13/11/2026. Ele não reflete os serviços, papéis e fluxos atuais. A versão vigente está em [`entrega/Projetos/OficinaPro/`](../../entrega/Projetos/OficinaPro/README.md) (Documento 02 (seção 6)). Mantido apenas como registro do levantamento.
+
 > **Documento de trabalho — Grupo GarageOps**
 >
 > **Objetivo:** padronizar os principais termos utilizados no projeto OficinaPro.
