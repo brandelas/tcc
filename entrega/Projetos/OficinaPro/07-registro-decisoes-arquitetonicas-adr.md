@@ -114,7 +114,19 @@ No MVP, as chamadas entre serviços são poucas e precisam de resposta imediata:
 
 1. **Síncrono (implementado):** chamadas HTTP internas em `/internal/*`, autenticadas por segredo de serviço e bloqueadas na entrada pública. O tenant é sempre repassado a partir do token verificado.
 2. **Assíncrono (proposto):** **RabbitMQ** para eventos que não precisam de resposta imediata, começando por `ordem.orcamento_enviado`, `ordem.decisao_registrada`, `ordem.mensagem_criada`, `ordem.status_alterado` e `pagamento.registrado`, consumidos pelos serviços de notificação e de auditoria.
-3. **Confiabilidade proporcional ao MVP:** todo evento leva `event_id`, `tenant_id`, `correlation_id`, tipo, versão e data; os consumidores gravam o `event_id` processado e ignoram duplicados (idempotência); mensagens que falham após tentativas limitadas vão para uma *dead letter queue*. O padrão *transactional outbox* será usado nos produtores em que perder o evento cause inconsistência (por exemplo, auditoria de pagamento).
+Eventos propostos para o primeiro ciclo (versão 1 de cada contrato):
+
+| Evento | Produtor | Consumidores | Conteúdo mínimo além do envelope |
+|---|---|---|---|
+| `ordem.orcamento_enviado` | workorders | Notification, Audit | ordem, versão do orçamento, total |
+| `ordem.decisao_registrada` | workorders | Notification, Audit | ordem, versão, decisão, autor |
+| `ordem.mensagem_criada` | workorders | Notification | ordem, tipo de autor (cliente ou equipe) |
+| `ordem.status_alterado` | workorders | Notification, Audit, Reporting | ordem, status anterior e novo |
+| `pagamento.registrado` | workorders (Billing após a separação) | Audit, Reporting | ordem, valor, forma de pagamento |
+
+O envelope de todo evento tem `event_id`, `tipo`, `versao`, `tenant_id`, `correlation_id` e `ocorrido_em`. Eventos não carregam texto de mensagens nem dados pessoais do cliente; o consumidor que precisar do conteúdo consulta a API do serviço dono, com autorização.
+
+3. **Confiabilidade proporcional ao MVP:** todo evento leva `event_id`, `tenant_id`, `correlation_id`, tipo, versão e data; os consumidores gravam o `event_id` processado e ignoram duplicados (idempotência); mensagens que falham são reprocessadas até 3 vezes, com intervalo crescente, e depois vão para uma *dead letter queue* para análise. O padrão *transactional outbox* será usado nos produtores em que perder o evento cause inconsistência (por exemplo, auditoria de pagamento).
 
 #### Alternativas Consideradas
 
@@ -282,7 +294,7 @@ No MVP, três microsserviços implantáveis de forma independente, cada um com b
 
 **Data:** 24/09/2026
 **Status:** Aceita
-**Autores:** GarageOps
+**Autores:** GarageOps — regra de negócio revisada por Eloisa do Santos Brandão
 
 #### Contexto
 
@@ -311,11 +323,11 @@ Isolamento lógico por **`tenant_id`** em todas as entidades operacionais. O ten
 
 ---
 
-### ADR-009: Autenticação, Token e Papéis
+### ADR-009: Identidade Global, Autenticação e Papéis por Vínculo
 
 **Data:** 22/11/2026
 **Status:** Aceita
-**Autores:** GarageOps — área de Backend e Integrações (Thiago Marques Bueno)
+**Autores:** GarageOps — Thiago Marques Bueno (autenticação e token) e Matheus Gabriel Correa Braga Viana (acesso por papel na interface)
 
 #### Contexto
 
@@ -323,6 +335,7 @@ A mesma pessoa pode ser membro de equipe em uma oficina e cliente em outra. Os p
 
 #### Decisão
 
+- Cada pessoa tem **uma única identidade GarageOps**, que pode ter vínculos com várias oficinas. Cada vínculo tem papel e situação próprios, e os dados operacionais continuam separados por oficina (RF-033, RF-035). O cliente ativa o vínculo por convite validado com código (RF-034).
 - O `identity` é o **único emissor** de tokens JWT (HS256, emissor verificado, validade máxima de 8 horas, RNF-033). Os demais serviços apenas verificam.
 - O token tem `scope`: `account` (conta logada sem oficina), `tenant` (com `activeTenantId` e papéis do vínculo) ou `platform`.
 - Papéis de oficina: `tenant_admin`, `attendant`, `mechanic`, `finance` e `customer`. Senhas com hash bcrypt (RNF-032).
@@ -347,7 +360,7 @@ A mesma pessoa pode ser membro de equipe em uma oficina e cliente em outra. Os p
 
 ---
 
-### ADR-010: Frontend
+### ADR-010: Frontend e Navegação por Papel
 
 **Data:** 25/11/2026 (registro)
 **Status:** Aceita (React e Vite); uso de TypeScript no frontend proposto
@@ -359,7 +372,7 @@ Equipe, cliente e administrador da plataforma usam a mesma aplicação web, com 
 
 #### Decisão
 
-Uma **SPA em React com Vite**, servida por nginx no contêiner `web`. A adoção de TypeScript no frontend, prevista no README do grupo, é recomendada para alinhar os tipos aos contratos da API, mas ainda não foi feita.
+Uma **SPA em React com Vite**, servida por nginx no contêiner `web`, com áreas e ações exibidas conforme o papel ativo. A interface esconde ações não permitidas, mas a autorização real é sempre feita pelo servidor (RNF-034). A adoção de TypeScript no frontend, prevista no README do grupo, é recomendada para alinhar os tipos aos contratos da API, mas ainda não foi feita.
 
 #### Alternativas Consideradas
 
@@ -413,6 +426,68 @@ O termo de aceite exige GitHub Actions para build e deploy dos microsserviços, 
 
 ---
 
+### ADR-012: Escopo sem Estoque Interno
+
+**Data:** 13/11/2026
+**Status:** Aceita
+**Autores:** GarageOps — regra de negócio: Eloisa do Santos Brandão
+
+#### Contexto
+
+As versões iniciais previam um serviço de estoque com catálogo, saldo, reserva e baixa de peças. A premissa revista pelo grupo é que muitas oficinas pequenas compram as peças de autopeças parceiras a cada atendimento, sem manter estoque próprio relevante.
+
+#### Decisão
+
+O MVP **não controla estoque**. Peças entram como itens manuais do orçamento (descrição, quantidade e valor), sem catálogo, saldo, reserva ou movimentação (RF-015). Os requisitos RF-020 a RF-024 foram retirados e seus identificadores não são reutilizados.
+
+#### Alternativas Consideradas
+
+| Alternativa | Prós | Contras |
+|-------------|------|---------|
+| Peças manuais no orçamento | Simples; reflete a operação das oficinas-alvo | Sem controle de saldo nem alerta de reposição |
+| Estoque com reserva integral e baixa | Controle completo de peças | Mais um serviço e um fluxo distribuído de reserva, sem necessidade comprovada no MVP |
+
+#### Consequências
+
+**Positivas:**
+- O fluxo da ordem fica menor e testável, sem coordenação entre serviços para reservar peças.
+
+**Negativas:**
+- Oficinas com estoque próprio não são atendidas nesta versão. Um serviço de estoque pode voltar como evolução, com novo ADR.
+
+---
+
+### ADR-013: Orçamento Versionado com Decisão do Cliente
+
+**Data:** 09/11/2026
+**Status:** Aceita
+**Autores:** GarageOps — regra de negócio: Eloisa do Santos Brandão
+
+#### Contexto
+
+A oficina precisa comprovar o que o cliente aprovou e manter o histórico da negociação quando o orçamento é revisado ou recusado.
+
+#### Decisão
+
+Cada envio de orçamento cria uma **nova versão imutável**. O cliente autenticado aprova ou recusa uma versão específica, e a decisão guarda autor, data, hora e motivo, quando informado (RF-016, RF-037). Uma nova versão substitui a pendente (`superseded`). A execução só é liberada pela versão vigente aprovada (RF-017), e a recusa não encerra a ordem: a oficina pode revisar ou encerrar por recusa definitiva (RF-038).
+
+#### Alternativas Consideradas
+
+| Alternativa | Prós | Contras |
+|-------------|------|---------|
+| Versões imutáveis com decisão por versão | Prova do que foi aprovado; histórico completo | Mais registros por ordem |
+| Orçamento único editável | Simples | Perde a evidência do que o cliente aprovou |
+
+#### Consequências
+
+**Positivas:**
+- Serviço adicional ou divergente exige nova versão aprovada, o que protege oficina e cliente.
+
+**Negativas:**
+- A interface precisa mostrar claramente qual versão está vigente.
+
+---
+
 ## 4. Índice de ADRs
 
 | ID | Título | Status | Data |
@@ -425,16 +500,18 @@ O termo de aceite exige GitHub Actions para build e deploy dos microsserviços, 
 | ADR-006 | Integrações com APIs Externas | Aceita | 21/11/2026 |
 | ADR-007 | Decomposição em Microsserviços | Aceita (MVP); separação proposta | 22/11/2026 |
 | ADR-008 | Isolamento Multi-Tenant | Aceita | 24/09/2026 |
-| ADR-009 | Autenticação, Token e Papéis | Aceita | 22/11/2026 |
-| ADR-010 | Frontend | Aceita; TypeScript proposto | 25/11/2026 |
+| ADR-009 | Identidade Global, Autenticação e Papéis por Vínculo | Aceita | 22/11/2026 |
+| ADR-010 | Frontend e Navegação por Papel | Aceita; TypeScript proposto | 25/11/2026 |
 | ADR-011 | Qualidade, Entrega e Observabilidade | Aceita; detalhes propostos | 25/11/2026 |
+| ADR-012 | Escopo sem Estoque Interno | Aceita | 13/11/2026 |
+| ADR-013 | Orçamento Versionado com Decisão do Cliente | Aceita | 09/11/2026 |
 
 ---
 
 ## 5. Observações
 
 - ADRs com status **Proposta** precisam ser discutidos pelo grupo. Quando forem confirmados, o status muda para Aceita e a data é atualizada. Uma decisão que substitua outra gera novo ADR com status Aceita, e o anterior passa a Substituída.
-- O grupo deve conferir os autores indicados em cada ADR. Eles foram preenchidos a partir das responsabilidades por área registradas no README do repositório do sistema.
+- O grupo deve conferir os autores indicados em cada ADR. Eles foram preenchidos conforme a divisão combinada nos guias de cada integrante: ADR-001 e ADR-003 (Thiago), ADR-002, ADR-004 e ADR-005 (Gabriel), frontend e acesso por papel (Matheus), regras de negócio revisadas pela PO (Eloisa). O Matheus consolida o documento.
 - O contrato OpenAPI das rotas (RNF-030) ainda não existe e deve acompanhar os ADR-003 e ADR-009.
 
 ---
@@ -443,7 +520,7 @@ O termo de aceite exige GitHub Actions para build e deploy dos microsserviços, 
 
 | Versão | Data | Autor | Descrição da Alteração |
 |--------|------|-------|------------------------|
-| 1.0 | 25/11/2026 | GarageOps | Versão inicial com ADRs 001 a 011, separando decisões aceitas de propostas |
+| 1.0 | 25/11/2026 | GarageOps | Versão inicial com ADRs 001 a 013, separando decisões aceitas de propostas; inclui as decisões de escopo já tomadas (sem estoque, identidade global, orçamento versionado) e a tabela de eventos do ADR-003 |
 
 ---
 

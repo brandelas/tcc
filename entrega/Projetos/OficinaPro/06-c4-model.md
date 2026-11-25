@@ -82,6 +82,8 @@ C4Container
         ContainerDb(workordersdb, "workordersdb", "PostgreSQL 16", "Ordens, versões de orçamento, decisões, mensagens, execuções e pagamentos")
         ContainerQueue(broker, "RabbitMQ (planejado)", "RabbitMQ", "Eventos assíncronos para notificação e auditoria")
         Container(notification, "Notification Service (planejado)", "NestJS", "Avisos dentro da plataforma")
+        Container(prometheus, "Prometheus (planejado)", "Prometheus", "Coleta /metrics de cada serviço")
+        Container(grafana, "Grafana (planejado)", "Grafana", "Dashboards e alertas sem dados de clientes")
     }
 
     Rel(staff, web, "Usa", "HTTPS")
@@ -101,6 +103,10 @@ C4Container
     Rel(customers, fipe, "Consulta FIPE (cache de 24 h)", "HTTPS")
     Rel(workorders, broker, "Publica eventos (planejado)", "AMQP")
     Rel(broker, notification, "Entrega eventos (planejado)", "AMQP")
+    Rel(prometheus, identity, "Coleta métricas (planejado)", "HTTP /metrics")
+    Rel(prometheus, customers, "Coleta métricas (planejado)", "HTTP /metrics")
+    Rel(prometheus, workorders, "Coleta métricas (planejado)", "HTTP /metrics")
+    Rel(grafana, prometheus, "Consulta métricas (planejado)", "PromQL")
 ```
 
 ### Descrição dos Contêineres
@@ -229,14 +235,23 @@ C4Component
 
 ## 5. Decisões Arquiteturais (ADRs Resumidos)
 
+Resumo dos ADRs do Documento 07, com os mesmos números e títulos.
+
 | # | Decisão | Motivação | Alternativas Consideradas |
 |---|---------|-----------|--------------------------|
-| 1 | Backend em Node.js, TypeScript e NestJS (ADR-001) | Contratos tipados, módulos, guards e validação; padrão adotado pelo grupo em 22/11/2026 | Express com JavaScript (versão inicial do MVP), Java com Spring Boot |
-| 2 | PostgreSQL com banco lógico por serviço (ADR-002) | Dados relacionais, transações e restrições por tenant; cada serviço dono dos seus dados | Banco único compartilhado, MongoDB |
-| 3 | REST síncrono agora; RabbitMQ para eventos quando houver fluxo assíncrono (ADR-003) | Simplicidade no MVP e desacoplamento onde a resposta imediata não é necessária | Somente REST; somente mensageria |
-| 4 | Entrada única por caminho (nginx local, ALB na AWS) | Uma URL para a interface e as APIs, com bloqueio das rotas internas | API Gateway gerenciado, Kong |
-| 5 | ViaCEP e API FIPE como integrações externas (ADR-006) | Relevantes ao cadastro do cliente e do veículo, públicas e sem custo, com fallback manual | Integração de pagamento (fora do escopo atual) |
-| 6 | Isolamento multi-tenant por `tenant_id` validado no servidor (ADR-008) | Uma aplicação para todas as oficinas, sem vazamento entre tenants | Banco ou esquema por oficina |
+| ADR-001 | Linguagem e Framework do Backend: Node.js, TypeScript e NestJS | Contratos tipados, guards e validação; padrão adotado pelo grupo em 22/11/2026 | Express com JavaScript, Java com Spring Boot, Go |
+| ADR-002 | Escolha do Banco de Dados: PostgreSQL com banco lógico por serviço | Dados relacionais, transações e restrições por tenant; cada serviço dono dos seus dados | Banco compartilhado, instância por serviço, MongoDB |
+| ADR-003 | Comunicação entre Microsserviços: REST síncrono e RabbitMQ para eventos | Resposta imediata onde necessária; desacoplamento de notificação e auditoria | Somente REST, somente mensageria, SQS/SNS |
+| ADR-004 | Provedor de Nuvem e Serviços: AWS | Exigência de nuvem de grande porte; Terraform maduro | GCP, Azure |
+| ADR-005 | Containerização e Orquestração: ECS Fargate com entrada única pelo ALB | Deploy independente por serviço sem administrar servidores | EKS, EC2 com Docker Compose |
+| ADR-006 | Integrações com APIs Externas: ViaCEP e FIPE | Relevantes ao cadastro, públicas e sem custo, com preenchimento manual | Provedor de pagamento, envio de SMS |
+| ADR-007 | Decomposição em Microsserviços: três serviços no MVP | Entrega viável com limites claros | Oito serviços desde o início, monólito modular |
+| ADR-008 | Isolamento Multi-Tenant por `tenant_id` validado no servidor | Uma aplicação para todas as oficinas, sem vazamento | Esquema ou banco por oficina |
+| ADR-009 | Identidade Global, Autenticação e Papéis por Vínculo: JWT emitido pelo identity | Uma conta por pessoa, papéis por oficina, plataforma sem acesso aos dados | Cognito/Keycloak, sessão no servidor |
+| ADR-010 | Frontend e Navegação por Papel: React e Vite | Uma aplicação para todos os papéis | Next.js, Angular |
+| ADR-011 | Qualidade, Entrega e Observabilidade | Exigências do termo de aceite | CloudWatch sem Prometheus/Grafana |
+| ADR-012 | Escopo sem Estoque Interno | Oficinas compram peças de autopeças parceiras; reduz complexidade do MVP | Estoque com reservas e baixa |
+| ADR-013 | Orçamento Versionado com Decisão do Cliente | Prova de aprovação e histórico de negociação | Orçamento único editável |
 
 ---
 

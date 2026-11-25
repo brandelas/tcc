@@ -168,6 +168,23 @@ flowchart LR
 | C9 — 8 documentos | T-001 a T-016 |
 | C10 — Encontros com evolução | T-040 |
 
+### 4.3 Rastreabilidade com os requisitos funcionais
+
+Cada RF do Documento 02 aponta para a tarefa que o implementa ou implementará. RF já demonstrados no protótipo estão nas tarefas concluídas do 4º semestre; os demais ficam no 5º.
+
+| RF (Documento 02) | Tarefas | Situação |
+|---|---|---|
+| RF-001 a RF-006, RF-033, RF-039 — tenant, acesso, papéis e console da plataforma | T-007, T-008, T-009, T-011; reforço em T-021 e T-032 | Demonstrados no MVP |
+| RF-034 — convite do cliente | T-007, T-009 | Demonstrado no MVP, com código simulado; envio real depende do provedor (pendente) |
+| RF-007, RF-008, RF-011, RF-035 — clientes, veículos e histórico | T-007, T-009 | Demonstrados no MVP |
+| RF-009, RF-010 — ViaCEP e FIPE | T-010 | Demonstrados no MVP |
+| RF-012 a RF-019, RF-036 a RF-038 — ordem, diagnóstico, orçamento versionado, decisão, conversa, execução e encerramento | T-007, T-009; testes em T-021 | Demonstrados no MVP |
+| RF-025 a RF-027 — fechamento e pagamentos | T-007, T-009; separação em T-025 | Demonstrados no MVP dentro de `workorders` |
+| RF-028 — pagamento online | — | Fora do escopo atual |
+| RF-029 — notificações | T-024, T-033 | 5º semestre |
+| RF-030, RF-031 — dashboard e relatórios | T-034 | 5º semestre |
+| RF-032 — auditoria | T-024, T-031 | 5º semestre |
+
 ---
 
 ## 5. Detalhamento por Sprint
@@ -354,7 +371,7 @@ O grupo deve realizar as seguintes cerimônias e registrar evidências:
 | Sprint Review | Final de cada sprint | 30 min | Demonstração do incremento; no 5º semestre, junto do encontro com o orientador quando coincidir |
 | Sprint Retrospectiva | Final de cada sprint | 30 min | Pontos positivos, negativos e ações de melhoria |
 
-As durações e a frequência são uma proposta para o grupo confirmar. No 5º semestre, os encontros com o orientador (mínimo de 4, intervalo máximo de 5 semanas) são registrados na ficha oficial, e cada integrante deve ter pelo menos 1 commit por semana (critério C10).
+As durações e a frequência são uma proposta para o grupo confirmar. Evidências: o quadro de tarefas (GitHub Projects), os Pull Requests e, no 5º semestre, as fichas oficiais de registro de encontro. No 5º semestre, os encontros com o orientador (mínimo de 4, intervalo máximo de 5 semanas) são registrados na ficha oficial, e cada integrante deve ter pelo menos 1 commit por semana (critério C10).
 
 ---
 
