@@ -14,7 +14,7 @@ Este fork (`brandelas/tcc`) é o espaço de trabalho de requisitos e de revisão
 | Documentos oficiais já entregues (01 a 04) | Fork do repositório oficial, branch `docs/garageops-entrega-3-dfd`, pasta `Projetos/OficinaPro` | Substituídos pelas versões revisadas em `entrega/` |
 | Código do MVP (NestJS, React, PostgreSQL, Docker Compose) | [`gcdsofc/tcc`](https://github.com/gcdsofc/tcc), pasta `mvp/` | Ainda não sincronizado com este fork |
 | Dúvidas para o orientador e decisões pendentes do grupo | [`docs/requisitos/duvidas-professor.md`](docs/requisitos/duvidas-professor.md) | Atualizado em 25/11/2026 |
-| Documentos de trabalho antigos (`docs/arquitetura/`, demais arquivos de `docs/requisitos/`) | `docs/` | **Históricos.** Descrevem o modelo anterior com estoque e não devem ser usados na entrega |
+| Versão de 16/11/2026 dos 8 documentos (`docs/arquitetura/01` a `08`) e demais arquivos de `docs/requisitos/` | `docs/` | **Históricos.** Descrevem o modelo anterior com estoque e não devem ser usados na entrega |
 
 Para entregar: copiar o conteúdo de `entrega/Projetos/OficinaPro/` para a pasta `Projetos/OficinaPro/` do fork do repositório oficial e abrir a PR com o título `[GarageOps] - Entrega N - Descrição`, alterando apenas essa pasta.
 
@@ -64,4 +64,4 @@ Detalhes nos Documentos 05 (nuvem), 06 (C4) e 07 (ADR).
 
 ## Histórico deste README
 
-A versão anterior deste arquivo (até o commit `b5f6f9b`) descrevia sete microsserviços, controle de estoque e um ambiente local que não existe neste fork. Ela foi substituída em 25/11/2026 para refletir as decisões do grupo de 13/11 e 22/11/2026 e continua disponível no histórico do Git.
+As versões anteriores deste arquivo (a mais recente de 16/11/2026, commit `2736319`) descreviam o modelo com controle de estoque, Inventory Service e reserva de peças. Ela foi substituída em 25/11/2026 para refletir as decisões do grupo de 13/11 e 22/11/2026 e continua disponível no histórico do Git.

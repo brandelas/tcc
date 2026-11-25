@@ -1,80 +1,97 @@
-# Arquitetura de Nuvem e Infraestrutura como Código (IaC) — OficinaPro
+# Desenho de Arquitetura em Nuvem — OficinaPro
 
-> **Documento histórico — não usar na entrega.** Este arquivo foi escrito para o modelo anterior do OficinaPro, com controle de estoque, reserva de peças e perfil de estoque, retirados do escopo pelo grupo em 13/11/2026. Ele não reflete os serviços, papéis e fluxos atuais. A versão vigente está em [`entrega/Projetos/OficinaPro/`](../../entrega/Projetos/OficinaPro/README.md) (Documento 05). Mantido apenas como registro do levantamento.
+> **Documento histórico — não usar na entrega.** Esta versão (revisada em 16/11/2026) segue o modelo com controle de estoque, reserva de peças e Inventory Service. O grupo retirou o estoque do escopo em 13/11/2026 e, em 22/11/2026, adotou o MVP com os serviços `identity`, `customers` e `workorders`. A versão vigente está em [`entrega/Projetos/OficinaPro/`](../../entrega/Projetos/OficinaPro/README.md) (Documento 05). Mantido como registro do levantamento.
 
-> **Documento de trabalho — Grupo GarageOps**
->
-> Este documento apresenta a arquitetura de infraestrutura em nuvem proposta para o OficinaPro, considerando sua utilização como uma plataforma SaaS (Software as a Service) para múltiplas oficinas mecânicas.
->
-> A proposta descreve os serviços de nuvem, a organização dos ambientes, a hospedagem dos microsserviços, a segurança, a observabilidade e a automação da infraestrutura por meio do Terraform.
->
-> As decisões técnicas aqui apresentadas deverão ser validadas pelo grupo e pelo professor antes da implementação definitiva.
+**Projeto:** OficinaPro  
+**Grupo:** GarageOps  
+**Provedor de Nuvem:** Amazon Web Services (AWS)  
+**Data:** 16/11/2026  
+**Versão:** 1.0  
+**Status:** Proposta arquitetural para validação do grupo e do professor.
 
 ---
 
-## 1. Objetivo e Visão Geral da Arquitetura
+## 1. Objetivo
 
-O OficinaPro será desenvolvido como uma aplicação SaaS, permitindo que diferentes oficinas utilizem a mesma plataforma, mantendo seus dados e operações isolados.
+Este documento apresenta o desenho da arquitetura de infraestrutura em nuvem proposta para o OficinaPro, uma plataforma SaaS (Software as a Service) destinada à gestão operacional de pequenas e médias oficinas mecânicas.
+
+A arquitetura descreve os serviços de nuvem, os recursos computacionais, a organização da rede, a persistência de dados, a comunicação entre microsserviços, os mecanismos de segurança, a observabilidade e a automação da infraestrutura por meio de Terraform.
 
 A infraestrutura deverá atender aos seguintes objetivos:
 
 - Disponibilizar a aplicação pela internet de maneira segura.
 - Permitir a execução independente dos microsserviços.
 - Garantir o isolamento dos dados entre diferentes oficinas.
-- Facilitar a manutenção e a evolução da aplicação.
-- Permitir o monitoramento dos serviços e a identificação de falhas.
+- Manter a responsabilidade dos dados separada por microsserviço.
+- Permitir monitoramento, identificação e análise de falhas.
 - Automatizar a criação e a atualização dos recursos de infraestrutura.
-- Controlar os custos e evitar recursos desnecessários.
-- Permitir a recuperação dos dados em caso de falhas.
+- Possibilitar a recuperação dos dados em caso de falhas.
+- Controlar os custos de execução e evitar recursos desnecessários.
+- Permitir a evolução da plataforma conforme o crescimento da utilização.
 
-A arquitetura proposta utiliza a AWS como provedora de nuvem, Docker para empacotamento dos serviços e Terraform para provisionamento da infraestrutura.
+A AWS foi definida como provedora de nuvem da arquitetura proposta. Docker será utilizado para empacotamento dos serviços e Terraform para declaração e provisionamento da infraestrutura.
 
-### 1.1 Arquitetura lógica proposta
+**Importante:** este documento descreve a arquitetura planejada. A existência, configuração e disponibilidade dos recursos na AWS dependerão da implementação e da validação prática da infraestrutura.
 
-A infraestrutura será organizada nas seguintes camadas:
+## 2. Visão Geral da Arquitetura
+
+A arquitetura será organizada em camadas:
 
 1. **Acesso e distribuição:** disponibilização do frontend e recebimento das requisições externas.
 2. **Aplicação:** execução dos quatro microsserviços em contêineres.
 3. **Persistência:** armazenamento dos dados em bancos PostgreSQL separados por responsabilidade.
-4. **Mensageria:** comunicação assíncrona entre os microsserviços.
+4. **Mensageria:** comunicação assíncrona entre os microsserviços por RabbitMQ.
 5. **Segurança e configuração:** gerenciamento de credenciais, permissões e configurações.
-6. **Observabilidade:** monitoramento de métricas, logs e disponibilidade.
+6. **Observabilidade:** centralização de logs, coleta de métricas e acompanhamento da disponibilidade.
 7. **Automação:** provisionamento e atualização da infraestrutura por Terraform e GitHub Actions.
 
-### 1.2 Diagrama da infraestrutura proposta
+### 2.1 Diagrama da arquitetura proposta
 
 ```mermaid
-flowchart TD
-    Usuario([Usuários das oficinas])
+flowchart TB
+    USER["Usuários das oficinas"]
 
-    subgraph Acesso["Camada de acesso"]
-        CF[CloudFront]
-        S3FE[(S3 - Frontend React)]
-        ALB[Application Load Balancer]
+    subgraph INTERNET["Internet"]
+        EXT["API externa selecionada<br/>(integração pendente de definição)"]
     end
 
-    subgraph Aplicacao["Camada de aplicação - ECS Fargate"]
-        AUTH[Auth Service]
-        WO[Work Order Service]
-        INV[Inventory Service]
-        BILL[Billing Service]
+    subgraph AWS["AWS Cloud"]
+        subgraph ACCESS["Camada de acesso"]
+            CF["CloudFront"]
+            S3FE[("S3 - Frontend React")]
+            ALB["Application Load Balancer"]
+        end
+
+        subgraph VPC["VPC - Rede privada da aplicação"]
+            subgraph APP["Sub-redes privadas - Aplicação"]
+                AUTH["Auth Service<br/>NestJS"]
+                WO["Work Order Service<br/>NestJS"]
+                INV["Inventory Service<br/>NestJS"]
+                BILL["Billing Service<br/>NestJS"]
+            end
+
+            subgraph DATA["Sub-redes privadas - Persistência"]
+                RDS[("Amazon RDS<br/>PostgreSQL")]
+                MQ["Amazon MQ<br/>RabbitMQ"]
+            end
+        end
+
+        subgraph SUPPORT["Serviços de suporte"]
+            ECR["Amazon ECR"]
+            SM["AWS Secrets Manager"]
+            CW["Amazon CloudWatch"]
+            S3BACKUP[("S3 - Backups e arquivos")]
+        end
     end
 
-    subgraph Persistencia["Camada de persistência"]
-        RDS[(Amazon RDS - PostgreSQL)]
-        MQ[Amazon MQ - RabbitMQ]
+    subgraph CICD["Integração e entrega contínua"]
+        GH["GitHub Actions"]
+        TF["Terraform"]
     end
 
-    subgraph Operacao["Segurança e observabilidade"]
-        SM[AWS Secrets Manager]
-        CW[Amazon CloudWatch]
-        PROM[Prometheus]
-        GRAF[Grafana]
-    end
-
-    Usuario --> CF
+    USER --> CF
     CF --> S3FE
-    Usuario --> ALB
+    USER --> ALB
 
     ALB --> AUTH
     ALB --> WO
@@ -86,10 +103,12 @@ flowchart TD
     INV --> RDS
     BILL --> RDS
 
-    AUTH -.-> MQ
-    WO -.-> MQ
-    INV -.-> MQ
-    BILL -.-> MQ
+    AUTH <--> MQ
+    WO <--> MQ
+    INV <--> MQ
+    BILL <--> MQ
+
+    WO -.-> EXT
 
     SM -.-> AUTH
     SM -.-> WO
@@ -101,260 +120,261 @@ flowchart TD
     INV -.-> CW
     BILL -.-> CW
 
-    PROM --> GRAF
+    RDS -.-> S3BACKUP
+
+    GH --> ECR
+    ECR --> AUTH
+    ECR --> WO
+    ECR --> INV
+    ECR --> BILL
+
+    TF -.-> AWS
 ```
 
-**Observação:** o diagrama representa a organização lógica dos componentes. O compartilhamento de uma instância RDS não significa compartilhamento das responsabilidades dos bancos: cada microsserviço deverá acessar exclusivamente seu próprio banco de dados.
+**Observações sobre o diagrama:**
 
----
+- O frontend será disponibilizado por S3 e CloudFront.
+- O ALB será o ponto de entrada das APIs dos microsserviços.
+- Os quatro serviços serão executados em contêineres independentes no ECS Fargate.
+- O RDS poderá conter bancos lógicos separados para cada microsserviço, mantendo a propriedade individual dos dados.
+- O RabbitMQ será utilizado para troca de eventos e comunicação assíncrona.
+- A integração com API externa permanece pendente de seleção e formalização.
+- O diagrama representa uma proposta lógica, não uma comprovação de recursos já implantados.
 
-## 2. Pilha Tecnológica de Nuvem e DevOps
+### 2.2 Fluxo geral de comunicação
 
-A tabela apresenta a arquitetura-base recomendada para o projeto.
+1. O usuário acessa a interface do OficinaPro pelo navegador.
+2. O CloudFront distribui os arquivos estáticos hospedados no S3.
+3. As requisições da interface às APIs são encaminhadas pelo ALB.
+4. O ALB direciona cada requisição ao microsserviço responsável.
+5. O microsserviço valida a autenticação, as permissões e o contexto da oficina.
+6. O serviço consulta ou modifica exclusivamente os dados sob sua responsabilidade.
+7. Quando necessário, publica ou consome eventos por meio do RabbitMQ.
+8. Os serviços registram informações operacionais nos mecanismos de observabilidade.
 
-| Camada / Recurso | Tecnologia proposta | Finalidade |
+## 3. Inventário de Recursos Cloud
+
+### 3.1 Computação
+
+A aplicação será organizada em quatro microsserviços, executados de maneira independente por meio do Amazon ECS com AWS Fargate.
+
+| Recurso | Serviço AWS | Configuração proposta | Finalidade |
+|---|---|---|---|
+| Auth Service | ECS Fargate | Contêiner independente | Autenticação, usuários, vínculos com oficinas e permissões. |
+| Work Order Service | ECS Fargate | Contêiner independente | Clientes, veículos, ordens de serviço e diagnósticos. |
+| Inventory Service | ECS Fargate | Contêiner independente | Cadastro de peças, controle de estoque, reservas e movimentações. |
+| Billing Service | ECS Fargate | Contêiner independente | Orçamentos, itens de orçamento e pagamentos. |
+| Imagens Docker | Amazon ECR | Repositórios para os serviços | Armazenamento e versionamento das imagens dos microsserviços. |
+
+Cada serviço deverá possuir:
+
+- Imagem Docker própria.
+- Definição de execução independente.
+- Variáveis de ambiente e configurações próprias.
+- Permissões específicas para acessar os recursos necessários.
+- Health checks para verificação de disponibilidade.
+- Logs e métricas para acompanhamento operacional.
+
+A quantidade de CPU e memória de cada serviço deverá ser definida após testes e avaliação da demanda do MVP, evitando dimensionamento arbitrário.
+
+O ECS Fargate foi escolhido como proposta inicial por permitir executar contêineres sem administrar diretamente servidores. O Amazon EKS não será adotado como padrão no MVP, pois adicionaria complexidade operacional sem necessidade identificada até o momento.
+
+### 3.2 Banco de Dados e Cache
+
+O PostgreSQL será utilizado como tecnologia de persistência.
+
+A arquitetura seguirá o padrão Database-per-Service, no qual cada microsserviço é responsável pelo próprio banco de dados.
+
+| Recurso | Serviço AWS | Configuração proposta | Finalidade |
+|---|---|---|---|
+| Auth Service | Amazon RDS for PostgreSQL | Banco `auth_db` | Persistência de usuários, perfis e vínculos com oficinas. |
+| Work Order Service | Amazon RDS for PostgreSQL | Banco `work_order_db` | Persistência de clientes, veículos, ordens de serviço e diagnósticos. |
+| Inventory Service | Amazon RDS for PostgreSQL | Banco `inventory_db` | Persistência de peças, saldos, reservas e movimentações. |
+| Billing Service | Amazon RDS for PostgreSQL | Banco `billing_db` | Persistência de orçamentos, itens e pagamentos. |
+| Cache | Não previsto no MVP | Avaliação futura | Cache de consultas ou sessões, caso exista necessidade comprovada. |
+
+Para reduzir custos e complexidade no MVP, será avaliada a utilização de uma única instância Amazon RDS for PostgreSQL contendo bancos separados, credenciais específicas e permissões independentes para cada microsserviço.
+
+Essa alternativa mantém a separação lógica das responsabilidades, mas não equivale a isolamento físico entre instâncias.
+
+Cada microsserviço deverá:
+
+- Acessar exclusivamente seu próprio banco.
+- Utilizar credenciais específicas.
+- Controlar suas próprias migrações.
+- Não consultar diretamente tabelas pertencentes a outro microsserviço.
+- Trocar informações por APIs ou eventos.
+- Manter as restrições de integridade dentro do próprio banco.
+
+A separação física dos bancos em instâncias independentes poderá ser considerada futuramente, conforme as necessidades de escalabilidade, disponibilidade e isolamento.
+
+**Cache:** não será introduzido Redis ou outro mecanismo de cache no MVP sem uma necessidade funcional ou de desempenho identificada.
+
+### 3.3 Rede
+
+A infraestrutura utilizará uma VPC (Virtual Private Cloud), permitindo controlar a comunicação entre os componentes e restringir o acesso aos recursos internos.
+
+| Recurso | Configuração proposta | Finalidade |
 |---|---|---|
-| Provedor de nuvem | AWS | Hospedagem da aplicação e dos recursos de infraestrutura. |
-| Infraestrutura como Código | Terraform | Provisionamento e gerenciamento declarativo dos recursos. |
-| Estado remoto | AWS S3 | Armazenamento centralizado e versionado do estado Terraform. |
-| Bloqueio do estado | S3 Lockfile | Evitar alterações simultâneas no mesmo estado Terraform. |
-| Frontend | React + S3 + CloudFront | Hospedagem e distribuição da interface da aplicação. |
-| Contêineres | Docker | Empacotamento dos microsserviços. |
-| Execução dos contêineres | AWS ECS com Fargate | Execução e gerenciamento dos microsserviços sem administrar servidores. |
-| Entrada das APIs | Application Load Balancer (ALB) | Distribuição de requisições para os microsserviços. |
-| Registro de imagens | Amazon ECR | Armazenamento das imagens Docker. |
-| Banco de dados | PostgreSQL no Amazon RDS | Persistência dos dados dos microsserviços. |
-| Mensageria | RabbitMQ no Amazon MQ | Comunicação assíncrona entre os microsserviços. |
-| Armazenamento de arquivos | AWS S3 | Armazenamento de documentos e arquivos da aplicação. |
-| Gerenciamento de segredos | AWS Secrets Manager | Armazenamento protegido de credenciais e informações sensíveis. |
-| CI/CD | GitHub Actions | Automação de testes, validações e implantação. |
-| Logs | Amazon CloudWatch | Centralização e consulta de logs operacionais. |
-| Métricas | Prometheus | Coleta de métricas da aplicação e dos serviços. |
-| Dashboards | Grafana | Visualização de métricas e acompanhamento da infraestrutura. |
+| VPC | Faixa CIDR inicial sugerida `10.0.0.0/16` | Isolamento lógico da rede. |
+| Sub-redes públicas | Distribuídas entre zonas de disponibilidade, conforme ambiente | Hospedagem dos componentes que necessitam de entrada pública. |
+| Sub-redes privadas de aplicação | Distribuídas entre zonas de disponibilidade | Execução dos contêineres dos microsserviços. |
+| Sub-redes privadas de dados | Distribuídas entre zonas de disponibilidade | Persistência e mensageria. |
+| Security Groups | Regras específicas por componente | Controle de tráfego entre os recursos. |
+| Application Load Balancer | Entrada HTTPS das APIs | Distribuição das requisições externas. |
+| Internet Gateway | Associado à VPC | Comunicação de recursos públicos com a internet. |
+| NAT Gateway | Uso condicionado à necessidade e ao orçamento | Acesso de saída à internet por recursos privados, quando necessário. |
 
-**Diretriz arquitetural:** o ECS com Fargate será a opção inicial de execução dos contêineres. O EKS não será adotado como padrão, pois introduziria a complexidade de Kubernetes sem uma necessidade identificada no MVP.
+Os bancos de dados e o broker RabbitMQ não deverão receber conexões públicas diretamente.
 
-A utilização de serviços gerenciados reduz a necessidade de administrar diretamente servidores, bancos de dados e componentes de infraestrutura, mas deverá ser acompanhada de uma avaliação de custos.
+### 3.4 Mensageria e Eventos
 
----
-
-## 3. Organização da Infraestrutura de Rede
-
-A infraestrutura deverá utilizar uma VPC (Virtual Private Cloud), permitindo controlar a comunicação entre os componentes e restringir o acesso aos recursos internos.
-
-### 3.1 Organização das sub-redes
-
-A proposta considera a seguinte separação:
-
-| Camada | Localização | Recursos |
+| Recurso | Serviço AWS | Finalidade |
 |---|---|---|
-| Acesso público | Sub-redes públicas | Application Load Balancer e componentes que precisem de acesso público. |
-| Aplicação | Sub-redes privadas | Contêineres dos microsserviços executados no ECS Fargate. |
-| Persistência | Sub-redes privadas de banco de dados | Instância RDS e recursos de persistência. |
-| Mensageria | Sub-redes privadas | Broker RabbitMQ do Amazon MQ. |
+| Broker de mensagens | Amazon MQ com RabbitMQ | Comunicação assíncrona entre os microsserviços. |
+| Filas e exchanges | RabbitMQ | Distribuição de eventos aos serviços interessados. |
+| Dead Letter Queue (DLQ) | RabbitMQ | Isolamento de mensagens que não puderam ser processadas. |
 
-Os bancos de dados e o broker de mensageria não deverão receber conexões públicas diretamente.
+A escolha do RabbitMQ mantém a arquitetura de mensageria já definida nos documentos do projeto.
 
-### 3.2 Controle de tráfego
+O Amazon SQS não será utilizado como substituto do RabbitMQ nesta proposta, pois os serviços deverão seguir o mecanismo de mensageria definido para o OficinaPro.
 
-Os Security Groups deverão limitar a comunicação entre os componentes.
+### 3.5 Armazenamento
 
-Exemplos:
+| Recurso | Serviço AWS | Finalidade |
+|---|---|---|
+| Frontend | Amazon S3 | Hospedagem dos arquivos estáticos da interface. |
+| Distribuição do frontend | Amazon CloudFront | Distribuição de conteúdo e acesso HTTPS. |
+| Imagens de contêineres | Amazon ECR | Armazenamento das imagens Docker. |
+| Backups e arquivos | Amazon S3 | Armazenamento de arquivos e cópias de segurança, conforme necessidade. |
+| Estado do Terraform | Amazon S3 | Armazenamento remoto e versionado do estado da infraestrutura. |
 
-- O ALB poderá receber tráfego HTTPS externo.
-- Os microsserviços receberão requisições somente dos componentes autorizados.
-- O PostgreSQL aceitará conexões somente dos microsserviços autorizados.
-- O RabbitMQ aceitará conexões somente dos serviços que precisem publicar ou consumir eventos.
-- O acesso administrativo deverá ser restrito e autenticado.
-
-### 3.3 Disponibilidade e custos de rede
-
-A infraestrutura de produção deverá considerar a distribuição dos recursos entre zonas de disponibilidade, quando compatível com os serviços escolhidos.
-
-O NAT Gateway poderá ser utilizado quando os recursos em sub-redes privadas precisarem acessar a internet. Entretanto, como possui custo próprio, sua necessidade deverá ser avaliada antes do provisionamento.
-
-Para o MVP, a configuração de rede deverá buscar equilíbrio entre segurança, disponibilidade e custo.
-
----
-
-## 4. Hospedagem da Aplicação
-
-### 4.1 Frontend — React
-
-O frontend será desenvolvido utilizando React e poderá ser hospedado em um bucket AWS S3 configurado para armazenamento de conteúdo estático.
-
-O CloudFront será utilizado como camada de distribuição de conteúdo, permitindo disponibilizar a interface aos usuários.
-
-A configuração deverá considerar:
-
-- Distribuição HTTPS.
-- Restrição de acesso direto ao bucket.
-- Atualização dos arquivos publicados.
-- Configuração das rotas da aplicação frontend.
-- Separação dos arquivos de cada ambiente.
+Os buckets deverão possuir políticas de acesso restritas, criptografia e identificação de finalidade.
 
 O bucket do frontend não deverá armazenar informações sensíveis ou dados internos dos microsserviços.
 
-### 4.2 Microsserviços — ECS Fargate
+### 3.6 Monitoramento e Observabilidade
 
-A aplicação será organizada em quatro microsserviços, conforme a arquitetura definida no DFD:
-
-| Microsserviço | Responsabilidade |
-|---|---|
-| **Auth Service** | Autenticação, usuários, vínculos com oficinas e permissões. |
-| **Work Order Service** | Clientes, veículos, ordens de serviço e diagnósticos. |
-| **Inventory Service** | Cadastro de peças, controle de estoque e movimentações. |
-| **Billing Service** | Orçamentos, itens de orçamento e pagamentos. |
-
-Cada microsserviço deverá possuir:
-
-- Sua própria imagem Docker.
-- Uma definição de execução independente.
-- Configurações e variáveis de ambiente próprias.
-- Permissões específicas para acessar seus recursos.
-- Health checks para verificar sua disponibilidade.
-- Logs e métricas para acompanhamento operacional.
-
-O ECS Fargate será responsável pela execução dos contêineres, sem exigir que o grupo administre diretamente as máquinas virtuais utilizadas pela plataforma.
-
-### 4.3 Entrada das APIs — Application Load Balancer
-
-O Application Load Balancer será utilizado como ponto de entrada das APIs.
-
-Ele deverá encaminhar as requisições para os serviços correspondentes, conforme regras de roteamento definidas pelo grupo.
-
-A comunicação deverá utilizar HTTPS e certificados digitais adequados.
-
-Para o MVP, não será necessário introduzir um API Gateway adicional se o ALB atender aos requisitos de roteamento, distribuição e exposição dos serviços.
-
-Caso sejam identificadas necessidades futuras de gerenciamento avançado de APIs, autenticação centralizada, limitação de requisições ou políticas específicas, essa decisão poderá ser reavaliada.
-
-### 4.4 Registro das Imagens — Amazon ECR
-
-O Amazon Elastic Container Registry (ECR) será utilizado para armazenar as imagens Docker dos microsserviços.
-
-O processo previsto será:
-
-1. O GitHub Actions executa os testes e validações.
-2. Após a aprovação das verificações, as imagens Docker são construídas.
-3. As imagens são identificadas por tags, preferencialmente associadas ao commit correspondente.
-4. As imagens são publicadas no ECR.
-5. O ECS utiliza a nova versão da imagem durante a implantação.
-
-As imagens deverão possuir identificação de versão para facilitar a rastreabilidade e a reversão de implantações.
-
----
-
-## 5. Banco de Dados e Isolamento SaaS
-
-### 5.1 PostgreSQL e Database-per-Service
-
-O PostgreSQL será utilizado como tecnologia de banco de dados.
-
-A arquitetura seguirá o padrão Database-per-Service, no qual cada microsserviço é responsável pelos próprios dados.
-
-A organização lógica proposta é:
-
-| Microsserviço | Banco de dados |
-|---|---|
-| Auth Service | `auth_db` |
-| Work Order Service | `work_order_db` |
-| Inventory Service | `inventory_db` |
-| Billing Service | `billing_db` |
-
-Para reduzir custos e complexidade no MVP, recomenda-se avaliar uma única instância Amazon RDS for PostgreSQL contendo bancos separados, credenciais específicas e permissões independentes para cada microsserviço.
-
-Essa organização mantém a separação lógica sem exigir quatro instâncias físicas independentes.
-
-Cada serviço deverá:
-
-- Acessar somente seu próprio banco.
-- Possuir credenciais específicas.
-- Controlar suas próprias migrações.
-- Não consultar diretamente as tabelas dos demais serviços.
-- Trocar informações por APIs ou eventos.
-
-A separação física em instâncias independentes poderá ser considerada futuramente, conforme a necessidade de escalabilidade, disponibilidade ou isolamento.
-
-### 5.2 Isolamento entre Oficinas (Multi-tenancy)
-
-Como o OficinaPro será um SaaS, diferentes oficinas utilizarão a mesma plataforma.
-
-A proposta inicial é utilizar um modelo multi-tenant com separação lógica dos dados por meio do identificador `tenant_id`.
-
-As tabelas que armazenarem dados pertencentes a uma oficina deverão possuir esse identificador.
-
-O isolamento deverá ser garantido pelas seguintes regras:
-
-- O `tenant_id` deverá ser obtido de um contexto autenticado e validado pelo backend.
-- O sistema não deverá confiar exclusivamente no identificador enviado pelo frontend.
-- Todas as consultas e alterações deverão respeitar o contexto da oficina.
-- As operações deverão validar o vínculo do usuário com a oficina.
-- As restrições de unicidade deverão considerar o contexto da oficina quando a regra permitir registros iguais em oficinas diferentes.
-- Os eventos publicados no RabbitMQ deverão transportar o identificador da oficina.
-- Os consumidores deverão validar o contexto da oficina antes de processar os eventos.
-
-O uso de Row-Level Security (RLS) no PostgreSQL poderá ser avaliado como camada adicional de proteção. Entretanto, deverá ser implementado com cuidado para garantir que o contexto da oficina seja definido corretamente em cada transação e conexão utilizada pela aplicação.
-
-**Regra fundamental:** uma oficina nunca poderá consultar, modificar ou excluir dados pertencentes a outra oficina.
-
-### 5.3 Backups e Recuperação
-
-O banco de dados deverá possuir uma estratégia de backup e recuperação compatível com a importância das informações armazenadas.
-
-A configuração deverá considerar:
-
-- Backups automatizados.
-- Criptografia dos backups.
-- Política de retenção.
-- Recuperação para um ponto no tempo, quando disponível no serviço contratado.
-- Testes periódicos de restauração.
-- Restrição de acesso aos backups.
-
-O objetivo é permitir a recuperação dos dados em caso de falhas operacionais ou incidentes.
-
----
-
-## 6. Mensageria Assíncrona
-
-O RabbitMQ será utilizado para a comunicação assíncrona entre os microsserviços.
-
-A proposta é utilizar o Amazon MQ com RabbitMQ para reduzir a necessidade de administrar diretamente o broker em produção.
-
-Os principais eventos previstos no DFD são:
-
-| Evento | Publicador | Consumidor |
+| Recurso | Tecnologia | Finalidade |
 |---|---|---|
-| `RESERVA_SOLICITADA` | Billing Service | Inventory Service |
-| `RESERVA_CONFIRMADA` | Inventory Service | Billing Service |
-| `RESERVA_RECUSADA` | Inventory Service | Billing Service |
-| `ORCAMENTO_APROVADO` | Billing Service | Work Order Service |
+| Logs | Amazon CloudWatch | Centralização e consulta de logs operacionais. |
+| Métricas | Prometheus | Coleta de métricas da aplicação e dos serviços. |
+| Dashboards | Grafana | Visualização de métricas e acompanhamento operacional. |
+| Alertas | CloudWatch e/ou Grafana | Identificação de falhas e condições operacionais relevantes. |
 
-### 6.1 Requisitos de Confiabilidade
+A configuração deverá permitir acompanhar:
 
-A comunicação deverá considerar:
+- Disponibilidade dos microsserviços.
+- Uso de CPU e memória dos contêineres.
+- Tempo de resposta das APIs.
+- Quantidade de requisições e erros.
+- Estado das conexões com os bancos de dados.
+- Quantidade de mensagens pendentes no RabbitMQ.
+- Falhas de publicação e consumo de eventos.
+- Saúde dos serviços e disponibilidade da infraestrutura.
 
-- Persistência de mensagens e filas, conforme a configuração adotada.
-- Confirmação de recebimento e processamento das mensagens.
-- Identificadores únicos para rastreabilidade.
-- Consumidores idempotentes.
-- Estratégia de retentativa para falhas temporárias.
-- Dead Letter Queue (DLQ) para mensagens que não puderem ser processadas após as tentativas definidas.
-- Monitoramento de filas, mensagens pendentes e falhas.
+Prometheus e Grafana deverão ser implantados de maneira compatível com o orçamento e com os requisitos acadêmicos do projeto. A forma de hospedagem dessas ferramentas ainda deverá ser definida.
 
-O padrão Transactional Outbox deverá ser aplicado nos serviços que precisarem persistir uma alteração no banco de dados e publicar um evento relacionado a essa alteração.
+### 3.7 CI/CD e Registry
 
-O Inventory Service deverá utilizá-lo para publicar os resultados das reservas. O Billing Service deverá aplicar o mesmo princípio ao registrar a aprovação definitiva do orçamento e publicar o evento correspondente.
+| Recurso | Serviço | Finalidade |
+|---|---|---|
+| Pipeline | GitHub Actions | Build, testes, validações e implantação automatizada. |
+| Container Registry | Amazon ECR | Armazenamento das imagens Docker. |
+| Infraestrutura como Código | Terraform | Provisionamento e atualização dos recursos AWS. |
+| Autenticação do pipeline | OIDC com IAM | Acesso temporário e controlado do GitHub Actions à AWS. |
 
-A implementação deverá respeitar as regras de consistência e idempotência descritas no DFD.
+O pipeline deverá separar as etapas de validação da aplicação e de alteração da infraestrutura.
 
----
+## 4. Estratégia de Rede e Segurança
 
-## 7. Segurança e Gerenciamento de Segredos
+### 4.1 Diagrama de Rede
 
-A segurança deverá ser considerada em todas as camadas da infraestrutura.
+A organização lógica inicial da rede é apresentada abaixo:
 
-### 7.1 Gerenciamento de Credenciais
+```text
+VPC: 10.0.0.0/16
+│
+├── Sub-redes públicas
+│   ├── Public Subnet A - AZ-a
+│   │   └── Application Load Balancer
+│   │
+│   └── Public Subnet B - AZ-b
+│       └── Application Load Balancer
+│
+├── Sub-redes privadas de aplicação
+│   ├── Private App Subnet A - AZ-a
+│   │   ├── Auth Service
+│   │   ├── Work Order Service
+│   │   ├── Inventory Service
+│   │   └── Billing Service
+│   │
+│   └── Private App Subnet B - AZ-b
+│       └── Execução distribuída dos contêineres,
+│           conforme necessidade de disponibilidade
+│
+└── Sub-redes privadas de dados
+    ├── Private Data Subnet A - AZ-a
+    │   ├── Amazon RDS PostgreSQL
+    │   └── Amazon MQ
+    │
+    └── Private Data Subnet B - AZ-b
+        └── Recursos de disponibilidade e recuperação,
+            conforme configuração dos serviços gerenciados
+```
+
+A distribuição exata dos recursos, faixas CIDR e zonas de disponibilidade deverá ser definida na implementação Terraform.
+
+A utilização de múltiplas zonas de disponibilidade será considerada especialmente para o ambiente de produção, respeitando o orçamento disponível.
+
+### 4.2 Security Groups
+
+Os Security Groups deverão limitar a comunicação entre os componentes, seguindo o princípio do menor privilégio.
+
+| Nome lógico | Porta(s) | Origem autorizada | Destino | Finalidade |
+|---|---|---|---|---|
+| `sg-alb` | 443 | Internet | ALB | Recebimento de requisições HTTPS. |
+| `sg-app` | Portas definidas para as APIs | Security Group do ALB e serviços autorizados | Contêineres | Comunicação com os microsserviços. |
+| `sg-db` | 5432 | Security Groups dos serviços autorizados | RDS PostgreSQL | Acesso aos bancos de dados. |
+| `sg-mq` | Portas configuradas para RabbitMQ | Security Groups dos microsserviços | Amazon MQ | Publicação e consumo de eventos. |
+| `sg-monitoring` | Portas específicas | Origem administrativa restrita | Prometheus/Grafana | Acesso às ferramentas de monitoramento. |
+
+As portas efetivamente utilizadas deverão ser confirmadas durante a implementação, de acordo com as configurações dos serviços.
+
+Não deverá existir regra de acesso público irrestrito aos bancos de dados, ao RabbitMQ ou às ferramentas administrativas.
+
+### 4.3 Proteção de Comunicação
+
+A arquitetura deverá considerar:
+
+- HTTPS para comunicação externa.
+- Certificados digitais adequados para os domínios utilizados.
+- Comunicação privada entre os recursos internos.
+- Criptografia dos dados armazenados, conforme os recursos AWS utilizados.
+- Restrição de acesso aos bancos e ao broker.
+- Controle de permissões por usuário e serviço.
+- Proteção dos logs contra exposição de informações sensíveis.
+
+### 4.4 Isolamento Multi-tenant
+
+Como o OficinaPro será uma plataforma SaaS, diferentes oficinas utilizarão a mesma aplicação.
+
+O isolamento dos dados será realizado por meio do identificador `tenant_id`, seguindo as regras estabelecidas nos documentos de requisitos e no MER.
+
+A infraestrutura deverá apoiar esse isolamento por meio de:
+
+- Comunicação autenticada entre os serviços.
+- Credenciais específicas para cada microsserviço.
+- Restrição de acesso aos bancos de dados.
+- Proteção das credenciais e configurações.
+- Registro do contexto da oficina nos eventos.
+- Monitoramento das operações e dos acessos relevantes.
+
+O backend deverá obter e validar o `tenant_id` a partir do contexto autenticado. O identificador enviado pelo frontend não poderá ser considerado suficiente para autorizar acesso aos dados de uma oficina.
+
+O isolamento lógico por `tenant_id` deverá ser aplicado em todas as consultas, alterações, eventos e relatórios que envolvam dados de uma oficina.
+
+### 4.5 Gerenciamento de Credenciais
 
 O AWS Secrets Manager será a opção proposta para armazenar credenciais de bancos de dados, tokens e outras informações sensíveis.
 
@@ -368,45 +388,44 @@ Não deverão ser armazenados no GitHub:
 - Credenciais permanentes da AWS.
 - Arquivos de configuração contendo informações sensíveis.
 
-### 7.2 Permissões e Identidade
+O acesso aos segredos deverá ser limitado às funções IAM dos serviços que realmente necessitem deles.
 
-O gerenciamento de permissões deverá utilizar IAM e mecanismos de identidade próprios dos serviços da AWS.
+### 4.6 Permissões e Identidade
+
+O gerenciamento de permissões da infraestrutura deverá utilizar IAM.
 
 Cada componente deverá possuir somente as permissões necessárias para executar suas atividades.
 
 Para o ECS Fargate, deverão ser configuradas as permissões adequadas às funções de execução das tarefas e às aplicações.
 
-### 7.3 Autenticação do GitHub Actions na AWS
-
-O GitHub Actions deverá utilizar OIDC (OpenID Connect) para autenticação na AWS, evitando a necessidade de armazenar chaves permanentes de acesso no repositório.
+O GitHub Actions deverá utilizar OIDC (OpenID Connect) para autenticação na AWS, evitando o armazenamento de chaves permanentes de acesso no repositório.
 
 A relação de confiança deverá ser restrita ao repositório, à branch ou ao ambiente autorizado para executar as operações.
 
-As permissões utilizadas nos pipelines deverão ser limitadas às ações necessárias.
+### 4.7 Proteção de Dados e LGPD
 
-### 7.4 Proteção dos Dados
+A arquitetura deverá considerar os princípios de proteção de dados aplicáveis ao sistema:
 
-A infraestrutura deverá considerar:
+- Restrição de acesso a dados pessoais.
+- Controle de permissões por perfil.
+- Proteção das credenciais.
+- Criptografia de dados armazenados e transmitidos.
+- Registro de operações relevantes.
+- Evitar exposição de dados pessoais em logs.
+- Preservação do histórico operacional necessário.
+- Aplicação de políticas de retenção e descarte adequadas.
 
-- HTTPS para comunicação externa.
-- Criptografia dos dados armazenados, conforme os recursos utilizados.
-- Restrição de acesso aos bancos de dados e ao broker.
-- Proteção dos logs contra exposição de informações sensíveis.
-- Controle de permissões por usuário e serviço.
-- Auditoria das operações relevantes.
-- Medidas compatíveis com os requisitos da LGPD.
+As medidas deverão ser implementadas em conjunto com os requisitos de segurança e privacidade definidos no documento de requisitos.
 
----
-
-## 8. Infraestrutura como Código — Terraform
+## 5. Infraestrutura como Código (Terraform)
 
 O Terraform será utilizado para declarar e provisionar os recursos da AWS.
 
-A infraestrutura deverá ser organizada em módulos ou componentes reutilizáveis, evitando a concentração de toda a configuração em um único arquivo.
+A infraestrutura deverá ser organizada em módulos reutilizáveis, permitindo separar responsabilidades e facilitar a manutenção.
 
-### 8.1 Recursos Gerenciados pelo Terraform
+### 5.1 Recursos Gerenciados pelo Terraform
 
-A estrutura de IaC deverá contemplar, conforme a necessidade do ambiente:
+A estrutura de IaC deverá contemplar, conforme a necessidade de cada ambiente:
 
 1. VPC, sub-redes, tabelas de rotas e Internet Gateway.
 2. Security Groups e regras de comunicação.
@@ -421,9 +440,9 @@ A estrutura de IaC deverá contemplar, conforme a necessidade do ambiente:
 11. Recursos de monitoramento e logs.
 12. Políticas de backup e configurações de segurança.
 
-A divisão dos recursos deverá respeitar a separação dos ambientes e facilitar a manutenção da infraestrutura.
+A criação dos recursos deverá respeitar a separação dos ambientes e as dependências entre os componentes.
 
-### 8.2 Organização dos Arquivos
+### 5.2 Estrutura dos Módulos
 
 Uma estrutura inicial sugerida é:
 
@@ -431,45 +450,54 @@ Uma estrutura inicial sugerida é:
 infra/
 ├── bootstrap/
 │   └── main.tf
+│
 ├── modules/
 │   ├── networking/
 │   ├── ecs/
 │   ├── database/
 │   ├── messaging/
 │   ├── storage/
+│   ├── security/
 │   └── monitoring/
+│
 └── environments/
     ├── dev/
     │   ├── main.tf
     │   ├── variables.tf
     │   └── backend.hcl
+    │
     ├── staging/
     │   ├── main.tf
     │   ├── variables.tf
     │   └── backend.hcl
+    │
     └── prod/
         ├── main.tf
         ├── variables.tf
         └── backend.hcl
 ```
 
-Essa estrutura é uma sugestão inicial e poderá ser ajustada conforme a organização efetivamente adotada pelo grupo.
+Essa estrutura é uma proposta inicial e poderá ser ajustada conforme a organização efetivamente adotada pelo grupo.
 
-### 8.3 Backend Remoto do Terraform
+### 5.3 State Management
 
-O estado do Terraform deverá ser armazenado em um bucket S3 dedicado.
+O estado do Terraform deverá ser armazenado remotamente em um bucket S3 dedicado.
 
-A configuração deverá contemplar:
-
-- Versionamento do bucket.
-- Criptografia dos objetos.
-- Bloqueio nativo do estado por meio de `use_lockfile = true`.
-- Controle de acesso restrito.
-- Separação dos arquivos de estado por ambiente.
+| Item | Configuração proposta |
+|---|---|
+| Backend | Amazon S3 |
+| State File | Arquivos separados por ambiente |
+| Versionamento | Habilitado no bucket |
+| Criptografia | Habilitada |
+| Bloqueio | Mecanismo nativo `use_lockfile` do backend S3 |
+| Acesso | Restrito às identidades autorizadas |
+| Bootstrap | Criação prévia do bucket e de suas configurações |
 
 O bucket utilizado pelo backend deverá ser criado previamente, por uma etapa de bootstrap independente da configuração que utiliza esse mesmo backend.
 
-### 8.4 Exemplo de Configuração do Backend
+A separação dos estados deverá impedir que alterações em um ambiente afetem diretamente os demais.
+
+### 5.4 Exemplo de Configuração do Backend
 
 Exemplo ilustrativo para o ambiente de desenvolvimento:
 
@@ -511,7 +539,7 @@ encrypt      = true
 use_lockfile = true
 ```
 
-Inicialização do backend:
+Inicialização:
 
 ```powershell
 terraform init -backend-config=backend.hcl
@@ -520,164 +548,71 @@ terraform init -backend-config=backend.hcl
 **Observações:**
 
 - O nome do bucket é ilustrativo e deverá ser substituído pelo nome efetivamente criado na AWS.
-- A região `us-east-1` é uma referência inicial, sujeita à confirmação do grupo.
-- O exemplo utiliza Terraform 1.10 ou superior devido ao bloqueio nativo do S3.
-- O provider AWS deverá ser testado com os recursos declarados e sua versão deverá ser mantida de maneira controlada.
-- O arquivo de estado poderá conter dados sensíveis. Portanto, deverá ser protegido contra acesso não autorizado.
+- A região `us-east-1` é uma referência inicial, sujeita à confirmação da configuração do grupo.
+- O exemplo utiliza Terraform 1.10 ou superior devido ao mecanismo de bloqueio nativo do S3.
+- O arquivo de estado poderá conter informações sensíveis e deverá ser protegido contra acesso não autorizado.
 - A criação do bucket e suas configurações de segurança deverá ocorrer antes da inicialização do backend remoto.
+- O exemplo não representa uma infraestrutura já provisionada.
 
----
-
-## 9. Integração e Entrega Contínua — CI/CD
-
-O GitHub Actions será utilizado para automatizar as verificações de qualidade e o processo de implantação.
-
-O pipeline deverá separar a validação da aplicação da validação e implantação da infraestrutura.
-
-### 9.1 Pipeline de Integração Contínua (CI)
-
-O fluxo de CI poderá contemplar:
-
-1. Verificação de formatação do código.
-2. Execução de linters e análises estáticas.
-3. Execução dos testes automatizados dos microsserviços.
-4. Verificação da cobertura de testes exigida pelo projeto.
-5. Verificação da formatação Terraform com `terraform fmt`.
-6. Validação das configurações Terraform com `terraform validate`.
-7. Construção das imagens Docker.
-8. Verificação dos artefatos gerados.
-
-As verificações deverão ocorrer antes da integração das alterações na branch principal.
-
-### 9.2 Pipeline de Infraestrutura
-
-O pipeline de infraestrutura deverá executar:
-
-1. Inicialização do Terraform.
-2. Validação da configuração.
-3. Geração do plano de execução (`terraform plan`).
-4. Análise das alterações propostas.
-5. Aprovação das operações que alterem a infraestrutura.
-6. Aplicação das alterações autorizadas (`terraform apply`).
-
-Alterações destrutivas ou que possam gerar custos adicionais deverão receber atenção especial e aprovação antes da execução.
-
-### 9.3 Pipeline de Implantação da Aplicação
-
-O processo de implantação dos microsserviços deverá contemplar:
-
-1. Construção das imagens Docker.
-2. Identificação das versões das imagens.
-3. Publicação das imagens no Amazon ECR.
-4. Atualização das definições de execução no ECS.
-5. Implantação dos novos contêineres.
-6. Verificação da saúde dos serviços após a implantação.
-7. Possibilidade de reversão para uma versão anterior em caso de falha.
-
-As alterações de infraestrutura não deverão ser executadas automaticamente a cada alteração de código da aplicação. Cada fluxo deverá ser acionado conforme a natureza da mudança.
-
----
-
-## 10. Ambientes de Execução
-
-A infraestrutura deverá ser organizada em três ambientes:
-
-| Ambiente | Finalidade |
-|---|---|
-| **Desenvolvimento (dev)** | Desenvolvimento individual, testes iniciais e integração dos microsserviços. |
-| **Homologação (staging)** | Validação integrada das funcionalidades e testes antes da publicação. |
-| **Produção (prod)** | Execução da plataforma disponibilizada às oficinas. |
-
-### 10.1 Isolamento dos Ambientes
-
-Cada ambiente deverá possuir configurações próprias, incluindo:
-
-- Arquivos de estado Terraform independentes.
-- Configurações e variáveis específicas.
-- Segredos e credenciais próprios.
-- Recursos identificados pelo ambiente correspondente.
-- Políticas de acesso adequadas à finalidade.
-
-A separação por contas AWS distintas é recomendável para ambientes de produção e não produção quando a estrutura e o orçamento permitirem.
-
-Caso o projeto utilize uma única conta AWS, deverá haver isolamento por recursos, permissões, configurações e estados separados, sem compartilhamento indevido de dados.
-
----
-
-## 11. Monitoramento e Observabilidade
-
-O OficinaPro deverá possuir mecanismos para acompanhar o funcionamento da aplicação e identificar problemas operacionais.
-
-A proposta contempla:
-
-| Tecnologia | Responsabilidade |
-|---|---|
-| **Prometheus** | Coleta e armazenamento de métricas. |
-| **Grafana** | Visualização de métricas por meio de dashboards. |
-| **CloudWatch** | Centralização de logs e acompanhamento dos recursos AWS. |
-
-O monitoramento deverá contemplar:
-
-- Disponibilidade dos microsserviços.
-- Uso de CPU e memória dos contêineres.
-- Tempo de resposta das APIs.
-- Quantidade de requisições e erros.
-- Estado das conexões com os bancos de dados.
-- Quantidade de mensagens pendentes no RabbitMQ.
-- Falhas de publicação e consumo de eventos.
-- Saúde dos serviços e disponibilidade da infraestrutura.
-
-Os dashboards deverão permitir acompanhar os principais indicadores do sistema e apoiar a identificação de falhas.
-
-A configuração de Prometheus e Grafana deverá atender ao critério acadêmico de disponibilização funcional e acessível dessas ferramentas.
-
----
-
-## 12. Controle de Custos e Dimensionamento
+## 6. Estimativa de Custos
 
 A infraestrutura deverá ser dimensionada considerando o volume inicial de utilização do MVP e a possibilidade de crescimento futuro.
 
-A escolha dos serviços gerenciados deverá considerar o custo de execução, armazenamento, transferência de dados e manutenção.
+A estimativa deverá considerar custos de computação, armazenamento, banco de dados, mensageria, rede, transferência de dados e monitoramento.
+
+| Recurso | Serviço AWS | Estimativa mensal |
+|---|---|---|
+| Computação | ECS Fargate | A calcular |
+| Banco de dados | Amazon RDS PostgreSQL | A calcular |
+| Mensageria | Amazon MQ RabbitMQ | A calcular |
+| Distribuição | CloudFront | A calcular |
+| Armazenamento | S3 e ECR | A calcular |
+| Rede | ALB, NAT Gateway e transferência de dados | A calcular |
+| Monitoramento | CloudWatch, Prometheus e Grafana | A calcular |
+| **Total estimado** | | **Pendente de dimensionamento** |
+
+A estimativa não será preenchida com valores fictícios. Os custos deverão ser calculados utilizando a configuração real planejada para cada serviço.
+
+A consulta poderá ser realizada pelo [AWS Pricing Calculator](https://calculator.aws/).
+
+### 6.1 Estratégia de Controle de Custos
 
 Recomenda-se:
 
 - Utilizar recursos dimensionados para a demanda inicial.
-- Avaliar os custos do ECS Fargate, RDS, Amazon MQ e NAT Gateway antes do provisionamento.
+- Avaliar os custos de ECS Fargate, RDS, Amazon MQ e NAT Gateway antes do provisionamento.
 - Evitar manter ambientes de desenvolvimento e homologação ativos sem necessidade.
 - Configurar alertas de orçamento na AWS.
 - Aplicar tags de identificação dos recursos.
 - Acompanhar os custos por ambiente e serviço.
 - Revisar periodicamente os recursos provisionados.
 - Planejar a remoção de recursos temporários, preservando os dados necessários.
+- Avaliar a necessidade de alta disponibilidade de acordo com o ambiente e o orçamento.
 
-**Importante:** serviços gerenciados reduzem a carga de administração, mas não são necessariamente a alternativa mais barata. A escolha final deverá equilibrar confiabilidade, complexidade e orçamento disponível.
+Serviços gerenciados reduzem a carga de administração, mas não são necessariamente a alternativa mais barata. A escolha final deverá equilibrar confiabilidade, complexidade operacional e orçamento disponível.
 
----
+## 7. Histórico de Revisões
 
-## 13. Pontos Pendentes de Validação
-
-Embora a arquitetura-base esteja definida como proposta neste documento, os seguintes pontos ainda deverão ser confirmados pelo grupo:
-
-1. Confirmação da AWS como provedora de nuvem.
-2. Confirmação do ECS Fargate como ambiente de execução dos microsserviços.
-3. Confirmação do Application Load Balancer como ponto de entrada das APIs.
-4. Confirmação da hospedagem do frontend em S3 com distribuição pelo CloudFront.
-5. Confirmação da utilização do Amazon RDS for PostgreSQL, com bancos separados por microsserviço.
-6. Confirmação da utilização do Amazon MQ com RabbitMQ.
-7. Definição da região AWS e das zonas de disponibilidade.
-8. Definição da quantidade de ambientes que serão efetivamente provisionados para o MVP.
-9. Definição da estratégia de isolamento dos ambientes por contas AWS ou por recursos dentro de uma única conta.
-10. Definição da política de backups, retenção e recuperação dos bancos de dados.
-11. Definição dos limites de custos e do dimensionamento inicial dos recursos.
-12. Definição da configuração de Prometheus, Grafana e CloudWatch.
-13. Confirmação da estrutura de módulos Terraform e do processo de bootstrap do backend remoto.
-14. Definição dos fluxos de CI/CD e das aprovações necessárias para implantação.
-15. Validação da estratégia de isolamento multi-tenant e das permissões de acesso aos dados.
+| Versão | Data | Autor | Descrição da Alteração |
+|---|---|---|---|
+| 1.0 | 16/11/2026 | Grupo GarageOps | Consolidação da arquitetura AWS, dos quatro microsserviços do MVP, da persistência Database-per-Service, da mensageria RabbitMQ, da segurança e da estratégia de IaC. |
 
 ---
 
-**Última atualização:** 15/11/2026
+## Aprovação
 
-**Responsável:** Product Owner — Grupo GarageOps
+**Aprovado pelo grupo:**
 
-**Status:** Documento de trabalho sujeito à validação do grupo e do professor.
+___________________________________________________
+
+**Data:** ___/___/_____
+
+**Aprovado pelo professor orientador:**
+
+___________________________________________________
+
+**Data:** ___/___/_____
+
+---
+
+**Observação final:** a arquitetura apresentada representa o planejamento técnico do OficinaPro. A implantação dos recursos, os testes de funcionamento, a validação dos custos e a comprovação dos mecanismos de segurança deverão ser registrados conforme forem efetivamente realizados.

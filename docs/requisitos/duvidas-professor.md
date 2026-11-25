@@ -3,7 +3,7 @@
 **Grupo:** GarageOps
 **Atualizado em:** 25/11/2026
 
-Este documento separa três coisas: o que já foi respondido pelos documentos oficiais do curso, o que o próprio grupo precisa decidir e as poucas perguntas que realmente precisam ser levadas ao orientador. A versão anterior (até o commit `b5f6f9b`) foi escrita para o modelo com estoque e listava perguntas que os documentos oficiais já respondem; ela continua no histórico do Git.
+Este documento separa três coisas: o que já foi respondido pelos documentos oficiais do curso, o que o próprio grupo precisa decidir e as poucas perguntas que realmente precisam ser levadas ao orientador. A versão anterior (revisada em 16/11/2026, commit `2736319`) foi escrita para o modelo com estoque e listava perguntas que os documentos oficiais já respondem; ela continua no histórico do Git.
 
 ---
 

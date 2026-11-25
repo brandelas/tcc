@@ -1,377 +1,459 @@
-# Diagrama de Fluxo de Dados (DFD) e Comunicação — OficinaPro
+# Diagrama de Fluxo de Dados (DFD) — OficinaPro
 
-> **Documento histórico — não usar na entrega.** Este arquivo foi escrito para o modelo anterior do OficinaPro, com controle de estoque, reserva de peças e perfil de estoque, retirados do escopo pelo grupo em 13/11/2026. Ele não reflete os serviços, papéis e fluxos atuais. A versão vigente está em [`entrega/Projetos/OficinaPro/`](../../entrega/Projetos/OficinaPro/README.md) (Documento 03). Mantido apenas como registro do levantamento.
+> **Documento histórico — não usar na entrega.** Esta versão (revisada em 16/11/2026) segue o modelo com controle de estoque, reserva de peças e Inventory Service. O grupo retirou o estoque do escopo em 13/11/2026 e, em 22/11/2026, adotou o MVP com os serviços `identity`, `customers` e `workorders`. A versão vigente está em [`entrega/Projetos/OficinaPro/`](../../entrega/Projetos/OficinaPro/README.md) (Documento 03). Mantido como registro do levantamento.
 
 > **Documento oficial de trabalho — Grupo GarageOps**
 >
-> Este documento apresenta a visão geral do fluxo de dados do OficinaPro, identificando os atores, os microsserviços, os bancos de dados e os mecanismos de comunicação entre os componentes.
+> Este documento apresenta o fluxo de dados do OficinaPro, identificando os atores externos, os processos internos, os microsserviços responsáveis pelo processamento das informações, os armazenamentos e os mecanismos de comunicação.
 >
-> A arquitetura descrita é uma proposta técnica de trabalho, sujeita à validação do grupo e do professor.
+> A arquitetura descrita representa a proposta técnica consolidada para o MVP. Contratos detalhados de APIs e eventos, assim como decisões ainda não formalizadas, poderão ser refinados durante o desenvolvimento e submetidos à validação do grupo e do professor.
 
 ---
 
-## 1. Visão Geral da Arquitetura
+**Projeto:** OficinaPro  
+**Grupo:** GarageOps  
+**Data:** 16/11/2026  
+**Versão:** 1.0
 
-O OficinaPro está sendo projetado como um sistema de gestão para oficinas mecânicas, com arquitetura baseada em microsserviços.
+---
 
-A proposta considera quatro microsserviços principais:
+## 1. Objetivo
 
-- **Auth Service:** responsável pela autenticação, usuários, vínculos com oficinas e controle de permissões.
-- **Work Order Service:** responsável pelo cadastro de clientes, veículos, ordens de serviço e diagnósticos.
-- **Inventory Service:** responsável pelo cadastro de peças, controle de estoque e movimentações.
-- **Billing Service:** responsável pela elaboração de orçamentos, seus itens e pelo registro de pagamentos.
+Este documento apresenta o Diagrama de Fluxo de Dados (DFD) do OficinaPro, demonstrando como as informações entram, são processadas, armazenadas e transmitidas entre os usuários, os microsserviços e os componentes internos do sistema.
 
-A arquitetura propõe o padrão **Database-per-Service**, no qual cada microsserviço possui responsabilidade exclusiva sobre seus próprios dados e não acessa diretamente o banco de dados de outro serviço.
+O DFD tem como objetivos:
 
-A comunicação entre o frontend e os microsserviços ocorrerá por meio de APIs REST. Para operações que envolvam comunicação assíncrona, poderá ser utilizado o RabbitMQ.
+- Identificar as entidades externas que interagem com o sistema.
+- Representar os principais processos responsáveis pelo tratamento dos dados.
+- Demonstrar os fluxos de informação entre os processos.
+- Identificar os armazenamentos de dados e os microsserviços responsáveis por eles.
+- Documentar a comunicação síncrona e assíncrona.
+- Demonstrar os mecanismos de integridade, isolamento entre oficinas e confiabilidade das operações.
 
-### 1.1 Atores do Sistema
+O OficinaPro será desenvolvido como um SaaS de gestão para oficinas mecânicas, utilizando uma arquitetura baseada em microsserviços e isolamento de dados por oficina (*multi-tenancy*).
 
-Os seguintes perfis são uma proposta inicial para o MVP:
+## 2. Notação Utilizada
 
-| Ator | Responsabilidades |
+| Símbolo | Significado |
 |---|---|
-| **Atendente** | Gerenciar clientes e veículos, além de abrir e consultar ordens de serviço. |
-| **Mecânico** | Registrar diagnósticos e executar os serviços autorizados. |
-| **Estoquista** | Gerenciar peças, consultar saldos e acompanhar movimentações de estoque. |
-| **Financeiro** | Elaborar orçamentos, registrar decisões relacionadas a eles e controlar pagamentos. |
+| Retângulo | Entidade externa, como usuário ou sistema externo |
+| Círculo / Elipse | Processo responsável por transformar ou processar dados |
+| Setas | Fluxo de dados, indicando origem, destino e direção |
+| Cilindro | Armazenamento persistente de dados |
+| Fila / Broker | Componente responsável pela comunicação assíncrona entre processos |
 
-As permissões de cada perfil deverão ser definidas e validadas pelo grupo.
+Os diagramas foram elaborados em Mermaid para permitir visualização e manutenção diretamente em Markdown.
 
-### 1.2 Isolamento entre Oficinas (Multi-tenancy)
+## 3. DFD Nível 0 — Diagrama de Contexto
 
-Como proposta para a estrutura SaaS, o sistema deverá permitir que diferentes oficinas utilizem a mesma plataforma sem compartilhar indevidamente seus dados.
+O DFD de Nível 0 representa o OficinaPro como um único processo, demonstrando as interações entre o sistema e as entidades externas, sem detalhar os microsserviços internos.
 
-Para isso, recomenda-se:
+```mermaid
+flowchart LR
+    AT([Atendente])
+    MEC([Mecânico])
+    EST([Estoquista])
+    FIN([Financeiro])
+    CLI([Cliente da oficina])
 
-- Identificar cada oficina por meio de um `tenant_id`.
-- Associar os registros operacionais à oficina correspondente.
-- Validar o vínculo do usuário com a oficina em cada operação.
-- Impedir que um usuário consulte ou altere dados de outra oficina.
-- Utilizar o contexto de oficina obtido da autenticação e validado no backend, sem confiar exclusivamente em valores enviados pelo frontend.
+    SISTEMA((OficinaPro))
 
-A implementação desse modelo ainda deverá ser validada pelo grupo.
+    AT -->|Dados cadastrais, veículos e solicitações de OS| SISTEMA
+    SISTEMA -->|Confirmações, consultas e informações das OS| AT
 
----
+    MEC -->|Diagnósticos e registros de execução| SISTEMA
+    SISTEMA -->|OS, diagnósticos e serviços autorizados| MEC
 
-## 2. Diagrama de Fluxo de Dados — Nível 0 (Contexto)
+    EST -->|Cadastros de peças e movimentações| SISTEMA
+    SISTEMA -->|Saldos, reservas e informações de estoque| EST
 
-O DFD de contexto apresenta o OficinaPro como um único processo, destacando as interações entre os usuários e o sistema, sem detalhar o funcionamento interno dos microsserviços.
+    FIN -->|Orçamentos, decisões e pagamentos| SISTEMA
+    SISTEMA -->|Valores, situações e informações financeiras| FIN
+
+    CLI -->|Dados cadastrais e decisão sobre orçamento| SISTEMA
+    SISTEMA -->|Orçamento e informações da OS| CLI
+```
+
+### 3.1 Entidades Externas
+
+| Entidade | Descrição | Principais informações fornecidas |
+|---|---|---|
+| Atendente | Usuário responsável pelo atendimento e abertura de ordens de serviço. | Dados de clientes, veículos e solicitações de OS. |
+| Mecânico | Usuário responsável pelo diagnóstico e execução dos serviços autorizados. | Diagnósticos, observações técnicas e registros de execução. |
+| Estoquista | Usuário responsável pelo controle de peças e movimentações do inventário. | Cadastros de peças, entradas e demais movimentações. |
+| Financeiro | Usuário responsável pela elaboração de orçamentos e pelo controle financeiro. | Orçamentos, decisões relacionadas a eles e registros de pagamentos. |
+| Cliente da oficina | Pessoa externa à equipe da oficina que solicita serviços e avalia os orçamentos. | Dados cadastrais e decisão sobre o orçamento apresentado. |
+
+**Observação:** os perfis Atendente, Mecânico, Estoquista e Financeiro representam os papéis operacionais previstos para o MVP. As permissões específicas devem respeitar as regras de autorização definidas no documento de requisitos.
+
+O cliente da oficina é representado como entidade externa. O canal pelo qual ele receberá e aceitará orçamentos — atendimento presencial, link ou outra interface — ainda deverá ser definido pelo grupo. O diagrama representa a troca lógica de informações, não uma funcionalidade de portal do cliente já confirmada.
+
+## 4. DFD Nível 1 — Processos Principais
+
+O DFD de Nível 1 decompõe o OficinaPro em seus quatro microsserviços principais, demonstrando os processos, os armazenamentos e os fluxos de dados entre eles.
+
+A arquitetura adota o padrão **Database-per-Service**: cada microsserviço é responsável pelos próprios dados e não realiza acesso direto ao banco de dados de outro serviço.
 
 ```mermaid
 flowchart TD
-    Atendente([Atendente])
-    Mecanico([Mecânico])
-    Estoquista([Estoquista])
-    Financeiro([Financeiro])
-    Cliente([Cliente da oficina])
+    %% Entidades externas
+    U([Usuários da oficina])
+    C([Cliente da oficina])
 
-    Sistema((OficinaPro))
+    %% Frontend
+    FE[Frontend React / TypeScript / Vite]
 
-    Atendente -->|Dados de clientes, veículos e OS| Sistema
-    Sistema -->|Consultas e informações operacionais| Atendente
+    %% Processos
+    P1((1.0 Auth Service))
+    P2((2.0 Work Order Service))
+    P3((3.0 Inventory Service))
+    P4((4.0 Billing Service))
 
-    Mecanico -->|Diagnósticos e informações de execução| Sistema
-    Sistema -->|Dados das OS e serviços autorizados| Mecanico
+    %% Armazenamentos
+    D1[(D-001 auth_db)]
+    D2[(D-002 work_order_db)]
+    D3[(D-003 inventory_db)]
+    D4[(D-004 billing_db)]
 
-    Estoquista -->|Cadastros e movimentações de peças| Sistema
-    Sistema -->|Saldos e informações de estoque| Estoquista
+    %% Mensageria
+    Q((M-001 RabbitMQ))
 
-    Financeiro -->|Orçamentos e registros de pagamentos| Sistema
-    Sistema -->|Valores, situações e informações financeiras| Financeiro
+    %% Acesso
+    U -->|Credenciais e solicitações autenticadas| FE
+    C -->|Dados e decisão sobre orçamento| FE
 
-    Cliente -->|Dados cadastrais e decisão sobre orçamento| Sistema
-    Sistema -->|Orçamento e informações da OS| Cliente
+    FE -->|Credenciais e contexto de acesso| P1
+    P1 -->|Token e informações de autenticação| FE
+
+    FE -->|Clientes, veículos, OS e diagnósticos| P2
+    P2 -->|Dados operacionais e confirmações| FE
+
+    FE -->|Cadastros, consultas e movimentações de peças| P3
+    P3 -->|Saldos e resultados das operações de estoque| FE
+
+    FE -->|Orçamentos e pagamentos| P4
+    P4 -->|Valores, decisões e situações financeiras| FE
+
+    %% Persistência exclusiva
+    P1 -->|Dados de usuários e vínculos| D1
+    D1 -->|Registros de autenticação e permissões| P1
+
+    P2 -->|Dados operacionais| D2
+    D2 -->|Clientes, veículos, OS e diagnósticos| P2
+
+    P3 -->|Dados de inventário e reservas| D3
+    D3 -->|Saldos, reservas e movimentações| P3
+
+    P4 -->|Dados financeiros| D4
+    D4 -->|Orçamentos e pagamentos| P4
+
+    %% Comunicação assíncrona
+    P4 -.->|RESERVA_SOLICITADA| Q
+    Q -.->|Solicitação de reserva| P3
+
+    P3 -.->|RESERVA_CONFIRMADA / RESERVA_RECUSADA| Q
+    Q -.->|Resultado da reserva| P4
+
+    P4 -.->|ORCAMENTO_APROVADO| Q
+    Q -.->|Liberação operacional após aprovação| P2
 ```
 
-**Observação:** o cliente representa uma pessoa externa à equipe da oficina. A forma de interação com o sistema, como acesso por portal, link ou atendimento presencial, ainda deverá ser definida pelo grupo.
+### 4.1 Descrição dos Processos
 
----
+| Processo | Microsserviço | Responsabilidade |
+|---|---|---|
+| 1.0 | Auth Service | Autenticar usuários, gerenciar vínculos com oficinas e aplicar controle de acesso e permissões. |
+| 2.0 | Work Order Service | Gerenciar clientes, veículos, ordens de serviço, diagnósticos e informações de execução. |
+| 3.0 | Inventory Service | Gerenciar peças, saldos físicos, reservas, consumo, liberações e movimentações de estoque. |
+| 4.0 | Billing Service | Gerenciar orçamentos, itens, decisões relacionadas aos orçamentos e registros de pagamentos. |
 
-## 3. Diagrama de Comunicação entre os Componentes
-
-O diagrama seguinte detalha a comunicação interna proposta entre o frontend, os microsserviços, os bancos de dados e o sistema de mensageria.
-
-```mermaid
-flowchart TD
-    Usuario([Usuários da oficina])
-    FE[Frontend React / Vite]
-
-    Auth[Auth Service]
-    WO[Work Order Service]
-    INV[Inventory Service]
-    BILL[Billing Service]
-
-    DBA[(auth_db)]
-    DBW[(work_order_db)]
-    DBI[(inventory_db)]
-    DBB[(billing_db)]
-
-    RMQ((RabbitMQ))
-
-    Usuario --> FE
-
-    FE -->|Autenticação e requisições autenticadas| Auth
-    FE -->|Clientes, veículos, OS e diagnósticos| WO
-    FE -->|Consulta e gestão de estoque| INV
-    FE -->|Orçamentos e pagamentos| BILL
-
-    Auth --> DBA
-    WO --> DBW
-    INV --> DBI
-    BILL --> DBB
-
-    BILL -.->|RESERVA_SOLICITADA| RMQ
-    RMQ -.->|Solicitação de reserva| INV
-
-    INV -.->|RESERVA_CONFIRMADA ou RESERVA_RECUSADA| RMQ
-    RMQ -.->|Resultado da reserva| BILL
-
-    BILL -.->|ORCAMENTO_APROVADO| RMQ
-    RMQ -.->|Atualização da situação da OS| WO
-```
-
-**Observações sobre a comunicação:**
-
-- Cada microsserviço é responsável pelo próprio banco de dados.
-- As referências entre registros de serviços diferentes são realizadas por identificadores, como UUID, e não por chaves estrangeiras entre bancos.
-- O RabbitMQ será utilizado para comunicação assíncrona quando necessário.
-- Os eventos deverão transportar o identificador da oficina (`tenant_id`) e os identificadores necessários para processar a operação.
-- Os consumidores deverão ser idempotentes, evitando que a repetição de uma mensagem provoque movimentações duplicadas.
-- O diagrama representa uma proposta lógica. Os contratos definitivos das APIs e dos eventos deverão ser especificados durante o desenvolvimento.
-
----
-
-## 4. Descrição dos Principais Fluxos de Dados
-
-### 4.1 Fluxo de Autenticação e Identificação da Oficina
+### 4.2 Fluxo de Autenticação e Identificação da Oficina
 
 1. O usuário informa suas credenciais pelo frontend.
 2. O Auth Service valida as credenciais e verifica os vínculos do usuário com as oficinas.
 3. Após a autenticação, o serviço disponibiliza um mecanismo seguro de identificação do usuário e do contexto de acesso.
-4. As requisições aos demais microsserviços são autenticadas e autorizadas.
-5. Cada serviço valida se o usuário possui permissão para executar a operação solicitada e se os dados pertencem à oficina correspondente.
+4. O frontend utiliza as informações de autenticação nas requisições aos demais microsserviços.
+5. Cada serviço valida a identidade, as permissões e o contexto da oficina antes de executar a operação solicitada.
+6. Os registros e as respostas devem respeitar o isolamento entre oficinas.
 
-**Regra importante:** o isolamento entre oficinas deve ser aplicado no backend, e não somente na interface.
+**Regra de segurança:** o `tenant_id` deve ser obtido ou validado a partir do contexto autenticado no backend. O sistema não deverá confiar exclusivamente em um identificador de oficina enviado pelo frontend.
 
-### 4.2 Fluxo de Cadastro de Clientes, Veículos e Abertura de OS
+### 4.3 Fluxo de Cadastro de Clientes, Veículos e Abertura de OS
 
 1. O Atendente informa os dados do cliente pelo frontend.
-2. O frontend encaminha a solicitação ao Work Order Service, por meio de uma requisição `POST /clientes`.
+2. O frontend encaminha a solicitação ao Work Order Service, por meio de uma requisição de cadastro.
 3. O serviço valida os dados e registra o cliente associado à oficina.
-4. O veículo é cadastrado por meio de `POST /veiculos`, associado ao cliente correspondente.
-5. O Atendente solicita a abertura da ordem de serviço por meio de `POST /ordens-servico`.
+4. O veículo é cadastrado e associado ao cliente correspondente.
+5. O Atendente solicita a abertura da ordem de serviço.
 6. O Work Order Service valida os vínculos entre oficina, cliente e veículo.
-7. A OS é registrada com seu status inicial, conforme as regras de negócio definidas para o sistema.
+7. A OS é registrada com seu status inicial, conforme as regras de negócio.
+8. Os registros permanecem associados à oficina responsável.
 
-### 4.3 Fluxo de Diagnóstico
+Os dados de clientes, veículos e ordens de serviço são de responsabilidade do Work Order Service no MVP.
+
+### 4.4 Fluxo de Diagnóstico
 
 1. O Mecânico consulta as ordens de serviço disponíveis.
 2. O Work Order Service verifica se o usuário possui autorização para acessar a OS.
-3. O Mecânico registra o diagnóstico técnico por meio de `POST /diagnosticos`.
-4. O Work Order Service armazena o diagnóstico, identificando o responsável e a data do registro.
+3. O Mecânico registra o diagnóstico técnico.
+4. O Work Order Service armazena as informações do diagnóstico, identificando o responsável e a data do registro.
 5. A situação da OS é atualizada conforme a transição de status prevista nas regras de negócio.
+6. O diagnóstico permanece associado à OS correspondente para consulta no histórico.
 
-Os diagnósticos deverão permanecer associados à OS correspondente, permitindo consultar seu histórico.
+### 4.5 Fluxo de Orçamento, Aceitação do Cliente e Reserva de Estoque
 
-### 4.4 Fluxo de Orçamento, Aceitação do Cliente e Reserva de Estoque
+Este fluxo envolve principalmente o Billing Service, o Inventory Service e o Work Order Service.
 
-Este fluxo envolve a comunicação entre o Billing Service e o Inventory Service. A aprovação definitiva do orçamento dependerá da confirmação da reserva de todas as peças necessárias.
+A aceitação do orçamento pelo cliente inicia o processo de reserva das peças necessárias. A aprovação definitiva no sistema e a liberação da execução dependem da confirmação de todas as reservas necessárias.
 
-1. O Financeiro elabora o orçamento por meio de `POST /orcamentos`, vinculando-o à OS por referência UUID.
-2. O orçamento recebe os serviços e as peças necessários, com suas respectivas quantidades e valores.
+1. O Financeiro elabora o orçamento no Billing Service, vinculando-o à OS por meio de uma referência identificadora.
+2. O orçamento recebe os serviços, as peças, as quantidades e os valores correspondentes.
 3. O orçamento é apresentado ao cliente para avaliação.
-4. O cliente aceita o orçamento, e o sistema registra a decisão com a identificação do responsável, a data e o horário.
-5. O orçamento passa para a situação `PENDENTE_RESERVA`.
-6. O Billing Service publica o evento `RESERVA_SOLICITADA` no RabbitMQ, contendo um identificador único da solicitação, o identificador da oficina, o orçamento e a relação de peças e quantidades necessárias.
-7. O Inventory Service consome o evento e inicia uma transação no PostgreSQL para processar a reserva de todas as peças solicitadas.
-8. Dentro da transação, o serviço controla o acesso aos registros de estoque e verifica a disponibilidade de cada peça, evitando que solicitações simultâneas reservem uma quantidade superior à disponível.
+4. O cliente aceita ou recusa o orçamento.
+5. O sistema registra a decisão, identificando o responsável, a data e o horário.
+6. Quando aceito, o orçamento passa para a situação `PENDENTE_RESERVA`.
+7. O Billing Service publica o evento `RESERVA_SOLICITADA` no RabbitMQ, contendo:
+   - Identificador único da solicitação.
+   - Identificador da oficina (`tenant_id`).
+   - Identificador do orçamento e da OS.
+   - Relação de peças e respectivas quantidades.
+8. O Inventory Service consome o evento e inicia uma transação em seu próprio banco de dados.
+9. O serviço verifica a disponibilidade de todas as peças, aplicando controle de concorrência para impedir reservas superiores ao saldo disponível.
+10. O processamento é realizado de maneira atômica:
+    - Se todas as peças estiverem disponíveis, todas as reservas serão registradas e a transação será confirmada por `COMMIT`.
+    - Se uma ou mais peças estiverem indisponíveis, nenhuma reserva parcial será efetivada.
+    - Se ocorrer uma falha técnica durante as alterações, a transação será revertida por `ROLLBACK`.
+11. O Inventory Service registra o resultado da solicitação e o evento correspondente:
+    - `RESERVA_CONFIRMADA`, quando todas as peças forem reservadas.
+    - `RESERVA_RECUSADA`, quando não houver disponibilidade suficiente para todas as peças.
+12. O resultado e o evento pendente de publicação são registrados de forma consistente por meio do padrão Transactional Outbox.
+13. O Inventory Service publica o evento de resultado no RabbitMQ.
+14. O Billing Service consome o resultado:
+    - Em caso de confirmação, registra a aprovação definitiva do orçamento e publica `ORCAMENTO_APROVADO`.
+    - Em caso de recusa, mantém o orçamento pendente de regularização e disponibiliza a informação para a oficina.
+15. O Work Order Service recebe `ORCAMENTO_APROVADO` e atualiza a situação da OS, liberando a execução conforme as regras de negócio.
 
-   - Se todas as peças possuírem saldo disponível suficiente, todas as reservas serão registradas e a transação será confirmada por meio de `COMMIT`.
-   - Se uma ou mais peças não possuírem saldo suficiente, nenhuma reserva será efetivada. O resultado da recusa será registrado para posterior publicação.
-   - Se ocorrer uma falha técnica durante o processamento, as alterações da transação serão revertidas por meio de `ROLLBACK`, permitindo o tratamento da falha sem manter reservas parciais.
+**Regra fundamental:** a aceitação do cliente não representa, isoladamente, a aprovação definitiva do orçamento no sistema. A execução só poderá ser liberada após a confirmação da reserva integral das peças necessárias.
 
-9. Após o processamento, o Inventory Service registra o resultado da solicitação e o evento correspondente:
+### 4.6 Fluxo de Tratamento de Indisponibilidade de Peças
 
-   - `RESERVA_CONFIRMADA`, quando todas as peças forem reservadas com sucesso.
-   - `RESERVA_RECUSADA`, quando não houver disponibilidade suficiente para todas as peças.
+Quando o Inventory Service informar `RESERVA_RECUSADA`, a oficina deverá tratar a pendência antes de liberar a execução.
 
-10. O resultado e o evento pendente de publicação são armazenados de forma consistente por meio do padrão Transactional Outbox, conforme descrito na seção 6.1.
-11. O Inventory Service publica o evento de resultado no RabbitMQ.
-12. Ao receber `RESERVA_CONFIRMADA`, o Billing Service registra a aprovação definitiva do orçamento e publica `ORCAMENTO_APROVADO`.
-13. O Work Order Service recebe o evento e atualiza a situação da OS, liberando a execução conforme as regras de negócio.
-14. Ao receber `RESERVA_RECUSADA`, o Billing Service mantém o orçamento pendente de regularização e disponibiliza a informação para a oficina.
+As alternativas previstas são:
 
-**Regra importante:** a aceitação do cliente não representa, por si só, a aprovação definitiva no sistema. A aprovação depende da confirmação da reserva de todas as peças necessárias.
-
-### 4.5 Fluxo de Tratamento de Indisponibilidade de Peças
-
-Quando a reserva for recusada, a oficina poderá escolher uma das seguintes alternativas:
-
-1. **Aguardar reposição:** a oficina providencia a aquisição das peças e solicita uma nova tentativa de reserva.
-2. **Alterar o orçamento:** a oficina substitui peças ou modifica os serviços. Caso a alteração modifique as condições anteriormente aceitas pelo cliente, será necessária uma nova autorização.
-3. **Cancelar a solicitação:** a oficina registra o cancelamento do orçamento ou da solicitação, conforme as regras de negócio.
+1. **Aguardar reposição:** providenciar a aquisição das peças e solicitar uma nova tentativa de reserva.
+2. **Alterar o orçamento:** substituir peças ou modificar os serviços. Se a alteração modificar as condições anteriormente aceitas, será necessária uma nova autorização do cliente.
+3. **Cancelar a solicitação:** registrar o cancelamento do orçamento ou da solicitação, conforme as regras de negócio.
 
 Enquanto a pendência não for resolvida:
 
 - O orçamento não poderá ser considerado definitivamente aprovado.
 - A OS permanecerá bloqueada para execução.
-- Nenhuma peça deverá permanecer reservada parcialmente.
+- Nenhuma reserva parcial deverá permanecer efetivada.
 - A indisponibilidade deverá ser registrada para consulta e rastreabilidade.
 
-### 4.6 Fluxo de Execução dos Serviços e Movimentação de Estoque
+### 4.7 Fluxo de Execução dos Serviços e Movimentação de Estoque
 
-1. Após a aprovação definitiva do orçamento e a confirmação das reservas necessárias, a OS poderá avançar para a execução.
+1. Após a aprovação definitiva do orçamento e a confirmação das reservas necessárias, a OS poderá avançar para `EM_EXECUCAO`.
 2. O Mecânico realiza os serviços autorizados.
-3. Quando uma peça reservada for efetivamente utilizada, o sistema deverá registrar sua utilização.
-4. O Inventory Service registra a movimentação correspondente, atualizando a quantidade disponível e a condição da peça.
-5. Caso uma peça reservada não seja utilizada, deverá ser registrada a devolução ou o estorno da reserva, conforme a situação.
-6. Em caso de perda operacional, deverá ser registrada uma movimentação específica, preservando o histórico.
+3. Quando uma peça reservada for efetivamente utilizada, o sistema registra sua utilização.
+4. O Inventory Service converte a quantidade reservada em saída definitiva, atualizando os saldos correspondentes.
+5. Caso uma peça reservada não seja utilizada, a reserva deverá ser liberada, retornando a quantidade ao saldo disponível sem aumentar o estoque físico.
+6. Em caso de perda operacional ou inutilização, deverá ser registrada uma movimentação específica, preservando o histórico e a condição física da peça.
+7. As movimentações deverão possuir identificadores únicos para impedir baixas duplicadas.
 
-As movimentações deverão possuir identificadores únicos para impedir baixas duplicadas e permitir rastreabilidade.
+**Distinção importante:**
 
-### 4.7 Fluxo Financeiro e Conclusão da OS
+- Estoque físico: quantidade de peças efetivamente existente.
+- Estoque reservado: quantidade comprometida em reservas ainda não consumidas.
+- Estoque disponível: quantidade física menos a quantidade reservada.
 
-1. O Financeiro registra os pagamentos recebidos por meio de `POST /pagamentos`.
-2. O Billing Service registra cada pagamento, associando-o à OS correspondente.
+A liberação de uma reserva não representa uma entrada física de estoque. Ela apenas desfaz o comprometimento anterior da quantidade.
+
+### 4.8 Fluxo Financeiro e Conclusão da OS
+
+1. O Financeiro registra os pagamentos recebidos no Billing Service.
+2. O serviço associa cada pagamento à OS correspondente.
 3. O sistema acompanha os valores pagos e o saldo restante.
-4. Quando todos os valores forem quitados, o sistema poderá identificar a situação financeira da OS como quitada.
-5. A conclusão operacional da OS deverá ser registrada pelo Work Order Service, conforme a finalização dos serviços e as regras de negócio.
-6. As informações da OS e de sua movimentação deverão permanecer disponíveis para consulta no histórico de manutenção do veículo.
+4. Quando todos os valores forem quitados, a situação financeira poderá ser registrada como `QUITADA`.
+5. O Work Order Service registra a conclusão operacional da OS quando os serviços forem finalizados e as regras de negócio forem atendidas.
+6. As informações da OS, dos serviços e das movimentações permanecem disponíveis para consulta no histórico de manutenção do veículo.
 
-**Importante:** os estados `CONCLUIDA` e `QUITADA` representam informações diferentes. A primeira indica a conclusão operacional dos serviços; a segunda indica a quitação financeira. A obrigatoriedade de pagamento para encerramento da OS deverá ser definida pelo grupo.
+A conclusão operacional e a quitação financeira são informações independentes:
 
----
+- `CONCLUIDA`: indica que os serviços da OS foram finalizados.
+- `QUITADA`: indica que os valores financeiros foram integralmente pagos.
 
-## 5. Comunicação Síncrona e Assíncrona
+O status financeiro não deverá ser utilizado como substituto do status operacional da OS.
+
+## 5. Comunicação entre os Componentes
 
 ### 5.1 Comunicação Síncrona — API REST
 
-A comunicação síncrona será utilizada quando o sistema precisar enviar uma solicitação e receber uma resposta imediata.
+A comunicação síncrona será utilizada quando um componente precisar enviar uma solicitação e receber uma resposta diretamente.
 
 Exemplos:
 
 - Autenticação de usuários.
+- Consulta de vínculos e permissões.
 - Cadastro e consulta de clientes.
 - Cadastro e consulta de veículos.
 - Abertura e consulta de ordens de serviço.
 - Registro de diagnósticos.
-- Consulta de peças e estoque.
+- Cadastro e consulta de peças.
+- Consulta de disponibilidade de estoque.
 - Elaboração e consulta de orçamentos.
 - Registro e consulta de pagamentos.
 
+A comunicação entre frontend e microsserviços será realizada por APIs REST, respeitando a autenticação, a autorização e o isolamento de dados por oficina.
+
 ### 5.2 Comunicação Assíncrona — RabbitMQ
 
-A comunicação assíncrona será utilizada em operações que envolvam processamento entre microsserviços e que não precisem ser concluídas dentro da mesma requisição HTTP.
+A comunicação assíncrona será utilizada nas operações que envolvam processamento entre microsserviços e não precisem ser concluídas dentro da mesma requisição HTTP.
 
-Eventos propostos:
+Eventos propostos para o MVP:
 
-| Evento | Serviço responsável pela publicação | Serviço consumidor |
-|---|---|---|
-| `RESERVA_SOLICITADA` | Billing Service | Inventory Service |
-| `RESERVA_CONFIRMADA` | Inventory Service | Billing Service |
-| `RESERVA_RECUSADA` | Inventory Service | Billing Service |
-| `ORCAMENTO_APROVADO` | Billing Service | Work Order Service |
+| Evento | Serviço publicador | Serviço consumidor | Finalidade |
+|---|---|---|---|
+| `RESERVA_SOLICITADA` | Billing Service | Inventory Service | Solicitar a reserva integral das peças do orçamento aceito. |
+| `RESERVA_CONFIRMADA` | Inventory Service | Billing Service | Informar que todas as peças foram reservadas. |
+| `RESERVA_RECUSADA` | Inventory Service | Billing Service | Informar que não foi possível reservar todas as peças. |
+| `ORCAMENTO_APROVADO` | Billing Service | Work Order Service | Informar a aprovação definitiva e permitir a liberação operacional da OS. |
 
-Os nomes e contratos dos eventos ainda deverão ser padronizados pelo grupo.
+Os nomes e contratos definitivos dos eventos deverão ser padronizados durante o desenvolvimento.
 
-**Requisitos para a mensageria:**
+### 5.3 Requisitos de Confiabilidade da Mensageria
 
-- Garantir que mensagens repetidas não provoquem operações duplicadas.
-- Registrar e tratar falhas no processamento.
-- Preservar o identificador da oficina e os identificadores dos registros envolvidos.
-- Definir estratégias de retentativa e tratamento de mensagens que não puderem ser processadas.
-- Aplicar mecanismos de publicação confiável, como o padrão Transactional Outbox, nos serviços que precisem persistir uma alteração no banco e publicar um evento relacionado a ela.
-- Considerar mecanismos de controle de mensagens já processadas, como o padrão Inbox ou uma estrutura equivalente de idempotência.
+A comunicação assíncrona deverá considerar:
 
----
+- Identificadores únicos para solicitações e eventos.
+- Identificação da oficina por `tenant_id`.
+- Identificadores de correlação para rastrear operações entre serviços.
+- Consumidores idempotentes, evitando processamento duplicado.
+- Estratégias de retentativa para falhas temporárias.
+- Tratamento de mensagens que não puderem ser processadas, incluindo mecanismo de fila de mensagens não processadas (DLQ).
+- Registro de falhas e possibilidade de recuperação.
+- Transactional Outbox para persistir alterações e eventos relacionados de forma consistente.
+- Inbox ou mecanismo equivalente para registrar mensagens já processadas.
 
-## 6. Integridade, Segurança e Rastreabilidade dos Dados
+O RabbitMQ poderá entregar uma mesma mensagem mais de uma vez. Portanto, a confiabilidade não deverá depender de uma entrega única, mas da combinação entre persistência, idempotência, controle de concorrência e tratamento de retentativas.
+
+## 6. Dicionário de Fluxos de Dados
+
+O dicionário identifica os principais fluxos de informação entre entidades externas, processos, armazenamentos e componentes de comunicação.
+
+| ID Fluxo | Nome | Origem | Destino | Descrição | Formato |
+|---|---|---|---|---|---|
+| F-001 | Credenciais | Usuário | Auth Service | Dados utilizados para autenticação. | JSON / HTTPS |
+| F-002 | Token e contexto de acesso | Auth Service | Frontend / demais serviços | Identificação autenticada do usuário e contexto de acesso. | Bearer Token |
+| F-003 | Dados de clientes | Atendente / Frontend | Work Order Service | Informações cadastrais do cliente associadas à oficina. | JSON / REST |
+| F-004 | Dados de veículos | Atendente / Frontend | Work Order Service | Informações do veículo e vínculo com o cliente. | JSON / REST |
+| F-005 | Dados da OS | Atendente / Frontend | Work Order Service | Solicitação de abertura e atualização de ordem de serviço. | JSON / REST |
+| F-006 | Diagnóstico | Mecânico / Frontend | Work Order Service | Informações técnicas e registros do diagnóstico. | JSON / REST |
+| F-007 | Dados de peças | Estoquista / Frontend | Inventory Service | Cadastro e atualização de peças. | JSON / REST |
+| F-008 | Movimentação de estoque | Estoquista / Frontend | Inventory Service | Registros de entrada, reserva, consumo, liberação e perda. | JSON / REST |
+| F-009 | Consulta de estoque | Inventory Service | Frontend | Saldos físicos, reservados e disponíveis. | JSON / REST |
+| F-010 | Dados do orçamento | Financeiro / Frontend | Billing Service | Serviços, peças, quantidades e valores do orçamento. | JSON / REST |
+| F-011 | Decisão do cliente | Cliente / Frontend | Billing Service | Aceitação ou recusa do orçamento, com responsável e data/hora. | JSON / REST |
+| F-012 | Solicitação de reserva | Billing Service | Inventory Service | Solicitação de reserva integral das peças necessárias. | Evento JSON / RabbitMQ |
+| F-013 | Resultado da reserva | Inventory Service | Billing Service | Confirmação ou recusa da reserva integral. | Evento JSON / RabbitMQ |
+| F-014 | Aprovação definitiva do orçamento | Billing Service | Work Order Service | Informação de que o orçamento foi aprovado após a confirmação da reserva. | Evento JSON / RabbitMQ |
+| F-015 | Dados de pagamento | Financeiro / Frontend | Billing Service | Registro dos pagamentos associados à OS. | JSON / REST |
+| F-016 | Situação financeira | Billing Service | Frontend | Valores pagos, saldo restante e situação financeira. | JSON / REST |
+| F-017 | Dados operacionais | Work Order Service | Frontend | Situação da OS, diagnósticos e informações de execução. | JSON / REST |
+| F-018 | Dados de histórico | Work Order Service | Frontend | Informações de manutenção associadas ao veículo e às OS. | JSON / REST |
+| F-019 | Identificação da oficina | Auth Service / contexto autenticado | Microsserviços | Contexto validado utilizado para isolamento dos dados. | Claim / contexto autenticado |
+| F-020 | Eventos de rastreabilidade | Microsserviços | RabbitMQ / consumidores | Identificadores de correlação, oficina e operação para rastrear processamento assíncrono. | Evento JSON |
+
+**Observação:** os formatos indicados representam a proposta de comunicação. Os contratos definitivos, os campos obrigatórios e os esquemas de validação deverão ser documentados durante a implementação das APIs e dos eventos.
+
+## 7. Dicionário de Armazenamentos
+
+Cada microsserviço será responsável pelo próprio armazenamento persistente, respeitando o padrão Database-per-Service.
+
+| ID | Nome | Tipo | Descrição | Microsserviço Responsável |
+|---|---|---|---|---|
+| D-001 | `auth_db` | Relacional (PostgreSQL) | Armazena usuários, credenciais, vínculos com oficinas, perfis e informações de autorização. | Auth Service |
+| D-002 | `work_order_db` | Relacional (PostgreSQL) | Armazena clientes, veículos, ordens de serviço, diagnósticos e informações operacionais. | Work Order Service |
+| D-003 | `inventory_db` | Relacional (PostgreSQL) | Armazena peças, saldos físicos, quantidades reservadas, solicitações de reserva e movimentações de estoque. | Inventory Service |
+| D-004 | `billing_db` | Relacional (PostgreSQL) | Armazena orçamentos, itens, decisões relacionadas aos orçamentos e registros de pagamentos. | Billing Service |
+| D-005 | Outbox / Inbox | Tabelas relacionais (PostgreSQL) | Armazena eventos pendentes de publicação e registros de mensagens processadas, conforme a responsabilidade de cada serviço. | Microsserviços responsáveis |
+| M-001 | RabbitMQ | Message Broker | Transporta eventos assíncronos entre os microsserviços, incluindo solicitações e resultados de reserva. | Infraestrutura de mensageria |
+
+**Observações sobre os armazenamentos:**
+
+1. Cada serviço deverá acessar exclusivamente seu próprio banco de dados.
+2. As referências entre dados de serviços diferentes deverão utilizar identificadores, como UUID, sem chaves estrangeiras entre bancos de microsserviços distintos.
+3. As validações de referências externas deverão ocorrer por meio de APIs ou eventos.
+4. O `tenant_id` deverá ser aplicado aos registros pertencentes a uma oficina, garantindo o isolamento entre os clientes do SaaS.
+5. A utilização de bancos lógicos separados na mesma instância PostgreSQL poderá ser considerada no MVP, desde que o isolamento e a responsabilidade de cada serviço sejam preservados.
+6. Outbox e Inbox representam mecanismos de persistência associados aos serviços, não um banco compartilhado acessado diretamente por todos eles.
+7. O RabbitMQ é um componente de mensageria e não substitui os armazenamentos persistentes dos microsserviços.
+
+## 8. Integridade, Segurança e Rastreabilidade dos Dados
 
 A comunicação entre os componentes deverá respeitar os seguintes princípios:
 
-- **Isolamento de dados:** cada oficina poderá acessar somente os registros aos quais possui autorização.
-- **Autenticação:** as requisições deverão identificar o usuário autenticado.
-- **Autorização:** cada operação deverá respeitar as permissões do perfil associado ao usuário.
-- **Integridade:** os serviços deverão validar os identificadores e os vínculos entre registros.
-- **Idempotência:** operações sensíveis, principalmente movimentações de estoque e pagamentos, deverão impedir duplicidade.
-- **Auditoria:** operações relevantes deverão registrar o usuário responsável, a oficina, a ação e a data/hora.
-- **Proteção de informações:** senhas, tokens e segredos não deverão ser armazenados em logs.
-- **Consistência:** os serviços deverão possuir mecanismos para tratar falhas e divergências decorrentes da comunicação assíncrona.
+### 8.1 Isolamento entre Oficinas
 
-### 6.1 Confiabilidade e Consistência das Reservas de Estoque
+- Cada oficina será identificada por um `tenant_id`.
+- Os registros operacionais deverão estar associados à oficina correspondente.
+- O backend deverá validar o contexto da oficina em cada operação.
+- Consultas, atualizações, eventos e relatórios deverão respeitar o isolamento entre oficinas.
+- O frontend não deverá ser considerado responsável pela garantia de isolamento dos dados.
 
-Para garantir que as reservas de peças sejam realizadas corretamente, mesmo quando houver solicitações simultâneas ou falhas na comunicação entre microsserviços, propõe-se a adoção dos seguintes mecanismos:
+### 8.2 Autenticação e Autorização
 
-**1. Transações atômicas no Inventory Service**
+- As requisições deverão identificar o usuário autenticado.
+- Cada operação deverá respeitar as permissões do perfil associado ao usuário.
+- O acesso a clientes, veículos, OS, estoque e informações financeiras deverá ser autorizado conforme a responsabilidade do perfil.
+- Senhas, tokens e segredos não deverão ser armazenados em logs.
 
-- O processamento da reserva deverá ocorrer dentro de uma transação no banco de dados do Inventory Service.
-- Todas as peças solicitadas deverão ser verificadas e reservadas como uma única operação lógica.
-- Se todas as peças estiverem disponíveis, as reservas serão registradas e a transação será confirmada por meio de `COMMIT`.
-- Se uma ou mais peças estiverem indisponíveis, nenhuma reserva parcial será efetivada.
-- Em caso de falha técnica durante as alterações, a transação deverá ser revertida por meio de `ROLLBACK`.
+### 8.3 Integridade e Idempotência
 
-**2. Controle de concorrência**
+- Os serviços deverão validar os identificadores e vínculos entre registros.
+- Operações sensíveis deverão possuir mecanismos de idempotência.
+- Movimentações de estoque e pagamentos não poderão ser duplicadas por reenvio de requisições ou mensagens.
+- As alterações de dados e os eventos relacionados deverão manter consistência.
 
-- O sistema deverá impedir que duas ou mais solicitações simultâneas reservem a mesma quantidade de estoque.
-- Para isso, poderá ser utilizado bloqueio de registros no banco de dados, como `SELECT ... FOR UPDATE`, durante a verificação e atualização das quantidades.
-- Quando uma solicitação envolver várias peças, recomenda-se bloquear os registros em uma ordem consistente para reduzir o risco de deadlocks.
-- As validações e atualizações deverão ocorrer dentro da mesma transação.
+### 8.4 Auditoria
 
-**3. Idempotência das solicitações**
+Operações relevantes deverão permitir identificar:
 
-- Cada solicitação de reserva deverá possuir um identificador único, como `id_solicitacao`.
-- O identificador deverá ser armazenado no Inventory Service e possuir uma restrição de unicidade adequada, considerando também a oficina.
-- Se o RabbitMQ entregar novamente uma mensagem já processada, o serviço deverá reconhecer a solicitação e retornar o resultado anteriormente registrado.
-- A repetição da mensagem não poderá gerar reservas ou movimentações duplicadas.
+- Usuário responsável.
+- Oficina relacionada (`tenant_id`).
+- Ação executada.
+- Registro afetado.
+- Data e horário.
+- Identificador de correlação, quando aplicável.
 
-**4. Publicação confiável de eventos — Transactional Outbox**
+### 8.5 Confiabilidade das Reservas de Estoque
 
-- O Inventory Service deverá utilizar o padrão Transactional Outbox para evitar divergências entre os dados armazenados e os eventos publicados.
-- O resultado do processamento da reserva e o evento correspondente deverão ser registrados na mesma transação do banco de dados.
-- Após a confirmação da transação, um processo separado será responsável por localizar os eventos pendentes e publicá-los no RabbitMQ.
-- Depois da confirmação de recebimento pelo broker, o evento poderá ser marcado como publicado.
-- Se ocorrer uma falha durante a publicação, o evento deverá permanecer disponível para uma nova tentativa.
-- O mesmo princípio deverá ser considerado no Billing Service ao registrar a aprovação definitiva do orçamento e publicar o evento `ORCAMENTO_APROVADO`.
+O processamento das reservas deverá ocorrer dentro do banco de dados do Inventory Service, respeitando as seguintes condições:
 
-**5. Registro e rastreabilidade**
+1. Todas as peças de uma solicitação deverão ser verificadas e reservadas como uma única operação lógica.
+2. A transação deverá ser confirmada somente quando todas as peças estiverem disponíveis.
+3. Se uma ou mais peças estiverem indisponíveis, nenhuma reserva parcial deverá ser efetivada.
+4. Em caso de falha técnica, as alterações deverão ser revertidas por meio de `ROLLBACK`.
+5. O controle de concorrência deverá impedir que solicitações simultâneas comprometam quantidades superiores ao estoque disponível.
+6. Poderá ser utilizado bloqueio de registros, como `SELECT ... FOR UPDATE`, durante a verificação e atualização dos saldos.
+7. Solicitações de reserva deverão possuir identificadores únicos e mecanismos de idempotência.
+8. O resultado da reserva e o evento correspondente deverão ser persistidos de forma consistente por meio do Transactional Outbox.
+9. A repetição de uma mensagem já processada deverá retornar ou reconhecer o resultado anterior, sem gerar reservas ou movimentações duplicadas.
 
-As solicitações de reserva deverão permitir identificar:
+## 9. Histórico de Revisões
 
-- O identificador único da solicitação.
-- A oficina relacionada (`tenant_id`).
-- O orçamento e a OS correspondentes.
-- As peças e quantidades solicitadas.
-- O resultado do processamento.
-- A data e o horário do processamento.
-- O evento relacionado e sua situação de publicação.
-
-**Observação técnica:** o RabbitMQ poderá entregar uma mesma mensagem mais de uma vez. Portanto, a confiabilidade não deverá depender de uma entrega única, mas da combinação entre persistência, idempotência, controle de concorrência e tratamento de retentativas.
+| Versão | Data | Autor | Descrição da Alteração |
+|---|---|---|---|
+| 1.0 | 16/11/2026 | Grupo GarageOps | Consolidação do DFD de contexto, processos principais, fluxos de dados, armazenamentos e comunicação entre microsserviços. |
 
 ---
 
-## 7. Pontos Pendentes de Validação
+**Aprovado por:**
 
-Os seguintes pontos deverão ser discutidos com o grupo antes de serem considerados decisões definitivas:
+___________________________________________________  
+Professor(a) Orientador(a)
 
-1. Confirmação da arquitetura multi-tenant e da utilização do `tenant_id`.
-2. Definição dos perfis e respectivas permissões.
-3. Confirmação da utilização dos quatro microsserviços propostos.
-4. Definição dos contratos das APIs REST.
-5. Padronização dos eventos e de seus respectivos dados.
-6. Definição dos status e das transições de uma OS.
-7. Confirmação do fluxo de reserva, baixa definitiva e estorno de peças.
-8. Definição do comportamento do orçamento quando a reserva de estoque for recusada.
-9. Definição da relação entre conclusão operacional da OS e quitação financeira.
-10. Definição da estratégia de retentativas e do tratamento de mensagens que não puderem ser processadas.
-11. Definição do prazo de validade das reservas de estoque.
-12. Definição dos mecanismos de recuperação e monitoramento de falhas na publicação e no consumo de eventos.
-13. Avaliação da utilização do padrão Saga para operações que envolvam etapas distribuídas entre microsserviços.
+**Data:** ____/____/2026
 
----
-
-**Última atualização:** 15/11/2026
-
-**Responsável:** Product Owner — Grupo GarageOps
-
-**Status:** Documento de trabalho sujeito à validação do grupo e do professor.
+**Status da aprovação:** Pendente de validação do grupo e do professor.

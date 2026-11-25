@@ -1,67 +1,62 @@
-# Modelo Entidade-Relacionamento e Arquitetura de Dados — OficinaPro
+# Modelo Entidade-Relacionamento (MER) — OficinaPro
 
-> **Documento histórico — não usar na entrega.** Este arquivo foi escrito para o modelo anterior do OficinaPro, com controle de estoque, reserva de peças e perfil de estoque, retirados do escopo pelo grupo em 13/11/2026. Ele não reflete os serviços, papéis e fluxos atuais. A versão vigente está em [`entrega/Projetos/OficinaPro/`](../../entrega/Projetos/OficinaPro/README.md) (Documento 04). Mantido apenas como registro do levantamento.
+> **Documento histórico — não usar na entrega.** Esta versão (revisada em 16/11/2026) segue o modelo com controle de estoque, reserva de peças e Inventory Service. O grupo retirou o estoque do escopo em 13/11/2026 e, em 22/11/2026, adotou o MVP com os serviços `identity`, `customers` e `workorders`. A versão vigente está em [`entrega/Projetos/OficinaPro/`](../../entrega/Projetos/OficinaPro/README.md) (Documento 04). Mantido como registro do levantamento.
 
 > **Documento oficial de trabalho — Grupo GarageOps**
 >
-> **Status:** Em discussão, sujeito à validação do grupo e do professor.
+> Este documento apresenta a modelagem conceitual e lógica dos dados do OficinaPro, considerando sua utilização como uma plataforma SaaS de gestão para oficinas mecânicas.
 >
-> Este documento apresenta a proposta de modelagem de dados do OficinaPro, considerando sua utilização como um sistema SaaS (Software as a Service) voltado à gestão operacional de oficinas mecânicas.
->
-> A arquitetura proposta utiliza microsserviços com bancos de dados independentes (*Database-per-Service*), respeitando a responsabilidade de cada serviço sobre seus próprios dados.
->
-> O modelo também considera a necessidade de isolamento dos dados entre diferentes oficinas contratantes (*multi-tenancy*), integridade das informações, rastreabilidade das operações e comunicação entre microsserviços.
+> A proposta utiliza quatro microsserviços no MVP, cada um responsável por seu próprio banco de dados. Os relacionamentos entre serviços são realizados por referências lógicas e mecanismos de comunicação, sem dependências de chaves estrangeiras entre bancos distintos.
 
 ---
 
-## 1. Visão geral da arquitetura de dados
+**Projeto:** OficinaPro  
+**Grupo:** GarageOps  
+**Data:** 16/11/2026  
+**Versão:** 1.0
 
-A proposta considera quatro microsserviços principais para o MVP:
+## 1. Objetivo
 
-| Microsserviço | Banco de dados | Responsabilidade |
-|---|---|---|
-| Auth Service | `auth_db` | Autenticação, usuários, oficinas e controle de acesso |
-| Work Order Service | `work_order_db` | Clientes, veículos, histórico de propriedade, ordens de serviço e diagnósticos |
-| Inventory Service | `inventory_db` | Cadastro de peças, saldos e movimentações de estoque |
-| Billing Service | `billing_db` | Orçamentos, itens de orçamento e pagamentos |
+Este documento apresenta a estrutura de dados do OficinaPro, identificando as entidades, seus atributos, relacionamentos, cardinalidades e restrições necessárias para a implementação do sistema.
 
-### 1.1. Estratégia Database-per-Service
+A modelagem tem como objetivos:
 
-Cada microsserviço será responsável por seu próprio banco de dados.
+- Representar os dados utilizados pelos principais processos do sistema.
+- Definir as entidades e seus atributos.
+- Estabelecer os relacionamentos e as cardinalidades.
+- Documentar as restrições de integridade.
+- Organizar os dados de acordo com os quatro microsserviços do MVP.
+- Garantir o isolamento das informações entre oficinas.
+- Preservar a integridade e a rastreabilidade das operações.
+- Servir como referência para a implementação dos bancos de dados.
 
-As tabelas pertencentes ao mesmo serviço poderão utilizar chaves estrangeiras físicas para garantir a integridade referencial.
+## 2. Justificativa da Escolha do Banco de Dados
 
-Já os relacionamentos entre serviços diferentes deverão utilizar referências lógicas por UUID e mecanismos de comunicação entre microsserviços.
+| Critério | Definição proposta |
+|---|---|
+| **Tipo escolhido** | Relacional (SQL) |
+| **Tecnologia** | PostgreSQL |
+| **Volume de dados esperado** | Volume inicial pequeno a moderado, com crescimento conforme a quantidade de oficinas e operações cadastradas. Não há estimativa quantitativa validada. |
+| **Padrão de acesso** | Balanceado, com operações de leitura e escrita. |
+| **Consistência vs. disponibilidade** | Integridade transacional e propriedades ACID são importantes, especialmente para reservas e movimentações de estoque e registros financeiros. |
+| **Formato dos dados** | Predominantemente estruturado, com possibilidade de utilização de JSONB para informações complementares. |
+| **Escalabilidade** | Vertical inicialmente, com possibilidade de evolução para estratégias horizontais conforme a demanda. |
 
-**Exemplo:**
+### 2.1 Justificativa resumida
 
-- O `Billing Service` armazena o identificador da OS relacionado a um orçamento.
-- O `Inventory Service` armazena o identificador da OS relacionada a uma movimentação.
-- Esses identificadores representam referências aos registros do `Work Order Service`, sem criar chaves estrangeiras físicas entre bancos independentes.
+O PostgreSQL foi escolhido como tecnologia proposta para os bancos de dados do OficinaPro por ser um sistema gerenciador de banco de dados relacional que oferece integridade referencial, transações ACID, restrições, índices e mecanismos de controle de concorrência.
 
-### 1.2. Multi-tenancy
+Essas características são importantes para os processos do sistema, especialmente para o controle de estoque, no qual uma reserva deve ser realizada integralmente ou não ser efetivada, evitando inconsistências entre quantidades físicas, reservadas e disponíveis.
 
-O OficinaPro deverá permitir que diferentes oficinas utilizem a mesma plataforma.
+A estrutura relacional também atende à necessidade de representar os vínculos entre clientes, veículos, ordens de serviço, diagnósticos, orçamentos, itens e pagamentos.
 
-Para isso, será adotada inicialmente a proposta de isolamento lógico por identificador de tenant (`tenant_id`).
+A arquitetura adotará o padrão **Database-per-Service**, no qual cada microsserviço possui responsabilidade exclusiva sobre seus dados. No MVP, poderão ser utilizados bancos lógicos separados em uma mesma instância PostgreSQL, desde que sejam preservadas a separação de responsabilidades e a impossibilidade de acesso direto de um serviço aos dados de outro.
 
-Cada oficina será representada por um tenant, e os registros operacionais deverão estar associados à oficina responsável por seus dados.
+## 3. Diagrama Entidade-Relacionamento (DER)
 
-Exemplo:
+### 3.1 Diagrama conceitual integrado
 
-- Oficina A possui seus próprios clientes, veículos, ordens de serviço e estoque.
-- Oficina B possui seus próprios clientes, veículos, ordens de serviço e estoque.
-- Os usuários de uma oficina não poderão consultar ou modificar informações pertencentes a outra.
-
-O isolamento deverá ser aplicado no backend, nas consultas ao banco de dados, nas APIs e na comunicação entre microsserviços.
-
-> **Status:** Estratégia proposta. A utilização de bancos compartilhados por serviço com isolamento por `tenant_id`, bem como o uso complementar de Row-Level Security (RLS), deverá ser validada tecnicamente.
-
----
-
-## 2. Diagrama conceitual de relacionamentos
-
-O diagrama abaixo representa uma visão integrada dos principais domínios do sistema.
+O diagrama abaixo apresenta as principais entidades de negócio do OficinaPro. Ele oferece uma visão conceitual integrada, não representando um banco de dados único.
 
 ```mermaid
 erDiagram
@@ -70,28 +65,30 @@ erDiagram
     PERFIL ||--o{ USUARIO_TENANT : define
 
     TENANT ||--o{ CLIENTE : possui
-    TENANT ||--o{ VEICULO : possui
+    TENANT ||--o{ VEICULO : controla
     TENANT ||--o{ ORDEM_SERVICO : controla
+    TENANT ||--o{ PECA : controla
 
-    CLIENTE ||--o{ VEICULO_HISTORICO : possui
+    CLIENTE ||--o{ VEICULO : possui
     VEICULO ||--o{ VEICULO_HISTORICO : registra
+    CLIENTE ||--o{ VEICULO_HISTORICO : participa
 
     CLIENTE ||--o{ ORDEM_SERVICO : solicita
     VEICULO ||--o{ ORDEM_SERVICO : recebe
     ORDEM_SERVICO ||--o{ DIAGNOSTICO : possui
 
-    ORDEM_SERVICO ||--o{ ORCAMENTO : gera
+    ORDEM_SERVICO ||--o{ ORCAMENTO : possui
     ORCAMENTO ||--o{ ITEM_SERVICO : contem
     ORCAMENTO ||--o{ ITEM_PECA : contem
 
-    PECA ||--o{ MOVIMENTACAO_ESTOQUE : sofre
-    ORDEM_SERVICO ||--o{ MOVIMENTACAO_ESTOQUE : referencia
+    PECA ||--o{ SALDO_ESTOQUE : possui
+    PECA ||--o{ ITEM_PECA : referencia
+    PECA ||--o{ ITEM_RESERVA : reservada
+    RESERVA ||--|{ ITEM_RESERVA : contem
+    ORDEM_SERVICO ||--o{ RESERVA : referencia
+    PECA ||--o{ MOVIMENTACAO_ESTOQUE : movimenta
 
     ORDEM_SERVICO ||--o{ PAGAMENTO : recebe
-
-    TENANT ||--o{ PECA : controla
-    TENANT ||--o{ ORCAMENTO : possui
-    TENANT ||--o{ PAGAMENTO : possui
 
     TENANT {
         uuid id PK
@@ -106,6 +103,7 @@ erDiagram
         string nome
         string email
         string senha_hash
+        string status
     }
 
     PERFIL {
@@ -117,8 +115,8 @@ erDiagram
     USUARIO_TENANT {
         uuid id PK
         uuid usuario_id FK
-        uuid tenant_id
-        uuid perfil_id
+        uuid tenant_id FK
+        uuid perfil_id FK
         string status
     }
 
@@ -136,6 +134,7 @@ erDiagram
     VEICULO {
         uuid id PK
         uuid tenant_id
+        uuid cliente_id FK
         string placa
         string marca
         string modelo
@@ -146,9 +145,8 @@ erDiagram
 
     VEICULO_HISTORICO {
         uuid id PK
-        uuid tenant_id
-        uuid veiculo_id
-        uuid cliente_id
+        uuid veiculo_id FK
+        uuid cliente_id FK
         timestamp data_inicio
         timestamp data_fim
     }
@@ -156,8 +154,8 @@ erDiagram
     ORDEM_SERVICO {
         uuid id PK
         uuid tenant_id
-        uuid cliente_id
-        uuid veiculo_id
+        uuid cliente_id FK
+        uuid veiculo_id FK
         string status
         text problema_relatado
         timestamp data_abertura
@@ -165,7 +163,6 @@ erDiagram
 
     DIAGNOSTICO {
         uuid id PK
-        uuid tenant_id
         uuid ordem_servico_id FK
         uuid responsavel_id
         text laudo_tecnico
@@ -187,6 +184,7 @@ erDiagram
         string descricao
         int quantidade
         decimal valor_unitario
+        decimal valor_total
     }
 
     ITEM_PECA {
@@ -195,14 +193,37 @@ erDiagram
         uuid peca_id
         int quantidade
         decimal valor_unitario
+        decimal valor_total
     }
 
     PECA {
         uuid id PK
         uuid tenant_id
         string nome
-        int quantidade_disponivel
-        decimal valor_unitario
+        string status
+    }
+
+    SALDO_ESTOQUE {
+        uuid id PK
+        uuid peca_id
+        int quantidade_fisica
+        int quantidade_reservada
+    }
+
+    RESERVA {
+        uuid id PK
+        uuid tenant_id
+        uuid ordem_servico_id
+        uuid solicitacao_id
+        string status
+        timestamp data_criacao
+    }
+
+    ITEM_RESERVA {
+        uuid id PK
+        uuid reserva_id FK
+        uuid peca_id
+        int quantidade
     }
 
     MOVIMENTACAO_ESTOQUE {
@@ -227,526 +248,888 @@ erDiagram
     }
 ```
 
-> **Nota:** O diagrama é uma representação conceitual integrada. As relações entre entidades de microsserviços diferentes representam referências lógicas, não chaves estrangeiras físicas.
->
-> O diagrama também não substitui os diagramas físicos individuais de cada banco de dados.
+**Observações sobre o diagrama:**
 
----
+1. O diagrama apresenta uma visão conceitual dos domínios e não representa a existência de chaves estrangeiras entre bancos de microsserviços diferentes.
+2. As relações entre entidades do mesmo microsserviço poderão utilizar chaves estrangeiras físicas.
+3. As relações entre serviços diferentes deverão utilizar identificadores UUID como referências lógicas.
+4. `TENANT`, `USUARIO`, `PERFIL` e `USUARIO_TENANT` pertencem ao Auth Service.
+5. `CLIENTE`, `VEICULO`, `VEICULO_HISTORICO`, `ORDEM_SERVICO` e `DIAGNOSTICO` pertencem ao Work Order Service.
+6. `PECA`, `SALDO_ESTOQUE`, `RESERVA`, `ITEM_RESERVA` e `MOVIMENTACAO_ESTOQUE` pertencem ao Inventory Service.
+7. `ORCAMENTO`, `ITEM_SERVICO`, `ITEM_PECA` e `PAGAMENTO` pertencem ao Billing Service.
+8. As entidades de reserva foram separadas das movimentações para representar o ciclo de reserva e consumo sem confundir quantidade comprometida com saída física definitiva.
 
-## 3. Dicionário de dados por microsserviço
+### 3.2 DER lógico do Auth Service
 
-### 3.1. Auth Service (`auth_db`)
+```mermaid
+erDiagram
+    TENANTS ||--o{ USUARIO_TENANT : possui
+    USUARIOS ||--o{ USUARIO_TENANT : participa
+    PERFIS ||--o{ USUARIO_TENANT : define
 
-Responsável pela autenticação, identificação dos usuários e controle de acesso às oficinas.
+    TENANTS {
+        uuid id PK
+        varchar nome
+        varchar documento
+        varchar status
+        timestamp data_criacao
+    }
 
-#### Tabela `tenants`
+    USUARIOS {
+        uuid id PK
+        varchar nome
+        varchar email UK
+        varchar senha_hash
+        varchar status
+        timestamp data_criacao
+    }
+
+    PERFIS {
+        uuid id PK
+        varchar nome UK
+        text descricao
+    }
+
+    USUARIO_TENANT {
+        uuid id PK
+        uuid usuario_id FK
+        uuid tenant_id FK
+        uuid perfil_id FK
+        varchar status
+        timestamp data_vinculo
+    }
+```
+
+### 3.3 DER lógico do Work Order Service
+
+```mermaid
+erDiagram
+    CLIENTES ||--o{ VEICULOS : possui
+    VEICULOS ||--o{ VEICULO_HISTORICO : registra
+    CLIENTES ||--o{ VEICULO_HISTORICO : participa
+    CLIENTES ||--o{ ORDENS_SERVICO : solicita
+    VEICULOS ||--o{ ORDENS_SERVICO : recebe
+    ORDENS_SERVICO ||--o{ DIAGNOSTICOS : possui
+
+    CLIENTES {
+        uuid id PK
+        uuid tenant_id
+        varchar nome
+        varchar cpf
+        varchar telefone
+        varchar email
+        text endereco
+        varchar status
+    }
+
+    VEICULOS {
+        uuid id PK
+        uuid tenant_id
+        uuid cliente_id FK
+        varchar placa
+        varchar marca
+        varchar modelo
+        int ano
+        varchar cor
+        int quilometragem
+    }
+
+    VEICULO_HISTORICO {
+        uuid id PK
+        uuid tenant_id
+        uuid veiculo_id FK
+        uuid cliente_id FK
+        timestamp data_inicio
+        timestamp data_fim
+    }
+
+    ORDENS_SERVICO {
+        uuid id PK
+        uuid tenant_id
+        uuid cliente_id FK
+        uuid veiculo_id FK
+        varchar status
+        text problema_relatado
+        timestamp data_abertura
+    }
+
+    DIAGNOSTICOS {
+        uuid id PK
+        uuid tenant_id
+        uuid ordem_servico_id FK
+        uuid responsavel_id
+        text laudo_tecnico
+        timestamp data_criacao
+    }
+```
+
+### 3.4 DER lógico do Inventory Service
+
+```mermaid
+erDiagram
+    PECAS ||--|| SALDOS_ESTOQUE : possui
+    PECAS ||--o{ MOVIMENTACOES_ESTOQUE : sofre
+    RESERVAS ||--|{ ITENS_RESERVA : contem
+    PECAS ||--o{ ITENS_RESERVA : referencia
+
+    PECAS {
+        uuid id PK
+        uuid tenant_id
+        varchar nome
+        text descricao
+        varchar status
+    }
+
+    SALDOS_ESTOQUE {
+        uuid id PK
+        uuid peca_id FK
+        int quantidade_fisica
+        int quantidade_reservada
+        timestamp atualizado_em
+    }
+
+    RESERVAS {
+        uuid id PK
+        uuid tenant_id
+        uuid ordem_servico_id
+        uuid solicitacao_id UK
+        varchar status
+        timestamp data_criacao
+        timestamp data_atualizacao
+    }
+
+    ITENS_RESERVA {
+        uuid id PK
+        uuid reserva_id FK
+        uuid peca_id FK
+        int quantidade
+    }
+
+    MOVIMENTACOES_ESTOQUE {
+        uuid id PK
+        uuid tenant_id
+        uuid peca_id FK
+        uuid ordem_servico_id
+        varchar tipo_movimentacao
+        int quantidade
+        varchar condicao_fisica
+        varchar idempotency_key
+        timestamp data_movimentacao
+    }
+```
+
+### 3.5 DER lógico do Billing Service
+
+```mermaid
+erDiagram
+    ORCAMENTOS ||--o{ ITENS_SERVICO : contem
+    ORCAMENTOS ||--o{ ITENS_PECA : contem
+
+    ORCAMENTOS {
+        uuid id PK
+        uuid tenant_id
+        uuid ordem_servico_id
+        decimal valor_servicos
+        decimal valor_pecas
+        decimal descontos
+        decimal valor_total
+        varchar status_decisao
+        uuid responsavel_decisao
+        timestamp data_decisao
+        timestamp data_criacao
+    }
+
+    ITENS_SERVICO {
+        uuid id PK
+        uuid orcamento_id FK
+        varchar descricao
+        int quantidade
+        decimal valor_unitario
+        decimal valor_total
+    }
+
+    ITENS_PECA {
+        uuid id PK
+        uuid orcamento_id FK
+        uuid peca_id
+        int quantidade
+        decimal valor_unitario
+        decimal valor_total
+    }
+
+    PAGAMENTOS {
+        uuid id PK
+        uuid tenant_id
+        uuid ordem_servico_id
+        decimal valor_pago
+        varchar forma_pagamento
+        varchar status
+        varchar idempotency_key
+        timestamp data_pagamento
+    }
+```
+
+## 4. Dicionário de Dados
+
+Os tipos apresentados são propostas de implementação para PostgreSQL. As chaves estrangeiras indicadas são físicas somente quando as entidades pertencem ao mesmo banco. Identificadores externos representam referências lógicas.
+
+### 4.1 Auth Service (`auth_db`)
+
+Responsável pela autenticação, identificação dos usuários, oficinas e controle de acesso.
+
+#### 4.1.1 Tabela `tenants`
 
 Representa as oficinas contratantes da plataforma.
 
-- `id`: UUID (Chave Primária).
-- `nome`: VARCHAR(150) (Not Null).
-- `documento`: VARCHAR(20) (Null — identificação fiscal da oficina, quando aplicável).
-- `status`: VARCHAR(20) (Not Null — ATIVO / INATIVO / SUSPENSO).
-- `data_criacao`: TIMESTAMP (Not Null, Default: NOW()).
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador único da oficina |
+| `nome` | VARCHAR(150) | Não | - | Nome da oficina ou empresa |
+| `documento` | VARCHAR(20) | Sim | - | Documento fiscal, quando aplicável |
+| `status` | VARCHAR(20) | Não | CHECK | Situação da oficina: ATIVO, INATIVO ou SUSPENSO |
+| `data_criacao` | TIMESTAMP | Não | DEFAULT NOW() | Data de criação |
 
-**Regras e observações:**
+**Regras:**
 
 - Cada tenant representa uma oficina ou empresa contratante.
-- O tenant deverá possuir identificação única.
 - O status deverá controlar a disponibilidade de acesso à plataforma.
-- A definição de planos, limites e cobrança da assinatura deverá ser tratada separadamente das operações financeiras das oficinas.
+- A cobrança de assinatura deverá ser separada dos pagamentos das ordens de serviço.
 
-#### Tabela `usuarios`
+#### 4.1.2 Tabela `usuarios`
 
-Armazena os dados de identificação e autenticação dos usuários.
+Armazena os dados de identificação e autenticação.
 
-- `id`: UUID (Chave Primária).
-- `nome`: VARCHAR(150) (Not Null).
-- `email`: VARCHAR(150) (Not Null).
-- `senha_hash`: VARCHAR(255) (Not Null — armazenamento de hash seguro).
-- `data_criacao`: TIMESTAMP (Not Null, Default: NOW()).
-- `status`: VARCHAR(20) (Not Null — ATIVO / INATIVO).
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador único |
+| `nome` | VARCHAR(150) | Não | - | Nome completo |
+| `email` | VARCHAR(150) | Não | UNIQUE* | E-mail de autenticação |
+| `senha_hash` | VARCHAR(255) | Não | - | Hash seguro da senha |
+| `data_criacao` | TIMESTAMP | Não | DEFAULT NOW() | Data de criação |
+| `status` | VARCHAR(20) | Não | CHECK | Situação: ATIVO ou INATIVO |
 
-**Regras e observações:**
+**Regras:**
 
-- A senha nunca deverá ser armazenada em texto puro.
-- O e-mail deverá possuir uma regra de unicidade compatível com a estratégia de contas adotada.
-- Um usuário poderá participar de uma ou mais oficinas, caso essa possibilidade seja aprovada.
+- Senhas nunca deverão ser armazenadas em texto puro.
+- O e-mail deverá possuir uma regra de unicidade definida para a estratégia de contas.
+- A possibilidade de um usuário participar de várias oficinas será suportada pelo relacionamento com `usuario_tenant`, caso essa regra seja validada.
 
-#### Tabela `perfis`
+\* A unicidade global do e-mail é uma proposta a confirmar conforme a estratégia de identidade do sistema.
 
-Armazena os perfis de acesso disponíveis.
+#### 4.1.3 Tabela `perfis`
 
-- `id`: UUID (Chave Primária).
-- `nome`: VARCHAR(50) (Not Null).
-- `descricao`: TEXT (Null).
+Armazena os perfis de acesso.
 
-**Perfis inicialmente considerados:**
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador único |
+| `nome` | VARCHAR(50) | Não | UNIQUE | Nome do perfil |
+| `descricao` | TEXT | Sim | - | Descrição das responsabilidades |
+
+**Perfis previstos para o MVP:**
 
 - Atendente;
 - Mecânico;
 - Estoque;
 - Financeiro.
 
-> **Status:** Proposta. Os perfis e suas permissões deverão ser validados pela equipe. Não considerar o perfil de administrador da oficina como decisão aprovada.
+Não está previsto um perfil genérico de administrador da oficina.
 
-#### Tabela `usuario_tenant`
+#### 4.1.4 Tabela `usuario_tenant`
 
 Relaciona os usuários às oficinas nas quais possuem acesso.
 
-- `id`: UUID (Chave Primária).
-- `usuario_id`: UUID (Chave Estrangeira referenciando `usuarios.id`).
-- `tenant_id`: UUID (Chave Estrangeira referenciando `tenants.id`).
-- `perfil_id`: UUID (Chave Estrangeira referenciando `perfis.id`).
-- `status`: VARCHAR(20) (Not Null — ATIVO / INATIVO).
-- `data_vinculo`: TIMESTAMP (Not Null, Default: NOW()).
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador do vínculo |
+| `usuario_id` | UUID | Não | FK | Referência a `usuarios.id` |
+| `tenant_id` | UUID | Não | FK | Referência a `tenants.id` |
+| `perfil_id` | UUID | Não | FK | Referência a `perfis.id` |
+| `status` | VARCHAR(20) | Não | CHECK | Situação do vínculo |
+| `data_vinculo` | TIMESTAMP | Não | DEFAULT NOW() | Data de criação do vínculo |
 
 **Restrições propostas:**
 
-- Combinação de `usuario_id` e `tenant_id` deverá ser única, caso seja adotada uma associação por usuário e oficina.
-- O usuário somente poderá acessar os dados de uma oficina quando possuir vínculo ativo com ela.
-- O perfil deverá determinar as permissões disponíveis dentro daquela oficina.
+- Os campos `usuario_id`, `tenant_id` e `perfil_id` deverão referenciar registros existentes no mesmo banco.
+- A combinação `usuario_id` + `tenant_id` deverá ser única caso seja adotado um único perfil por usuário em cada oficina.
+- O usuário somente poderá acessar uma oficina quando possuir vínculo ativo.
+- As permissões deverão ser verificadas em cada operação protegida.
 
----
+### 4.2 Work Order Service (`work_order_db`)
 
-### 3.2. Work Order Service (`work_order_db`)
+Responsável pelo cadastro de clientes, veículos, histórico de propriedade, ordens de serviço e diagnósticos.
 
-Responsável pelo núcleo operacional do OficinaPro.
+#### 4.2.1 Tabela `clientes`
 
-#### Tabela `clientes`
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador do cliente |
+| `tenant_id` | UUID | Não | Índice | Referência lógica à oficina |
+| `nome` | VARCHAR(150) | Não | - | Nome completo |
+| `cpf` | VARCHAR(14) | Não | UNIQUE (`tenant_id`, `cpf`) | CPF do cliente |
+| `telefone` | VARCHAR(20) | Não | - | Telefone de contato |
+| `email` | VARCHAR(150) | Não | - | E-mail |
+| `endereco` | TEXT | Não | - | Endereço |
+| `status` | VARCHAR(20) | Não | CHECK | ATIVO ou INATIVO |
 
-Armazena os dados cadastrais dos clientes de cada oficina.
+**Regras:**
 
-- `id`: UUID (Chave Primária).
-- `tenant_id`: UUID (Referência lógica ao tenant do Auth Service).
-- `nome`: VARCHAR(150) (Not Null).
-- `cpf`: VARCHAR(14) (Not Null).
-- `telefone`: VARCHAR(20) (Not Null).
-- `email`: VARCHAR(150) (Not Null).
-- `endereco`: TEXT (Not Null).
-- `status`: VARCHAR(20) (Not Null — ATIVO / INATIVO).
-
-**Restrições e regras:**
-
-- O CPF deverá ser obrigatório.
-- O CPF deverá ser único dentro de cada oficina, considerando a combinação `tenant_id` + `cpf`.
-- Telefone, e-mail e endereço poderão ser atualizados após o cadastro.
-- Clientes com histórico de atendimentos não deverão ser excluídos definitivamente.
+- O CPF será obrigatório e único dentro de cada oficina.
+- Telefone, e-mail e endereço poderão ser atualizados.
+- Clientes com histórico de atendimento não deverão ser excluídos definitivamente.
 - A inativação deverá preservar o histórico.
-- O sistema deverá evitar cadastros duplicados.
+- O mesmo CPF poderá existir em oficinas diferentes.
 
-#### Tabela `veiculos`
+#### 4.2.2 Tabela `veiculos`
 
-Armazena os veículos atendidos pelas oficinas.
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador do veículo |
+| `tenant_id` | UUID | Não | Índice | Referência lógica à oficina |
+| `cliente_id` | UUID | Não | FK | Proprietário atual no cadastro |
+| `placa` | VARCHAR(10) | Não | UNIQUE (`tenant_id`, `placa`) | Placa |
+| `marca` | VARCHAR(50) | Não | - | Marca |
+| `modelo` | VARCHAR(50) | Não | - | Modelo |
+| `ano` | INT | Não | CHECK | Ano do veículo |
+| `cor` | VARCHAR(30) | Não | - | Cor |
+| `quilometragem` | INT | Não | CHECK | Quilometragem atual |
 
-- `id`: UUID (Chave Primária).
-- `tenant_id`: UUID (Referência lógica ao tenant).
-- `cliente_id`: UUID (Chave Estrangeira referenciando `clientes.id`).
-- `placa`: VARCHAR(10) (Not Null).
-- `marca`: VARCHAR(50) (Not Null).
-- `modelo`: VARCHAR(50) (Not Null).
-- `ano`: INT (Not Null).
-- `cor`: VARCHAR(30) (Not Null).
-- `quilometragem`: INT (Not Null).
+**Regras:**
 
-**Restrições e regras:**
-
-- A placa deverá ser obrigatória e única dentro de cada oficina, considerando `tenant_id` + `placa`.
-- Todo veículo deverá possuir um proprietário atual associado.
+- A placa deverá ser única dentro de cada oficina.
+- Todo veículo deverá possuir um proprietário atual.
 - Um cliente poderá possuir vários veículos.
-- A mudança de proprietário deverá preservar o histórico anterior.
-- A quilometragem deverá ser validada para impedir valores negativos.
+- A quilometragem não poderá ser negativa.
+- A alteração de proprietário deverá preservar o histórico anterior.
 
-#### Tabela `veiculo_historico`
+#### 4.2.3 Tabela `veiculo_historico`
 
 Registra o histórico de associação entre veículos e seus proprietários.
 
-- `id`: UUID (Chave Primária).
-- `tenant_id`: UUID (Referência lógica ao tenant).
-- `veiculo_id`: UUID (Chave Estrangeira referenciando `veiculos.id`).
-- `cliente_id`: UUID (Chave Estrangeira referenciando `clientes.id`).
-- `data_inicio`: TIMESTAMP (Not Null).
-- `data_fim`: TIMESTAMP (Null enquanto a associação estiver vigente).
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador do histórico |
+| `tenant_id` | UUID | Não | Índice | Referência lógica à oficina |
+| `veiculo_id` | UUID | Não | FK | Referência a `veiculos.id` |
+| `cliente_id` | UUID | Não | FK | Referência a `clientes.id` |
+| `data_inicio` | TIMESTAMP | Não | - | Início da propriedade |
+| `data_fim` | TIMESTAMP | Sim | - | Fim da propriedade |
 
-**Restrições e regras:**
+**Regras:**
 
 - A mudança de proprietário deverá encerrar o vínculo anterior.
-- Um novo vínculo deverá ser registrado para o proprietário atual.
+- Um novo vínculo deverá ser registrado.
 - O histórico anterior não deverá ser apagado.
 - Deverá existir apenas um vínculo vigente por veículo.
-- Os relacionamentos deverão respeitar o mesmo `tenant_id`.
+- Os registros deverão pertencer ao mesmo tenant.
 
-#### Tabela `ordens_servico`
+#### 4.2.4 Tabela `ordens_servico`
 
-Controla o fluxo principal dos atendimentos.
+Controla o fluxo operacional dos atendimentos.
 
-- `id`: UUID (Chave Primária).
-- `tenant_id`: UUID (Referência lógica ao tenant).
-- `cliente_id`: UUID (Chave Estrangeira referenciando `clientes.id`).
-- `veiculo_id`: UUID (Chave Estrangeira referenciando `veiculos.id`).
-- `problema_relatado`: TEXT (Not Null).
-- `status`: VARCHAR(30) (Not Null).
-- `data_abertura`: TIMESTAMP (Not Null, Default: NOW()).
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador da OS |
+| `tenant_id` | UUID | Não | Índice | Referência lógica à oficina |
+| `cliente_id` | UUID | Não | FK | Cliente associado |
+| `veiculo_id` | UUID | Não | FK | Veículo associado |
+| `problema_relatado` | TEXT | Não | - | Descrição do problema informado |
+| `status` | VARCHAR(30) | Não | CHECK | Situação operacional |
+| `data_abertura` | TIMESTAMP | Não | DEFAULT NOW() | Data de abertura |
 
-**Status inicialmente propostos:**
+**Status operacionais previstos:**
 
 - `ABERTA`;
 - `EM_DIAGNOSTICO`;
 - `AGUARDANDO_APROVACAO`;
-- `APROVADA`;
-- `RECUSADA`;
+- `AGUARDANDO_RESERVA`;
 - `EM_EXECUCAO`;
-- `AGUARDANDO_PAGAMENTO`;
 - `CONCLUIDA`;
 - `CANCELADA`.
 
-**Regras e observações:**
+**Regras:**
 
-- A OS deverá estar associada a um cliente e a um veículo pertencentes ao mesmo tenant.
+- Cliente e veículo deverão pertencer ao mesmo tenant da OS.
 - A OS deverá preservar a identificação do cliente e do veículo no momento da abertura.
-- A execução deverá ser bloqueada enquanto o orçamento não estiver aprovado.
-- As transições de status deverão respeitar o fluxo operacional definido pela equipe.
-- A alteração de proprietário do veículo não deverá modificar o histórico de atendimentos anteriores.
+- A execução será bloqueada até que o orçamento esteja definitivamente aprovado.
+- A aprovação e a recusa são decisões do orçamento, não status da OS.
+- A conclusão operacional não dependerá da quitação financeira.
+- A alteração de proprietário do veículo não deverá modificar os atendimentos anteriores.
 
-#### Tabela `diagnosticos`
+#### 4.2.5 Tabela `diagnosticos`
 
 Armazena os diagnósticos técnicos associados às ordens de serviço.
 
-- `id`: UUID (Chave Primária).
-- `tenant_id`: UUID (Referência lógica ao tenant).
-- `ordem_servico_id`: UUID (Chave Estrangeira referenciando `ordens_servico.id`).
-- `laudo_tecnico`: TEXT (Not Null).
-- `responsavel_id`: UUID (Referência lógica ao usuário do Auth Service).
-- `data_criacao`: TIMESTAMP (Not Null, Default: NOW()).
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador do diagnóstico |
+| `tenant_id` | UUID | Não | Índice | Referência lógica à oficina |
+| `ordem_servico_id` | UUID | Não | FK | Referência a `ordens_servico.id` |
+| `laudo_tecnico` | TEXT | Não | - | Descrição técnica |
+| `responsavel_id` | UUID | Não | Referência lógica | Usuário responsável no Auth Service |
+| `data_criacao` | TIMESTAMP | Não | DEFAULT NOW() | Data do diagnóstico |
 
-**Regras e observações:**
+**Regras:**
 
 - Cada diagnóstico deverá estar associado a uma OS.
 - Deverá ser possível identificar o responsável pelo registro.
 - O histórico de diagnósticos deverá ser preservado.
-- A possibilidade de múltiplos diagnósticos ou revisões por OS deverá ser validada.
+- O modelo permite múltiplos diagnósticos por OS, mantendo registros separados.
 
----
+### 4.3 Inventory Service (`inventory_db`)
 
-### 3.3. Inventory Service (`inventory_db`)
+Responsável pelo cadastro de peças, controle de saldos, reservas e movimentações de estoque.
 
-Responsável pelo controle de peças, quantidades disponíveis e rastreabilidade das movimentações.
+#### 4.3.1 Tabela `pecas`
 
-#### Tabela `pecas`
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador da peça |
+| `tenant_id` | UUID | Não | Índice | Referência lógica à oficina |
+| `nome` | VARCHAR(100) | Não | - | Nome da peça |
+| `descricao` | TEXT | Sim | - | Descrição complementar |
+| `status` | VARCHAR(20) | Não | CHECK | ATIVA ou INATIVA |
 
-Armazena o cadastro das peças de cada oficina.
-
-- `id`: UUID (Chave Primária).
-- `tenant_id`: UUID (Referência lógica ao tenant).
-- `nome`: VARCHAR(100) (Not Null).
-- `descricao`: TEXT (Null).
-- `quantidade_disponivel`: INT (Not Null, Check >= 0).
-- `valor_unitario`: DECIMAL(10,2) (Not Null).
-- `status`: VARCHAR(20) (Not Null — ATIVA / INATIVA).
-
-**Regras e observações:**
+**Regras:**
 
 - Cada peça deverá pertencer a uma oficina.
-- O saldo não poderá ser negativo.
-- A inativação de uma peça deverá preservar seu histórico de movimentações.
-- A quantidade disponível deverá refletir as movimentações válidas.
+- A inativação deverá preservar o histórico de movimentações.
+- O cadastro da peça não deverá ser confundido com o controle de seu saldo.
 
-#### Tabela `movimentacoes_estoque`
+#### 4.3.2 Tabela `saldos_estoque`
 
-Registra as movimentações de estoque e a condição física das peças.
+Armazena os saldos físicos e reservados de cada peça.
 
-- `id`: UUID (Chave Primária).
-- `tenant_id`: UUID (Referência lógica ao tenant).
-- `peca_id`: UUID (Chave Estrangeira referenciando `pecas.id`).
-- `ordem_servico_id`: UUID (Referência lógica à OS no Work Order Service).
-- `tipo_movimentacao`: VARCHAR(30) (Not Null).
-- `quantidade`: INT (Not Null).
-- `condicao_fisica`: VARCHAR(30) (Conforme aplicabilidade).
-- `idempotency_key`: VARCHAR(100) (Identificador para evitar processamento duplicado).
-- `data_movimentacao`: TIMESTAMP (Not Null, Default: NOW()).
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador do saldo |
+| `peca_id` | UUID | Não | FK / UNIQUE | Referência a `pecas.id` |
+| `quantidade_fisica` | INT | Não | CHECK >= 0 | Quantidade fisicamente existente |
+| `quantidade_reservada` | INT | Não | CHECK >= 0 | Quantidade comprometida em reservas |
+| `atualizado_em` | TIMESTAMP | Não | DEFAULT NOW() | Data da última atualização |
 
-**Tipos de movimentação inicialmente considerados:**
+O saldo disponível será calculado por:
+
+`quantidade_disponivel = quantidade_fisica - quantidade_reservada`
+
+**Regras:**
+
+- O saldo físico não poderá ser negativo.
+- A quantidade reservada não poderá ser negativa.
+- A quantidade reservada não poderá superar a quantidade física.
+- A quantidade disponível não deverá ser armazenada como fonte independente de verdade; deverá ser calculada a partir dos dois saldos.
+- A atualização dos saldos deverá ocorrer de forma transacional.
+
+#### 4.3.3 Tabela `reservas`
+
+Representa uma solicitação de reserva de peças associada a uma OS.
+
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador da reserva |
+| `tenant_id` | UUID | Não | Índice | Referência lógica à oficina |
+| `ordem_servico_id` | UUID | Não | Referência lógica | OS relacionada |
+| `solicitacao_id` | UUID | Não | UNIQUE | Identificador idempotente da solicitação |
+| `status` | VARCHAR(30) | Não | CHECK | Situação da reserva |
+| `data_criacao` | TIMESTAMP | Não | DEFAULT NOW() | Data de criação |
+| `data_atualizacao` | TIMESTAMP | Não | DEFAULT NOW() | Última atualização |
+
+**Status propostos:**
+
+- `CONFIRMADA`;
+- `RECUSADA`;
+- `CONSUMIDA`;
+- `LIBERADA`;
+- `CANCELADA`.
+
+**Regras:**
+
+- Uma solicitação deverá possuir identificador único.
+- A reserva deverá estar associada à oficina e à OS correspondentes.
+- A confirmação deverá ocorrer somente quando todas as peças forem reservadas.
+- Uma reserva recusada não poderá manter quantidades parcialmente comprometidas.
+- A liberação não deverá gerar entrada física de estoque.
+
+#### 4.3.4 Tabela `itens_reserva`
+
+Armazena as peças e quantidades de cada reserva.
+
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador do item |
+| `reserva_id` | UUID | Não | FK | Referência a `reservas.id` |
+| `peca_id` | UUID | Não | FK | Referência a `pecas.id` |
+| `quantidade` | INT | Não | CHECK > 0 | Quantidade solicitada |
+
+**Regras:**
+
+- Cada item deverá pertencer a uma reserva.
+- A quantidade deverá ser maior que zero.
+- A peça deverá pertencer ao mesmo tenant da reserva.
+- A confirmação da reserva deverá contemplar todos os itens.
+
+#### 4.3.5 Tabela `movimentacoes_estoque`
+
+Registra as movimentações e alterações efetivas no estoque.
+
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador da movimentação |
+| `tenant_id` | UUID | Não | Índice | Referência lógica à oficina |
+| `peca_id` | UUID | Não | FK | Referência a `pecas.id` |
+| `ordem_servico_id` | UUID | Sim | Referência lógica | OS relacionada, quando aplicável |
+| `tipo_movimentacao` | VARCHAR(30) | Não | CHECK | Tipo de movimentação |
+| `quantidade` | INT | Não | CHECK > 0 | Quantidade movimentada |
+| `condicao_fisica` | VARCHAR(30) | Sim | CHECK | Condição física, quando aplicável |
+| `idempotency_key` | VARCHAR(100) | Não | UNIQUE | Chave para impedir duplicidade |
+| `data_movimentacao` | TIMESTAMP | Não | DEFAULT NOW() | Data da movimentação |
+
+**Tipos de movimentação propostos:**
 
 - `ENTRADA`;
-- `SAIDA_RESERVA`;
+- `CONSUMO`;
 - `ESTORNO`;
 - `PERDA_OPERACIONAL`.
 
 **Condições físicas inicialmente consideradas:**
 
 - `PENDENTE_INSTALACAO`;
-- `INSTALADA`.
+- `INSTALADA`;
+- `INUTILIZAVEL`.
 
-**Regras e observações:**
+**Regras:**
 
 - Toda movimentação deverá registrar peça, quantidade, data e tipo.
-- A reserva deverá estar associada à OS correspondente.
-- O sistema deverá impedir saídas superiores ao saldo disponível.
-- Uma mesma operação não deverá gerar baixas duplicadas.
-- O estorno deverá registrar a reversão da movimentação original, sem apagar seu histórico.
+- A utilização de peça reservada deverá converter a quantidade reservada em saída definitiva.
+- A liberação de peça não utilizada deverá reduzir a quantidade reservada, sem alterar a quantidade física.
+- Perdas operacionais deverão ser registradas de maneira específica.
+- O estorno deverá preservar o histórico da movimentação original.
+- Uma mesma operação não poderá gerar baixas duplicadas.
 - Peças instaladas ou inutilizáveis não deverão ser contabilizadas como disponíveis.
-- As quantidades reservadas e disponíveis deverão ser controladas de forma consistente.
 
-> **Ponto pendente:** Definir o ciclo definitivo entre reserva, retirada física, instalação, devolução e perda operacional, incluindo o momento em que cada movimentação altera o saldo.
+### 4.4 Billing Service (`billing_db`)
 
----
+Responsável pelos orçamentos, seus itens e os pagamentos relacionados às ordens de serviço.
 
-### 3.4. Billing Service (`billing_db`)
-
-Responsável pelos orçamentos e pagamentos relacionados às ordens de serviço.
-
-#### Tabela `orcamentos`
+#### 4.4.1 Tabela `orcamentos`
 
 Armazena os orçamentos associados às ordens de serviço.
 
-- `id`: UUID (Chave Primária).
-- `tenant_id`: UUID (Referência lógica ao tenant).
-- `ordem_servico_id`: UUID (Referência lógica à OS no Work Order Service).
-- `valor_servicos`: DECIMAL(10,2) (Not Null).
-- `valor_pecas`: DECIMAL(10,2) (Not Null).
-- `descontos`: DECIMAL(10,2) (Not Null, Default: 0.00).
-- `valor_total`: DECIMAL(10,2) (Not Null).
-- `status_decisao`: VARCHAR(20) (Not Null — AGUARDANDO / APROVADO / RECUSADO).
-- `data_criacao`: TIMESTAMP (Not Null, Default: NOW()).
-- `data_decisao`: TIMESTAMP (Null até o registro da decisão).
-- `responsavel_decisao_id`: UUID (Referência lógica ao usuário do Auth Service).
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador do orçamento |
+| `tenant_id` | UUID | Não | Índice | Referência lógica à oficina |
+| `ordem_servico_id` | UUID | Não | Referência lógica | OS relacionada |
+| `valor_servicos` | DECIMAL(10,2) | Não | CHECK >= 0 | Total dos serviços |
+| `valor_pecas` | DECIMAL(10,2) | Não | CHECK >= 0 | Total das peças |
+| `descontos` | DECIMAL(10,2) | Não | DEFAULT 0.00 | Valor de descontos |
+| `valor_total` | DECIMAL(10,2) | Não | CHECK >= 0 | Total do orçamento |
+| `status_decisao` | VARCHAR(30) | Não | CHECK | Situação da decisão e aprovação |
+| `responsavel_decisao` | UUID | Sim | Referência lógica | Responsável pela decisão registrada |
+| `data_decisao` | TIMESTAMP | Sim | - | Data e horário da decisão |
+| `data_criacao` | TIMESTAMP | Não | DEFAULT NOW() | Data de criação |
 
-**Regras e observações:**
+**Status propostos para o orçamento:**
 
-- Cada orçamento deverá pertencer a uma OS.
-- A aprovação ou recusa deverá registrar data e hora.
-- Deverá ser identificado o responsável pelo registro da decisão.
-- A execução da OS deverá depender da aprovação do orçamento.
-- A alteração de um orçamento aprovado deverá respeitar as regras de negócio definidas pela equipe.
-- Os valores deverão permanecer registrados para preservar o histórico do orçamento.
+- `AGUARDANDO`: aguardando decisão do cliente.
+- `RECUSADO`: orçamento recusado pelo cliente.
+- `PENDENTE_RESERVA`: cliente aceitou, mas a reserva ainda está em processamento.
+- `RESERVA_RECUSADA`: não foi possível reservar todas as peças.
+- `APROVADO`: reserva integral confirmada e aprovação definitiva registrada.
 
-#### Tabela `itens_servico`
+**Regras:**
 
-Armazena os serviços incluídos em cada orçamento.
+- Cada orçamento deverá possuir uma referência lógica à OS.
+- A aceitação do cliente deverá ser registrada com responsável e data/hora.
+- A aceitação do cliente não representa, isoladamente, aprovação definitiva.
+- A aprovação definitiva dependerá da confirmação integral da reserva.
+- Alterações relevantes em orçamento já aceito deverão exigir nova autorização do cliente.
+- Os valores deverão ser preservados para manter o histórico.
+- A aprovação deverá ser registrada de maneira idempotente.
 
-- `id`: UUID (Chave Primária).
-- `orcamento_id`: UUID (Chave Estrangeira referenciando `orcamentos.id`).
-- `descricao`: VARCHAR(255) (Not Null).
-- `quantidade`: INT (Not Null).
-- `valor_unitario`: DECIMAL(10,2) (Not Null).
-- `valor_total`: DECIMAL(10,2) (Not Null).
+#### 4.4.2 Tabela `itens_servico`
 
-**Regras e observações:**
+Armazena os serviços incluídos no orçamento.
+
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador do item |
+| `orcamento_id` | UUID | Não | FK | Referência a `orcamentos.id` |
+| `descricao` | VARCHAR(255) | Não | - | Descrição do serviço |
+| `quantidade` | INT | Não | CHECK > 0 | Quantidade |
+| `valor_unitario` | DECIMAL(10,2) | Não | CHECK >= 0 | Valor unitário |
+| `valor_total` | DECIMAL(10,2) | Não | CHECK >= 0 | Valor total do item |
+
+**Regras:**
 
 - Cada item deverá estar associado a um orçamento.
 - A quantidade deverá ser maior que zero.
-- O valor unitário deverá ser preservado no momento da elaboração do orçamento.
+- O valor unitário deverá ser preservado no momento da elaboração.
+- O valor total deverá corresponder à quantidade multiplicada pelo valor unitário, respeitando as regras de arredondamento.
 
-#### Tabela `itens_peca`
+#### 4.4.3 Tabela `itens_peca`
 
 Armazena as peças previstas em cada orçamento.
 
-- `id`: UUID (Chave Primária).
-- `orcamento_id`: UUID (Chave Estrangeira referenciando `orcamentos.id`).
-- `peca_id`: UUID (Referência lógica à peça do Inventory Service).
-- `quantidade`: INT (Not Null).
-- `valor_unitario`: DECIMAL(10,2) (Not Null).
-- `valor_total`: DECIMAL(10,2) (Not Null).
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador do item |
+| `orcamento_id` | UUID | Não | FK | Referência a `orcamentos.id` |
+| `peca_id` | UUID | Não | Referência lógica | Identificador da peça no Inventory Service |
+| `quantidade` | INT | Não | CHECK > 0 | Quantidade solicitada |
+| `valor_unitario` | DECIMAL(10,2) | Não | CHECK >= 0 | Valor unitário registrado |
+| `valor_total` | DECIMAL(10,2) | Não | CHECK >= 0 | Valor total do item |
 
-**Regras e observações:**
+**Regras:**
 
 - Cada item deverá estar associado a um orçamento.
 - A referência da peça deverá pertencer ao mesmo tenant do orçamento.
 - A quantidade deverá ser maior que zero.
-- O valor unitário deverá ser preservado no momento da elaboração do orçamento.
-- A comunicação com o Inventory Service deverá validar a existência e a disponibilidade da peça, conforme as regras de estoque.
+- O valor unitário deverá ser preservado no momento da elaboração.
+- A existência e a disponibilidade da peça deverão ser verificadas pelo Inventory Service.
+- `peca_id` é uma referência lógica, não uma chave estrangeira física.
 
-#### Tabela `pagamentos`
+#### 4.4.4 Tabela `pagamentos`
 
 Registra os pagamentos realizados em relação às ordens de serviço.
 
-- `id`: UUID (Chave Primária).
-- `tenant_id`: UUID (Referência lógica ao tenant).
-- `ordem_servico_id`: UUID (Referência lógica à OS no Work Order Service).
-- `valor_pago`: DECIMAL(10,2) (Not Null).
-- `forma_pagamento`: VARCHAR(50) (Not Null).
-- `status`: VARCHAR(20) (Not Null — PENDENTE / CONFIRMADO / ESTORNADO / FALHOU).
-- `idempotency_key`: VARCHAR(100) (Identificador para evitar registro duplicado).
-- `data_pagamento`: TIMESTAMP (Not Null, Default: NOW()).
+| Atributo | Tipo | Nulo? | Restrição | Descrição |
+|---|---|---|---|---|
+| `id` | UUID | Não | PK | Identificador do pagamento |
+| `tenant_id` | UUID | Não | Índice | Referência lógica à oficina |
+| `ordem_servico_id` | UUID | Não | Referência lógica | OS relacionada |
+| `valor_pago` | DECIMAL(10,2) | Não | CHECK > 0 | Valor do pagamento |
+| `forma_pagamento` | VARCHAR(50) | Não | - | Forma de pagamento |
+| `status` | VARCHAR(20) | Não | CHECK | Situação do pagamento |
+| `idempotency_key` | VARCHAR(100) | Não | UNIQUE | Identificador contra duplicidade |
+| `data_pagamento` | TIMESTAMP | Não | DEFAULT NOW() | Data do registro |
 
-**Regras e observações:**
+**Status propostos:**
+
+- `PENDENTE`;
+- `CONFIRMADO`;
+- `ESTORNADO`;
+- `FALHOU`.
+
+**Regras:**
 
 - Cada pagamento deverá estar associado a uma OS.
-- Deverá ser possível consultar os pagamentos registrados.
 - O sistema deverá preservar o histórico de pagamentos e estornos.
-- A possibilidade de pagamentos parciais e múltiplos pagamentos por OS deverá ser validada.
-- O status financeiro da OS deverá considerar o conjunto de pagamentos confirmados, sem depender de um único registro.
+- O modelo permite múltiplos pagamentos por OS.
+- A situação financeira deverá considerar o conjunto de pagamentos confirmados.
+- A situação financeira será independente do status operacional da OS.
+- A implementação deverá validar que os pagamentos não ultrapassem indevidamente o valor devido.
 
-> **Ponto pendente:** Definir as formas de pagamento aceitas, a possibilidade de pagamento parcial, parcelamento e integração com provedores externos.
+## 5. Relacionamentos e Cardinalidades
 
----
+| Entidade A | Entidade B | Cardinalidade | Descrição |
+|---|---|---|---|
+| `TENANTS` | `USUARIOS_TENANT` | 1:N | Uma oficina pode possuir vários vínculos de usuários. |
+| `USUARIOS` | `USUARIOS_TENANT` | 1:N | Um usuário pode possuir vínculos com oficinas. |
+| `PERFIS` | `USUARIOS_TENANT` | 1:N | Um perfil pode ser associado a vários vínculos. |
+| `CLIENTES` | `VEICULOS` | 1:N | Um cliente pode possuir vários veículos. |
+| `VEICULOS` | `VEICULO_HISTORICO` | 1:N | Um veículo pode possuir vários registros de propriedade. |
+| `CLIENTES` | `VEICULO_HISTORICO` | 1:N | Um cliente pode constar no histórico de vários veículos. |
+| `CLIENTES` | `ORDENS_SERVICO` | 1:N | Um cliente pode solicitar várias OS. |
+| `VEICULOS` | `ORDENS_SERVICO` | 1:N | Um veículo pode possuir várias OS ao longo do tempo. |
+| `ORDENS_SERVICO` | `DIAGNOSTICOS` | 1:N | Uma OS pode possuir vários diagnósticos. |
+| `ORDENS_SERVICO` | `ORCAMENTOS` | 1:N | Uma OS pode possuir orçamentos e revisões. |
+| `ORCAMENTOS` | `ITENS_SERVICO` | 1:N | Um orçamento pode possuir vários serviços. |
+| `ORCAMENTOS` | `ITENS_PECA` | 1:N | Um orçamento pode possuir várias peças. |
+| `PECAS` | `SALDOS_ESTOQUE` | 1:1 | Cada peça possui um registro de saldo. |
+| `RESERVAS` | `ITENS_RESERVA` | 1:N | Uma reserva contém um ou mais itens. |
+| `PECAS` | `ITENS_RESERVA` | 1:N | Uma peça pode constar em várias reservas. |
+| `PECAS` | `MOVIMENTACOES_ESTOQUE` | 1:N | Uma peça pode possuir várias movimentações. |
+| `ORDENS_SERVICO` | `PAGAMENTOS` | 1:N | Uma OS pode possuir vários pagamentos. |
 
-## 4. Auditoria e rastreabilidade
+**Importante:** as cardinalidades da tabela apresentam os relacionamentos conceituais. Quando as entidades pertencem a bancos diferentes, a associação será lógica e validada por APIs ou eventos.
 
-A plataforma deverá manter rastreabilidade das operações relevantes realizadas pelos usuários.
+## 6. Índices Planejados
 
-A proposta considera a criação de registros de auditoria nos serviços responsáveis pelos dados.
+Os índices abaixo são propostas para melhorar consultas frequentes e aplicar restrições de unicidade.
 
-Os registros poderão conter:
+| Banco | Tabela | Coluna(s) | Tipo | Justificativa |
+|---|---|---|---|---|
+| `auth_db` | `usuarios` | `email` | UNIQUE | Busca por autenticação |
+| `auth_db` | `usuario_tenant` | `usuario_id`, `tenant_id` | UNIQUE | Evitar vínculos duplicados, conforme a regra de perfil |
+| `auth_db` | `usuario_tenant` | `tenant_id`, `status` | COMPOSTO | Consultar usuários ativos de uma oficina |
+| `work_order_db` | `clientes` | `tenant_id`, `cpf` | UNIQUE | Evitar CPF duplicado dentro da oficina |
+| `work_order_db` | `clientes` | `tenant_id`, `nome` | INDEX | Consulta de clientes por oficina |
+| `work_order_db` | `veiculos` | `tenant_id`, `placa` | UNIQUE | Evitar placa duplicada dentro da oficina |
+| `work_order_db` | `veiculos` | `cliente_id` | INDEX | Consultar veículos de um cliente |
+| `work_order_db` | `ordens_servico` | `tenant_id`, `status` | COMPOSTO | Listagem de OS por oficina e situação |
+| `work_order_db` | `ordens_servico` | `veiculo_id`, `data_abertura` | COMPOSTO | Histórico de manutenção do veículo |
+| `work_order_db` | `diagnosticos` | `ordem_servico_id`, `data_criacao` | COMPOSTO | Consultar diagnósticos de uma OS |
+| `inventory_db` | `pecas` | `tenant_id`, `nome` | INDEX | Pesquisa de peças por oficina |
+| `inventory_db` | `saldos_estoque` | `peca_id` | UNIQUE | Garantir um saldo por peça |
+| `inventory_db` | `reservas` | `solicitacao_id` | UNIQUE | Impedir solicitação duplicada |
+| `inventory_db` | `reservas` | `tenant_id`, `status` | COMPOSTO | Consultar reservas por oficina e situação |
+| `inventory_db` | `movimentacoes_estoque` | `peca_id`, `data_movimentacao` | COMPOSTO | Consultar histórico de movimentações |
+| `inventory_db` | `movimentacoes_estoque` | `idempotency_key` | UNIQUE | Impedir movimentação duplicada |
+| `billing_db` | `orcamentos` | `tenant_id`, `ordem_servico_id` | INDEX | Consultar orçamentos da OS |
+| `billing_db` | `orcamentos` | `tenant_id`, `status_decisao` | COMPOSTO | Consultar orçamentos por situação |
+| `billing_db` | `itens_servico` | `orcamento_id` | INDEX | Consultar serviços do orçamento |
+| `billing_db` | `itens_peca` | `orcamento_id` | INDEX | Consultar peças do orçamento |
+| `billing_db` | `pagamentos` | `idempotency_key` | UNIQUE | Impedir pagamentos duplicados |
+| `billing_db` | `pagamentos` | `tenant_id`, `ordem_servico_id` | COMPOSTO | Consultar pagamentos de uma OS |
 
-- `id`: UUID (Chave Primária).
-- `tenant_id`: UUID (Referência lógica ao tenant).
-- `usuario_id`: UUID (Referência lógica ao usuário responsável).
-- `entidade`: VARCHAR(100) (Not Null).
-- `entidade_id`: UUID (Identificador do registro afetado).
-- `acao`: VARCHAR(50) (Not Null).
-- `data_hora`: TIMESTAMP (Not Null, Default: NOW()).
-- `detalhes`: JSONB (Informações complementares, sem armazenar credenciais ou segredos).
+Os índices definitivos deverão ser confirmados a partir das consultas implementadas e dos testes de desempenho. Índices adicionais deverão ser avaliados conforme a necessidade, evitando sobrecarga desnecessária em operações de escrita.
 
-**Exemplos de ações relevantes:**
+## 7. Considerações sobre Microsserviços
 
-- Cadastro e atualização de clientes.
-- Alteração de proprietário de veículo.
-- Abertura e alteração de OS.
-- Aprovação ou recusa de orçamento.
-- Reserva, saída e estorno de peças.
-- Registro e estorno de pagamentos.
-- Alteração de permissões de usuários.
+O OficinaPro adotará o padrão Database-per-Service. Cada microsserviço será responsável por suas próprias entidades e operações de persistência.
 
-> **Status:** Requisito de rastreabilidade proposto. A estrutura e a retenção dos registros deverão ser definidas tecnicamente.
+| Microsserviço | Banco | Entidades principais | Justificativa |
+|---|---|---|---|
+| Auth Service | `auth_db` | `tenants`, `usuarios`, `perfis`, `usuario_tenant` | Centraliza autenticação, vínculos com oficinas e controle de acesso. |
+| Work Order Service | `work_order_db` | `clientes`, `veiculos`, `veiculo_historico`, `ordens_servico`, `diagnosticos` | Gerencia o núcleo operacional e o histórico dos atendimentos. |
+| Inventory Service | `inventory_db` | `pecas`, `saldos_estoque`, `reservas`, `itens_reserva`, `movimentacoes_estoque` | Mantém o controle transacional do inventário e das reservas. |
+| Billing Service | `billing_db` | `orcamentos`, `itens_servico`, `itens_peca`, `pagamentos` | Gerencia os valores, decisões dos orçamentos e pagamentos das OS. |
 
----
+### 7.1 Regras de separação dos bancos
 
-## 5. Comunicação entre microsserviços
+1. Cada microsserviço deverá acessar exclusivamente seu próprio banco.
+2. Não deverão existir chaves estrangeiras físicas entre bancos de microsserviços diferentes.
+3. Referências externas deverão utilizar identificadores UUID.
+4. A existência e a correspondência de referências externas deverão ser verificadas por APIs ou eventos.
+5. Cada banco deverá manter suas próprias restrições e transações.
+6. Os serviços não deverão realizar consultas diretas às tabelas de outros serviços.
+7. A consistência entre serviços deverá ser tratada por comunicação síncrona ou assíncrona.
 
-A comunicação entre serviços deverá respeitar a propriedade dos dados de cada domínio.
+### 7.2 Auditoria e rastreabilidade
 
-A proposta prevê a utilização de APIs e, quando necessário, mensageria com RabbitMQ.
+As operações relevantes deverão permitir identificar o usuário, a oficina, a entidade afetada, a ação e o momento da execução.
 
-**Exemplos de eventos conceituais:**
+A proposta é manter os registros de auditoria sob responsabilidade dos serviços que executam as operações, evitando um banco compartilhado para escrita direta por todos os microsserviços.
 
-- `ORCAMENTO_CRIADO`;
-- `ORCAMENTO_APROVADO`;
-- `ORCAMENTO_RECUSADO`;
-- `ESTOQUE_RESERVADO`;
-- `PECA_UTILIZADA`;
-- `ESTOQUE_ESTORNADO`;
-- `PAGAMENTO_REGISTRADO`;
-- `PAGAMENTO_ESTORNADO`;
-- `OS_CONCLUIDA`.
+Os registros poderão utilizar os seguintes atributos:
 
-**Regras e observações:**
+| Atributo | Tipo | Descrição |
+|---|---|---|
+| `id` | UUID | Identificador do registro |
+| `tenant_id` | UUID | Oficina relacionada |
+| `usuario_id` | UUID | Referência lógica ao usuário responsável |
+| `entidade` | VARCHAR(100) | Tipo de entidade afetada |
+| `entidade_id` | UUID | Identificador do registro afetado |
+| `acao` | VARCHAR(50) | Operação executada |
+| `data_hora` | TIMESTAMP | Data e horário |
+| `detalhes` | JSONB | Informações complementares, sem segredos |
 
-- Cada serviço deverá ser responsável por publicar eventos relacionados às suas operações.
-- Os demais serviços deverão consumir somente os eventos necessários às suas responsabilidades.
-- O processamento de mensagens deverá considerar duplicidade e reentrega.
-- Operações que não podem ser executadas mais de uma vez deverão utilizar mecanismos de idempotência.
-- A comunicação entre serviços deverá preservar o `tenant_id`.
-- O sistema deverá prever tratamento de falhas e inconsistências temporárias.
+A implementação poderá utilizar tabelas de auditoria específicas por serviço ou outro mecanismo equivalente, conforme a definição técnica.
 
-> **Ponto técnico:** Avaliar o padrão Transactional Outbox e mecanismos de Inbox para reduzir o risco de perda ou processamento duplicado de eventos.
+### 7.3 Outbox e Inbox
 
----
+Cada serviço que publicar eventos deverá considerar o padrão Transactional Outbox, persistindo a alteração de domínio e o evento pendente de publicação na mesma transação local.
 
-## 6. Segurança e isolamento dos dados
+Os consumidores deverão utilizar Inbox ou mecanismo equivalente para registrar mensagens processadas, evitando efeitos duplicados em caso de reentrega.
+
+Essas estruturas deverão pertencer aos bancos dos respectivos microsserviços. Não deverão ser implementadas como tabelas compartilhadas entre serviços.
+
+## 8. Segurança e Isolamento dos Dados
 
 O modelo deverá considerar os seguintes controles:
 
-1. Todo registro operacional deverá possuir identificação do tenant responsável.
-2. Consultas deverão aplicar o filtro de tenant no backend.
-3. O tenant deverá ser obtido a partir de um contexto autenticado e validado, não de um identificador enviado livremente pelo frontend.
-4. O usuário deverá possuir vínculo ativo com a oficina para acessar seus dados.
-5. As permissões deverão ser verificadas em cada operação protegida.
-6. As referências lógicas entre serviços deverão validar a correspondência do tenant.
-7. Senhas deverão ser armazenadas por meio de hash seguro.
-8. Segredos, tokens e credenciais não deverão ser expostos nos registros de aplicação.
-9. O sistema deverá possuir estratégias de backup e recuperação.
-10. A possibilidade de utilizar Row-Level Security (RLS) deverá ser avaliada como camada adicional de isolamento.
+1. Todo registro operacional pertencente a uma oficina deverá possuir `tenant_id`.
+2. O backend deverá aplicar o filtro de tenant nas operações de leitura e escrita.
+3. O tenant deverá ser obtido ou validado a partir do contexto autenticado.
+4. O frontend não deverá ser considerado responsável pela garantia de isolamento.
+5. O usuário deverá possuir vínculo ativo com a oficina para acessar seus dados.
+6. As permissões deverão ser verificadas em cada operação protegida.
+7. As referências lógicas entre serviços deverão validar a correspondência do tenant.
+8. Senhas deverão ser armazenadas por meio de hash seguro.
+9. Segredos, tokens e credenciais não deverão ser expostos em logs.
+10. O sistema deverá possuir estratégias de backup e recuperação.
+11. Row-Level Security (RLS) poderá ser avaliada como camada adicional de proteção, desde que sua utilização seja compatível com a estratégia de conexão e o contexto de tenant.
 
----
-
-## 7. Separação entre pagamentos operacionais e cobrança do SaaS
-
-É importante diferenciar dois tipos de movimentação financeira:
-
-### 7.1. Pagamentos das ordens de serviço
-
-São os valores pagos pelos clientes das oficinas pelos serviços e peças utilizados.
-
-Esses registros pertencem ao domínio do `Billing Service` e estão relacionados às ordens de serviço.
-
-### 7.2. Assinaturas do OficinaPro
-
-São os valores pagos pelas oficinas para utilizar a plataforma SaaS.
-
-Esse domínio poderá incluir futuramente:
-
-- planos;
-- assinaturas;
-- períodos de cobrança;
-- situação da assinatura;
-- histórico de faturas;
-- pagamentos da assinatura.
-
-> **Status:** A cobrança recorrente do SaaS não está definida como parte do MVP. Caso seja implementada, deverá possuir modelagem própria, sem misturar seus registros com os pagamentos das ordens de serviço.
-
----
-
-## 8. Restrições e integridade dos dados
-
-As seguintes restrições são propostas para a implementação:
+### 8.1 Restrições de integridade
 
 | Domínio | Restrição |
 |---|---|
 | Tenants | Identificação única da oficina |
-| Usuários | E-mail com regra de unicidade definida |
+| Usuários | Regra de unicidade do e-mail definida |
 | Usuários e oficinas | Vínculo de acesso controlado |
 | Clientes | CPF obrigatório e único por tenant |
 | Veículos | Placa obrigatória e única por tenant |
 | Veículos | Histórico de propriedade preservado |
 | Ordens de serviço | Cliente e veículo pertencentes ao mesmo tenant |
 | Diagnósticos | Associação válida com uma OS |
-| Orçamentos | Associação lógica com uma OS do mesmo tenant |
+| Orçamentos | Referência lógica à OS do mesmo tenant |
 | Itens de orçamento | Quantidade maior que zero |
-| Peças | Saldo de estoque não negativo |
+| Peças | Saldo físico não negativo |
+| Reservas | Operação integral, sem reserva parcial |
 | Movimentações | Registro rastreável e sem duplicidade |
-| Pagamentos | Histórico preservado e possibilidade de múltiplos registros a validar |
+| Pagamentos | Histórico preservado e operações idempotentes |
 | Auditoria | Identificação da oficina e do usuário responsável |
 
-As restrições de relacionamento dentro de um mesmo banco deverão utilizar os recursos de integridade do PostgreSQL.
+## 9. Separação entre pagamentos operacionais e cobrança do SaaS
 
-As relações entre bancos de microsserviços diferentes deverão ser verificadas por APIs, eventos e mecanismos de consistência.
+É importante diferenciar dois domínios financeiros:
 
----
+### 9.1 Pagamentos das ordens de serviço
 
-## 9. Pontos pendentes para validação
+São os valores pagos pelos clientes das oficinas pelos serviços e peças utilizados.
 
-Os seguintes pontos ainda precisam de definição técnica ou validação do grupo:
+Esses registros pertencem ao Billing Service e estão relacionados às ordens de serviço.
+
+O status financeiro poderá assumir situações como:
+
+- `PENDENTE`;
+- `PARCIAL`;
+- `QUITADA`.
+
+A situação financeira deverá ser calculada a partir dos pagamentos confirmados e do valor devido, sem alterar diretamente o status operacional da OS.
+
+### 9.2 Assinaturas do OficinaPro
+
+São os valores pagos pelas oficinas para utilizar a plataforma SaaS.
+
+Esse domínio poderá incluir futuramente:
+
+- Planos;
+- Assinaturas;
+- Períodos de cobrança;
+- Situação da assinatura;
+- Histórico de faturas;
+- Pagamentos da assinatura.
+
+**Status:** a cobrança recorrente do SaaS não está definida como parte do MVP. Caso seja implementada, deverá possuir modelagem própria, sem misturar seus registros com os pagamentos das ordens de serviço.
+
+## 10. Pontos Pendentes para Validação
+
+Os seguintes pontos deverão ser confirmados pelo grupo ou durante a definição técnica:
 
 1. Confirmar a estratégia de isolamento multi-tenant.
 2. Definir se cada usuário poderá participar de mais de uma oficina.
-3. Definir a regra de unicidade do e-mail dos usuários.
-4. Definir a estrutura definitiva dos perfis e permissões.
-5. Validar a utilização de Row-Level Security no PostgreSQL.
-6. Definir como será implementado o histórico de propriedade dos veículos.
-7. Definir se uma OS poderá possuir vários diagnósticos.
-8. Definir se uma OS poderá possuir vários orçamentos.
-9. Definir como serão representados os serviços no orçamento.
-10. Definir o ciclo de reserva, saída, instalação, devolução e perda de peças.
-11. Definir se serão permitidos pagamentos parciais e múltiplos pagamentos por OS.
-12. Definir a estratégia de auditoria e retenção dos registros.
-13. Definir os eventos e contratos de comunicação entre microsserviços.
-14. Avaliar a adoção de Transactional Outbox e Inbox.
-15. Definir se o gerenciamento de assinaturas e cobrança do SaaS fará parte de uma etapa posterior.
-16. Definir a integração com pelo menos uma API externa, conforme os requisitos acadêmicos do projeto.
+3. Confirmar a regra de unicidade global ou por tenant para o e-mail dos usuários.
+4. Confirmar a estrutura definitiva dos perfis e permissões.
+5. Avaliar a utilização de Row-Level Security no PostgreSQL.
+6. Validar a regra de histórico de propriedade dos veículos.
+7. Confirmar se uma OS poderá possuir vários orçamentos ou revisões.
+8. Definir o tratamento de alterações em orçamento após a aceitação do cliente.
+9. Definir o ciclo operacional de reserva, consumo, liberação, estorno e perda de peças.
+10. Definir as regras para devolução de peças após retirada física.
+11. Definir as formas de pagamento aceitas.
+12. Definir se haverá pagamentos parciais e parcelamentos no MVP.
+13. Definir a estrutura e a retenção dos registros de auditoria.
+14. Definir os contratos definitivos dos eventos entre microsserviços.
+15. Confirmar a estratégia de Transactional Outbox e Inbox.
+16. Definir se o gerenciamento de assinaturas e cobrança do SaaS fará parte de uma etapa posterior.
+17. Confirmar a estrutura física dos bancos e a estratégia de implantação no ambiente de nuvem.
+
+## 11. Histórico de Revisões
+
+| Versão | Data | Autor | Descrição da Alteração |
+|---|---|---|---|
+| 1.0 | 16/11/2026 | Grupo GarageOps | Consolidação do MER conceitual e lógico, dicionário de dados, relacionamentos, índices e separação por microsserviço. |
 
 ---
 
-## 10. Observações finais
+**Aprovado por:**
 
-Este documento apresenta uma proposta de modelagem de dados para o OficinaPro, considerando a arquitetura de microsserviços e sua evolução como plataforma SaaS multiempresa.
+___________________________________________________
 
-A implementação deverá respeitar a separação de responsabilidades entre os serviços, a integridade dos dados, o isolamento entre oficinas, a segurança das informações e a rastreabilidade das operações.
+Professor(a) Orientador(a)
 
-A modelagem deverá permanecer alinhada ao backlog de requisitos, às histórias de usuário, aos fluxos do sistema, às regras de negócio, aos critérios de aceite e aos requisitos técnicos definidos para o projeto.
+**Data:** ____/____/2026
 
-As decisões ainda não validadas deverão permanecer identificadas como propostas ou pendências, evitando que escolhas arquiteturais sejam tratadas como definições definitivas sem aprovação da equipe.
-
-**Última atualização:** 15/11/2026
-
-**Responsável pela organização do documento:** Product Owner — Grupo GarageOps
+**Status da aprovação:** Pendente de validação do grupo e do professor.
