@@ -520,7 +520,7 @@ Cada envio de orçamento cria uma **nova versão imutável**. O cliente autentic
 
 | Versão | Data | Autor | Descrição da Alteração |
 |--------|------|-------|------------------------|
-| 1.0 | 25/11/2026 | GarageOps | Versão inicial com ADRs 001 a 013, separando decisões aceitas de propostas; inclui as decisões de escopo já tomadas (sem estoque, identidade global, orçamento versionado) e a tabela de eventos do ADR-003 |
+| 1.0 | 25/11/2026 | Eloisa (revisão) e Matheus (validação) | Versão inicial com ADRs 001 a 013, separando decisões aceitas de propostas; inclui as decisões de escopo já tomadas (sem estoque, identidade global, orçamento versionado) e a tabela de eventos do ADR-003 |
 
 ---
 

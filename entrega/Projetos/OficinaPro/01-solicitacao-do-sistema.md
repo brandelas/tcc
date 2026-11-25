@@ -275,7 +275,7 @@ No modelo multi-tenant, o PostgreSQL também permite adotar estratégias de isol
 | 1.3 | 13/11/2026 | Gabriel | Remoção do controle interno de estoque, inclusão de itens de peça manuais no orçamento e definição de acesso restrito do administrador da plataforma |
 | 1.4 | 20/11/2026 | Gabriel | Administrador da plataforma passa a cadastrar e manter as oficinas, com acesso ao cadastro delas e sem acesso ao conteúdo operacional |
 | 1.5 | 21/11/2026 | Gabriel | ViaCEP e FIPE passam a fazer parte do MVP; pagamento feito no local e pagamento online (sandbox) movido para evolução futura |
-| 1.6 | 25/11/2026 | GarageOps | Revisão de consistência com os documentos 02 a 08 e com o protótipo do MVP: cabeçalho de versão, itens do MVP já demonstrados, serviços implantados no MVP e papel de administrador da oficina |
+| 1.6 | 25/11/2026 | Eloisa (revisão) e Gabriel (validação) | Revisão de consistência com os documentos 02 a 08 e com o protótipo do MVP: cabeçalho de versão, itens do MVP já demonstrados, serviços implantados no MVP e papel de administrador da oficina |
 
 ---
 

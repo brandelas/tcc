@@ -322,7 +322,7 @@ Fontes dos preços: páginas oficiais de preço da AWS para Fargate, Elastic Loa
 
 | Versão | Data | Autor | Descrição da Alteração |
 |--------|------|-------|------------------------|
-| 1.0 | 25/11/2026 | GarageOps | Versão inicial: topologia AWS com ECS Fargate para os três serviços do MVP, RDS PostgreSQL com banco lógico por serviço, rede, segurança, Terraform, CI/CD, monitoramento e estimativa de custos |
+| 1.0 | 25/11/2026 | Eloisa (revisão) e Gabriel (validação) | Versão inicial: topologia AWS com ECS Fargate para os três serviços do MVP, RDS PostgreSQL com banco lógico por serviço, rede, segurança, Terraform, CI/CD, monitoramento e estimativa de custos |
 
 ---
 

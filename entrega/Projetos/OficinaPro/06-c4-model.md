@@ -278,7 +278,7 @@ Resumo dos ADRs do Documento 07, com os mesmos números e títulos.
 
 | Versão | Data | Autor | Descrição da Alteração |
 |--------|------|-------|------------------------|
-| 1.0 | 25/11/2026 | GarageOps | Versão inicial com contexto, contêineres e componentes dos três serviços do MVP, distinguindo o que está implementado do que está planejado |
+| 1.0 | 25/11/2026 | Eloisa (revisão) e Thiago (validação) | Versão inicial com contexto, contêineres e componentes dos três serviços do MVP, distinguindo o que está implementado do que está planejado |
 
 ---
 

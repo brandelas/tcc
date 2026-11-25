@@ -429,7 +429,7 @@ Uma tarefa só é considerada **concluída** quando atende a TODOS os critérios
 
 | Versão | Data | Autor | Descrição da Alteração |
 |--------|------|-------|------------------------|
-| 1.0 | 25/11/2026 | GarageOps | Versão inicial: sprints realizadas no 4º semestre e plano do 5º semestre por dependência, sem datas futuras até a divulgação do calendário |
+| 1.0 | 25/11/2026 | Eloisa | Versão inicial: sprints realizadas no 4º semestre e plano do 5º semestre por dependência, sem datas futuras até a divulgação do calendário |
 
 ---
 

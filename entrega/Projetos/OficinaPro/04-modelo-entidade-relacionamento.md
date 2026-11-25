@@ -374,7 +374,7 @@ As diferenças são simplificações do protótipo. A tabela acima deve ser atua
 | 1.2 | 13/11/2026 | Gabriel | Separação do papel global de administrador da plataforma dos papéis por oficina, sem autorização para ler dados de negócio dos tenants |
 | 1.3 | 20/11/2026 | Gabriel | Papel de plataforma passa a manter o cadastro do TENANT, sem acesso aos dados operacionais; inclusão de cor de identificação e estados `active`/`suspended` do TENANT |
 | 1.4 | 21/11/2026 | Gabriel | Endereço do cliente (ViaCEP) e código FIPE do veículo |
-| 1.5 | 25/11/2026 | GarageOps | Estados da ordem e das versões de orçamento definidos; unicidade de telefone e placa por tenant; correspondência com o esquema físico do MVP (seção 7.1); pendências resolvidas removidas |
+| 1.5 | 25/11/2026 | Eloisa (revisão) e Gabriel (validação) | Estados da ordem e das versões de orçamento definidos; unicidade de telefone e placa por tenant; correspondência com o esquema físico do MVP (seção 7.1); pendências resolvidas removidas |
 
 ---
 

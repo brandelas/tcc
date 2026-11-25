@@ -259,7 +259,7 @@ Os armazenamentos são conceituais. O MER e o documento de arquitetura deverão 
 | 1.2 | 13/11/2026 | Gabriel | Remoção de estoque interno, descrição de peças manuais no orçamento e restrição de acesso do administrador da plataforma ao conteúdo dos tenants |
 | 1.3 | 20/11/2026 | Gabriel | Fluxos do administrador da plataforma: gestão do cadastro das oficinas, sem acesso ao conteúdo operacional |
 | 1.4 | 21/11/2026 | Gabriel | Integrações externas limitadas a ViaCEP e FIPE; remoção da cobrança de teste do fluxo financeiro |
-| 1.5 | 25/11/2026 | GarageOps | Revisão de consistência: relatórios e auditoria sem leitura direta de armazenamentos de outros serviços; validação de cliente e veículo por API no nível 2; correspondência com os serviços do MVP |
+| 1.5 | 25/11/2026 | Eloisa (revisão) e Gabriel (validação) | Revisão de consistência: relatórios e auditoria sem leitura direta de armazenamentos de outros serviços; validação de cliente e veículo por API no nível 2; correspondência com os serviços do MVP |
 
 ---
 

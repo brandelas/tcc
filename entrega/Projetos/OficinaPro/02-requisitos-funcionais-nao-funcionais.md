@@ -314,7 +314,7 @@ Estas pendências não alteram o escopo já definido de não implementar control
 | 1.6 | 20/11/2026 | Gabriel | RF-001, RF-002, RF-039 e RNF-049: administrador da plataforma cadastra, edita, suspende e exclui oficinas e conhece o cadastro delas; o conteúdo operacional continua inacessível |
 | 1.7 | 21/11/2026 | Gabriel | RF-010 detalha o uso da FIPE; RF-026 registra pagamento no local; RF-028 (pagamento online) passa a evolução futura |
 | 1.8 | 22/11/2026 | Gabriel | RF-034: código antes de mostrar dados, nome e e-mail vindos do cadastro da oficina, sem conta duplicada por telefone e sem transferência de perfil já vinculado |
-| 1.9 | 25/11/2026 | GarageOps | Revisão de consistência: seção 3.0 com domínios lógicos e serviços do MVP; nota sobre RF-020 a RF-024; estados da ordem em RF-013 alinhados ao fluxo aprovado; conclusão técnica independente da quitação (RF-019, RF-027); papel de administrador da oficina em RF-030 e RF-031; atualização das pendências |
+| 1.9 | 25/11/2026 | Eloisa (revisão) e Gabriel (validação) | Revisão de consistência: seção 3.0 com domínios lógicos e serviços do MVP; nota sobre RF-020 a RF-024; estados da ordem em RF-013 alinhados ao fluxo aprovado; conclusão técnica independente da quitação (RF-019, RF-027); papel de administrador da oficina em RF-030 e RF-031; atualização das pendências |
 
 ---
 
