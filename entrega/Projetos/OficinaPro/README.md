@@ -51,14 +51,14 @@ A demonstração deve usar cinco oficinas fictícias com equipes de tamanhos dif
 ## Tecnologias Planejadas
 
 - **Backend:** Node.js, TypeScript e NestJS
-- **Frontend:** React e Vite (JavaScript no MVP; adoção de TypeScript proposta no ADR-010)
+- **Frontend:** React, TypeScript e Vite
 - **Banco de Dados:** PostgreSQL
 - **Mensageria:** RabbitMQ
 - **Cloud:** AWS
 - **Infraestrutura como Código:** Terraform
 - **CI/CD:** GitHub Actions
 - **Monitoramento:** Prometheus e Grafana
-- **Testes:** Jest, Supertest e React Testing Library
+- **Testes:** Jest e Supertest (backend); Vitest e React Testing Library (frontend)
 - **Ambiente Local:** Docker e Docker Compose
 
 ## Microsserviços

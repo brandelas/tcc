@@ -8,7 +8,7 @@
 **Duração da Sprint:** 2 semanas (proposta)
 **Data de Início:** 17/09/2026 (primeira versão do Documento 01)
 **Data de Término Prevista:** data da banca do 5º semestre, a definir pelo orientador
-**Versão:** 1.0
+**Versão:** 1.2
 
 ---
 
@@ -43,7 +43,7 @@ timeline
     section 4º semestre
         Sprint 1 (set/2026) : README do grupo : Documento 01 : Documento 02
         Sprint 2 (nov/2026) : Documentos 03 e 04 : Retirada do estoque do escopo : Protótipo do MVP
-        Sprint 3 (nov/2026) : MVP em NestJS : Documentos 05 a 08 : Revisão de consistência
+        Sprint 3 (nov/2026) : MVP em NestJS : Frontend em TypeScript : Documentos 05 a 08 : Revisão de consistência
         Entrega do 4º semestre : 8 documentos + MVP funcional
     section 5º semestre
         Sprint 4 : Migrations, OpenAPI e CI
@@ -110,7 +110,7 @@ timeline
 | T-019 | Backend | Contrato OpenAPI das rotas dos três serviços (RNF-030) | P1 | 5 | Thiago | Sprint 4 | [ ] |
 | T-020 | DevOps | Workflow de CI: lint, build, testes e cobertura global somada com limite de 60% (RNF-024, RNF-025, RNF-028) | P0 | 5 | Gabriel | Sprint 4 | [ ] |
 | T-021 | QA | Testes de rota com Supertest para autorização e isolamento entre tenants no CI (RNF-005, RNF-027) | P0 | 5 | Thiago | Sprint 4 | [ ] |
-| T-022 | Frontend | Decidir e, se aprovado, migrar o frontend para TypeScript (ADR-010) | P2 | 5 | Matheus | Sprint 4 | [ ] |
+| T-022 | Frontend | Refazer o frontend em TypeScript, com nova identidade visual e primeiros testes de interface (ADR-010) | P1 | 5 | Matheus | Sprint 3 | [x] |
 | T-023 | Infra local | RabbitMQ no Docker Compose com interface de gerenciamento (RNF-016) | P1 | 2 | Gabriel | Sprint 5 | [ ] |
 | T-024 | Backend | Publicação de eventos com `event_id`, `tenant_id` e `correlation_id`; consumidor idempotente, retentativa e DLQ (ADR-003) | P1 | 8 | Thiago | Sprint 5 | [ ] |
 | T-025 | Backend | Separar Billing Service com banco próprio para pagamentos e fechamento (ADR-007; RF-025 a RF-027) | P2 | 8 | Thiago | Sprint 5 | [ ] |
@@ -123,12 +123,13 @@ timeline
 | T-032 | Backend | Revogar acesso quando a oficina for suspensa ou excluída, sem esperar o token vencer (ADR-009) | P1 | 3 | Thiago | Sprint 7 | [ ] |
 | T-033 | Backend | Notification Service com avisos dentro da plataforma (RF-029) | P2 | 5 | Thiago | Sprint 8 | [ ] |
 | T-034 | Frontend | Dashboard e relatórios do administrador da oficina (RF-030, RF-031) | P2 | 8 | Matheus | Sprint 8 | [ ] |
-| T-035 | QA | Testes de interface com React Testing Library para estados de carregamento, vazio, erro e acesso negado | P2 | 5 | Matheus | Sprint 8 | [ ] |
+| T-035 | QA | Ampliar os testes de interface (Vitest e React Testing Library) para estados de carregamento, vazio, erro e acesso negado | P2 | 5 | Matheus | Sprint 8 | [~] |
 | T-036 | QA | Atingir e comprovar 60% de cobertura global no relatório do CI | P0 | 8 | Gabriel | Sprint 8 | [ ] |
 | T-037 | QA | Teste de latência das APIs principais (P95 até 800 ms, RNF-042) | P3 | 3 | Gabriel | Sprint 9 | [ ] |
 | T-038 | Todos | Correções e estabilização | P1 | 8 | Equipe | Sprint 9 | [ ] |
 | T-039 | Apresentação | Roteiro da demonstração em nuvem e ensaio da contingência com Docker Compose | P0 | 3 | Eloisa | Sprint 9 | [ ] |
 | T-040 | Acompanhamento | Fichas dos encontros com o orientador e quadro de critérios C1 a C10 atualizados | P1 | 2 | Eloisa | Contínuo (5º semestre) | [ ] |
+| T-041 | Backend | Padronizar o telefone nos três serviços e corrigir a exibição de cliente e veículo na ordem (ADR-014) | P1 | 3 | Matheus | Sprint 3 | [x] |
 
 As tarefas T-012 a T-015 têm rascunho completo em 25/11/2026 e aguardam a revisão do responsável indicado.
 
@@ -175,8 +176,8 @@ Cada RF do Documento 02 aponta para a tarefa que o implementa ou implementará. 
 | RF (Documento 02) | Tarefas | Situação |
 |---|---|---|
 | RF-001 a RF-006, RF-033, RF-039 — tenant, acesso, papéis e console da plataforma | T-007, T-008, T-009, T-011; reforço em T-021 e T-032 | Demonstrados no MVP |
-| RF-034 — convite do cliente | T-007, T-009 | Demonstrado no MVP, com código simulado; envio real depende do provedor (pendente) |
-| RF-007, RF-008, RF-011, RF-035 — clientes, veículos e histórico | T-007, T-009 | Demonstrados no MVP |
+| RF-034 — convite do cliente | T-007, T-009, T-041 | Demonstrado no MVP, com código simulado; envio real depende do provedor (pendente) |
+| RF-007, RF-008, RF-011, RF-035 — clientes, veículos e histórico | T-007, T-009, T-041 | Demonstrados no MVP |
 | RF-009, RF-010 — ViaCEP e FIPE | T-010 | Demonstrados no MVP |
 | RF-012 a RF-019, RF-036 a RF-038 — ordem, diagnóstico, orçamento versionado, decisão, conversa, execução e encerramento | T-007, T-009; testes em T-021 | Demonstrados no MVP |
 | RF-025 a RF-027 — fechamento e pagamentos | T-007, T-009; separação em T-025 | Demonstrados no MVP dentro de `workorders` |
@@ -232,7 +233,7 @@ Cada RF do Documento 02 aponta para a tarefa que o implementa ou implementará. 
 |------------|---------|
 | **Período** | 22/11/2026 até a entrega documental do 4º semestre (data definida pelo orientador) |
 | **Objetivo** | MVP no padrão NestJS e os 8 documentos completos e consistentes entre si |
-| **Capacidade** | 44 SP |
+| **Capacidade** | 52 SP |
 
 | ID | Tarefa | Responsável | SP | Critério de Conclusão (DoD) |
 |----|--------|-------------|----|-----------------------------|
@@ -240,6 +241,8 @@ Cada RF do Documento 02 aponta para a tarefa que o implementa ou implementará. 
 | T-009 | Migração do MVP | Gabriel | 8 | Testes `smoke` e `platform-check` passando em banco limpo e em banco da versão anterior |
 | T-010 | ViaCEP e FIPE | Gabriel | 5 | Consulta pelo serviço `customers`, com fallback manual testado |
 | T-011 | Gestão da equipe | Gabriel | 5 | Teste `team-check` passando; administrador limitado ao próprio tenant |
+| T-022 | Frontend em TypeScript | Matheus | 5 | Build com tipos e testes de interface passando; incorporado ao MVP em 26/11/2026 |
+| T-041 | Telefone padronizado e correções de fluxo | Matheus | 3 | Testes `phone.spec.ts` e `bugfix-check` passando; incorporado ao MVP em 26/11/2026 |
 | T-012 a T-015 | Documentos 05 a 08 | Gabriel, Thiago, Matheus e Eloisa | 14 | Documentos no template, revisados pelo responsável |
 | T-016 | Revisão de consistência | Eloisa | 3 | Mesmos nomes de serviços, papéis, estados e IDs em todos os documentos |
 | T-017 | PR de entrega | Eloisa | 1 | PR com título `[GarageOps] - Entrega N - Descrição`, alterando apenas `Projetos/OficinaPro` |
@@ -254,7 +257,7 @@ Cada RF do Documento 02 aponta para a tarefa que o implementa ou implementará. 
 |------------|---------|
 | **Período** | A definir conforme o calendário do 5º semestre |
 | **Objetivo** | Banco versionado, contratos publicados e CI bloqueando código quebrado |
-| **Capacidade** | 25 SP |
+| **Capacidade** | 20 SP |
 
 | ID | Tarefa | Responsável | SP | Critério de Conclusão (DoD) |
 |----|--------|-------------|----|-----------------------------|
@@ -262,7 +265,6 @@ Cada RF do Documento 02 aponta para a tarefa que o implementa ou implementará. 
 | T-019 | Contrato OpenAPI | Thiago | 5 | Especificação publicada no repositório e usada pelo frontend |
 | T-020 | Workflow de CI | Gabriel | 5 | PR executa lint, build, testes e cobertura; falha bloqueia o merge |
 | T-021 | Testes de rota e isolamento | Thiago | 5 | Testes de acesso negado entre tenants e para o administrador da plataforma rodando no CI |
-| T-022 | Frontend em TypeScript | Matheus | 5 | Decisão registrada no ADR-010; se aprovada, build do frontend com tipos |
 
 **Resultado esperado:** todo PR passa por build e testes automatizados, com relatório de cobertura.
 
@@ -430,6 +432,8 @@ Uma tarefa só é considerada **concluída** quando atende a TODOS os critérios
 | Versão | Data | Autor | Descrição da Alteração |
 |--------|------|-------|------------------------|
 | 1.0 | 25/11/2026 | Eloisa | Versão inicial: sprints realizadas no 4º semestre e plano do 5º semestre por dependência, sem datas futuras até a divulgação do calendário |
+| 1.1 | 26/11/2026 | Eloisa | T-022 (frontend em TypeScript) concluída na Sprint 3; T-035 em andamento |
+| 1.2 | 26/11/2026 | Eloisa | T-041 (telefone padronizado e correções de fluxo) concluída na Sprint 3; cabeçalho de versão corrigido |
 
 ---
 

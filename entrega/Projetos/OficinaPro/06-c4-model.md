@@ -4,8 +4,8 @@
 
 **Projeto:** OficinaPro — Plataforma SaaS Multi-Tenant para Gestão de Oficinas Mecânicas
 **Grupo:** GarageOps
-**Data:** 25/11/2026
-**Versão:** 1.0
+**Data:** 26/11/2026
+**Versão:** 1.2
 
 ---
 
@@ -72,7 +72,7 @@ C4Container
     System_Ext(fipe, "API FIPE")
 
     Container_Boundary(oficinapro, "OficinaPro") {
-        Container(web, "Aplicação web", "React 18, Vite 6, servida por nginx", "Interface única com navegação conforme o papel ativo")
+        Container(web, "Aplicação web", "React 18, TypeScript e Vite 6, servida por nginx", "Interface única com navegação conforme o papel ativo")
         Container(gateway, "Entrada HTTP", "nginx no MVP; ALB na AWS (planejado)", "Encaminha /api/identity, /api/customers e /api/orders; bloqueia rotas internas")
         Container(identity, "identity", "Node.js 22, NestJS 10, TypeScript", "Login, token, oficinas, vínculos, equipe, convites e console da plataforma")
         Container(customers, "customers", "Node.js 22, NestJS 10, TypeScript", "Clientes, veículos, histórico, ViaCEP e FIPE")
@@ -95,7 +95,7 @@ C4Container
     Rel(gateway, workorders, "/api/orders/*", "HTTP")
     Rel(identity, customers, "Vincula cliente ao convite; apaga dados na exclusão da oficina", "HTTP interno + segredo de serviço")
     Rel(identity, workorders, "Apaga dados na exclusão da oficina", "HTTP interno + segredo de serviço")
-    Rel(workorders, customers, "Valida cliente e veículo do tenant", "HTTP interno + segredo de serviço")
+    Rel(workorders, customers, "Valida cliente e veículo do tenant; busca nome e placa para exibir a ordem", "HTTP interno + segredo de serviço")
     Rel(identity, identitydb, "Lê e grava", "SQL")
     Rel(customers, customersdb, "Lê e grava", "SQL")
     Rel(workorders, workordersdb, "Lê e grava", "SQL")
@@ -113,7 +113,7 @@ C4Container
 
 | Contêiner | Tecnologia | Responsabilidade | Porta |
 |-----------|------------|------------------|-------|
-| Aplicação web | React 18 e Vite 6 (JavaScript), servida por nginx 1.27 | Interface única para equipe, cliente e administrador da plataforma | 80 no contêiner; 8080 no host local |
+| Aplicação web | React 18, TypeScript 5.6 e Vite 6, servida por nginx 1.27 | Interface única para equipe, cliente e administrador da plataforma | 80 no contêiner; 8080 no host local |
 | Entrada HTTP | nginx no MVP; Application Load Balancer na AWS (planejado) | Encaminhamento por caminho e bloqueio de `/api/*/internal/*` | 80/443 |
 | identity | Node.js 22, NestJS 10, TypeScript | Domínios Tenant e Auth: login, emissão de token, seleção de oficina, equipe, convites e console da plataforma | 3001 |
 | customers | Node.js 22, NestJS 10, TypeScript | Domínio Customer Vehicle: clientes, veículos, histórico e integrações ViaCEP e FIPE | 3002 |
@@ -198,7 +198,7 @@ C4Component
     Rel(web, custCtrl, "Cadastros e consultas", "HTTPS/JSON")
     Rel(web, extCtrl, "CEP e FIPE", "HTTPS/JSON")
     Rel(identity, intCtrl, "Vínculo do cliente; exclusão de oficina", "HTTP interno")
-    Rel(workorders, intCtrl, "Valida cliente e veículo", "HTTP interno")
+    Rel(workorders, intCtrl, "Valida cliente e veículo; devolve nome e placa das ordens", "HTTP interno")
     Rel(custCtrl, domain, "Usa")
     Rel(extCtrl, viacep, "HTTPS")
     Rel(extCtrl, fipe, "HTTPS")
@@ -225,7 +225,7 @@ C4Component
 
     Rel(web, ordersCtrl, "Fluxo da ordem", "HTTPS/JSON")
     Rel(ordersCtrl, domain, "Valida transições")
-    Rel(ordersCtrl, customers, "Valida cliente e veículo do tenant", "HTTP interno")
+    Rel(ordersCtrl, customers, "Valida cliente e veículo; busca nome e placa (a ordem abre mesmo se falhar)", "HTTP interno")
     Rel(identity, intCtrl, "Exclusão de oficina", "HTTP interno")
     Rel(ordersCtrl, workordersdb, "SQL em transação")
     Rel(intCtrl, workordersdb, "SQL")
@@ -248,10 +248,11 @@ Resumo dos ADRs do Documento 07, com os mesmos números e títulos.
 | ADR-007 | Decomposição em Microsserviços: três serviços no MVP | Entrega viável com limites claros | Oito serviços desde o início, monólito modular |
 | ADR-008 | Isolamento Multi-Tenant por `tenant_id` validado no servidor | Uma aplicação para todas as oficinas, sem vazamento | Esquema ou banco por oficina |
 | ADR-009 | Identidade Global, Autenticação e Papéis por Vínculo: JWT emitido pelo identity | Uma conta por pessoa, papéis por oficina, plataforma sem acesso aos dados | Cognito/Keycloak, sessão no servidor |
-| ADR-010 | Frontend e Navegação por Papel: React e Vite | Uma aplicação para todos os papéis | Next.js, Angular |
+| ADR-010 | Frontend e Navegação por Papel: React, TypeScript e Vite | Uma aplicação para todos os papéis | Next.js, Angular |
 | ADR-011 | Qualidade, Entrega e Observabilidade | Exigências do termo de aceite | CloudWatch sem Prometheus/Grafana |
 | ADR-012 | Escopo sem Estoque Interno | Oficinas compram peças de autopeças parceiras; reduz complexidade do MVP | Estoque com reservas e baixa |
 | ADR-013 | Orçamento Versionado com Decisão do Cliente | Prova de aprovação e histórico de negociação | Orçamento único editável |
+| ADR-014 | Padronização e Comparação de Telefone | Mesma pessoa reconhecida em qualquer formato de número; unicidade por oficina efetiva | Normalizar em cada serviço, não normalizar, normalizar só na comparação |
 
 ---
 
@@ -259,7 +260,7 @@ Resumo dos ADRs do Documento 07, com os mesmos números e títulos.
 
 | Camada | Tecnologia | Versão | Justificativa |
 |--------|------------|--------|---------------|
-| Frontend | React com Vite (JavaScript/JSX no MVP) | React 18.3, Vite 6.0 | SPA leve, uma aplicação para todos os papéis. A migração para TypeScript, prevista no README do grupo, está pendente |
+| Frontend | React com TypeScript e Vite | React 18.3, TypeScript 5.6, Vite 6.0 | SPA leve, uma aplicação para todos os papéis, com tipos dos contratos da API (ADR-010) |
 | Backend | Node.js, NestJS e TypeScript | Node.js 22, NestJS 10.4, TypeScript 5.7 | ADR-001 |
 | Banco Relacional | PostgreSQL | 16 | ADR-002 |
 | Banco NoSQL | Não utilizado | — | O domínio é relacional e transacional |
@@ -269,7 +270,7 @@ Resumo dos ADRs do Documento 07, com os mesmos números e títulos.
 | IaC | Terraform (planejado) | A definir | Requisito obrigatório |
 | CI/CD | GitHub Actions (planejado) | - | Requisito obrigatório |
 | Containerização | Docker e Docker Compose | Imagens base `node:22-alpine`, `nginx:1.27-alpine` e `postgres:16-alpine` | Padronização de execução e contingência da banca |
-| Testes | Jest e Supertest (backend); React Testing Library (planejado) | Jest 29 | RNF-028 e RNF-029 |
+| Testes | Jest e Supertest (backend); Vitest e React Testing Library (frontend) | Jest 29, Vitest 2.1, React Testing Library 16 | RNF-028 e RNF-029 |
 | Segurança | bcryptjs para hash de senha; JWT HS256 com validade de 8 h | bcryptjs 2.4, @nestjs/jwt 10.2 | RNF-032 e RNF-033 |
 
 ---
@@ -279,6 +280,8 @@ Resumo dos ADRs do Documento 07, com os mesmos números e títulos.
 | Versão | Data | Autor | Descrição da Alteração |
 |--------|------|-------|------------------------|
 | 1.0 | 25/11/2026 | Eloisa (revisão) e Thiago (validação) | Versão inicial com contexto, contêineres e componentes dos três serviços do MVP, distinguindo o que está implementado do que está planejado |
+| 1.1 | 26/11/2026 | Eloisa (revisão) e Thiago (validação) | Frontend atualizado para React com TypeScript, após o redesign incorporado ao MVP em 26/11/2026 |
+| 1.2 | 26/11/2026 | Eloisa (revisão) e Thiago (validação) | ADR-014 no resumo de ADRs; consulta de nome e placa do serviço de ordens ao de clientes (Pull Request #2); cabeçalho de versão corrigido |
 
 ---
 

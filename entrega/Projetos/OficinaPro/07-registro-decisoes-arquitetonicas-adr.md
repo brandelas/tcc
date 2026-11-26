@@ -4,8 +4,8 @@
 
 **Projeto:** OficinaPro — Plataforma SaaS Multi-Tenant para Gestão de Oficinas Mecânicas
 **Grupo:** GarageOps
-**Data:** 25/11/2026
-**Versão:** 1.0
+**Data:** 26/11/2026
+**Versão:** 1.2
 
 ---
 
@@ -362,23 +362,24 @@ A mesma pessoa pode ser membro de equipe em uma oficina e cliente em outra. Os p
 
 ### ADR-010: Frontend e Navegação por Papel
 
-**Data:** 25/11/2026 (registro)
-**Status:** Aceita (React e Vite); uso de TypeScript no frontend proposto
+**Data:** 26/11/2026
+**Status:** Aceita
 **Autores:** GarageOps — área de Frontend e UX (Matheus Gabriel Correa Braga Viana)
 
 #### Contexto
 
-Equipe, cliente e administrador da plataforma usam a mesma aplicação web, com navegação conforme o papel ativo. O README do grupo prevê React, TypeScript e Vite; o MVP usa React e Vite com JavaScript (JSX).
+Equipe, cliente e administrador da plataforma usam a mesma aplicação web, com navegação conforme o papel ativo. A primeira versão do MVP usava React e Vite com JavaScript (JSX). Em 26/11/2026 o frontend foi refeito em TypeScript, com nova identidade visual, e incorporado ao repositório do sistema.
 
 #### Decisão
 
-Uma **SPA em React com Vite**, servida por nginx no contêiner `web`, com áreas e ações exibidas conforme o papel ativo. A interface esconde ações não permitidas, mas a autorização real é sempre feita pelo servidor (RNF-034). A adoção de TypeScript no frontend, prevista no README do grupo, é recomendada para alinhar os tipos aos contratos da API, mas ainda não foi feita.
+Uma **SPA em React com TypeScript e Vite**, servida por nginx no contêiner `web`, com áreas e ações exibidas conforme o papel ativo. Os tipos das respostas da API ficam em um único módulo, e as chamadas aos serviços ficam separadas por domínio (`identity`, `customers` e `workorders`). A interface esconde ações não permitidas, mas a autorização real é sempre feita pelo servidor (RNF-034). Testes de interface com Vitest e React Testing Library.
 
 #### Alternativas Consideradas
 
 | Alternativa | Prós | Contras |
 |-------------|------|---------|
-| React + Vite | Build rápido; ecossistema amplo; já usado no MVP | Exige organizar rotas e estado manualmente |
+| React + TypeScript + Vite | Build rápido; tipos alinhados aos contratos da API; mesma linguagem do backend | Exige organizar rotas e estado manualmente; tipos mantidos à mão enquanto não houver OpenAPI |
+| React + Vite com JavaScript | Primeira versão do MVP; menos configuração | Mudanças de contrato da API só aparecem em tempo de execução |
 | Next.js | Renderização no servidor | Mais um servidor Node para operar; sem necessidade de SEO |
 | Angular | Estrutura completa | Curva de aprendizado e sem uso prévio no projeto |
 
@@ -388,8 +389,8 @@ Uma **SPA em React com Vite**, servida por nginx no contêiner `web`, com áreas
 - Uma única aplicação para todos os papéis, sem duplicar telas.
 
 **Negativas:**
-- Enquanto não houver TypeScript, mudanças de contrato da API podem quebrar a interface sem aviso no build.
-- Testes de interface (React Testing Library) ainda não existem.
+- Os tipos da API são escritos à mão; até existir o contrato OpenAPI (RNF-030), backend e frontend podem divergir sem aviso.
+- A cobertura dos testes de interface ainda é pequena e precisa crescer até a banca.
 
 ---
 
@@ -401,7 +402,7 @@ Uma **SPA em React com Vite**, servida por nginx no contêiner `web`, com áreas
 
 #### Contexto
 
-O termo de aceite exige GitHub Actions para build e deploy dos microsserviços, testes automatizados com cobertura global mínima de 60%, Terraform e Prometheus com Grafana funcionando na banca. Hoje o MVP tem testes unitários (Jest), testes de integração (`smoke`, `platform-check`, `team-check`) e o script `test:cov`, mas não tem workflows, `/metrics` nem Terraform.
+O termo de aceite exige GitHub Actions para build e deploy dos microsserviços, testes automatizados com cobertura global mínima de 60%, Terraform e Prometheus com Grafana funcionando na banca. Hoje o MVP tem testes unitários (Jest no backend; Vitest e React Testing Library no frontend), testes de integração (`smoke`, `platform-check`, `team-check`) e o script `test:cov`, mas não tem workflows, `/metrics` nem Terraform.
 
 #### Decisão
 
@@ -488,6 +489,48 @@ Cada envio de orçamento cria uma **nova versão imutável**. O cliente autentic
 
 ---
 
+### ADR-014: Padronização e Comparação de Telefone
+
+**Data:** 26/11/2026
+**Status:** Aceita
+**Autores:** GarageOps — regra de dados aprovada pelo grupo; implementação no backend (Thiago Marques Bueno e Gabriel Carneiro da Silva)
+
+#### Contexto
+
+O telefone identifica o cliente e é usado no convite de acesso (RF-007, RF-034). Até esta decisão, cada serviço gravava e comparava o número exatamente como foi digitado. Assim, `+5511991000301`, `(11) 99100-0301` e `011 99100-0301` eram tratados como pessoas diferentes, o que permitia cadastrar o mesmo cliente duas vezes na mesma oficina e oferecer a criação de uma segunda conta a quem já tinha uma. A unicidade de telefone por oficina (ADR-002) só funcionava quando o número era digitado sempre no mesmo formato.
+
+#### Decisão
+
+Padronizar o telefone em um **formato canônico único**, aplicado **antes de gravar e antes de comparar** nos três serviços:
+
+- Uma única função compartilhada (`normalizePhone`, em `libs/common`) define a regra: mantêm-se apenas os dígitos; zeros à esquerda são removidos (cobre o `0` de longa distância e o `00` internacional); números com 10 ou 11 dígitos (DDD mais número) recebem o código do país `55`; outros tamanhos permanecem como estão. Exemplo: `+55 (11) 99100-0301`, `(11) 99100-0301` e `0055 11 991000301` tornam-se `5511991000301`.
+- A normalização é aplicada no cadastro de cliente, nos convites e na criação e no vínculo de conta e de equipe. O mesmo número em formatos diferentes passa a ser tratado como a mesma pessoa, com o mesmo erro `409` já existente para duplicidade.
+- Os dados de demonstração são gravados no formato canônico. Uma migração converte os telefones já existentes ao subir o serviço; quando dois perfis da mesma oficina convergem para o mesmo número, nenhum é alterado ou mesclado e fica um aviso no log para a oficina revisar.
+- No frontend, o número é apenas exibido formatado (por exemplo, `+55 (11) 99100-0301`); o valor enviado à API continua sendo somente dígitos.
+
+#### Alternativas Consideradas
+
+| Alternativa | Prós | Contras |
+|-------------|------|---------|
+| Função única de normalização nos três serviços | Uma só regra; comparação consistente; sem duplicidade por formato | A regra precisa cobrir casos de borda (fixo, celular, código do país) e ter testes |
+| Normalizar em cada serviço separadamente | Sem dependência comum | Risco de regras divergentes para o mesmo dado |
+| Não normalizar (comportamento anterior) | Nenhuma mudança | Mantém o defeito: mesmo cliente duas vezes e segunda conta indevida |
+| Guardar como digitado e normalizar só na comparação | Preserva o formato original | Dois registros com o mesmo número canônico coexistiriam no banco |
+
+#### Consequências
+
+**Positivas:**
+- A mesma pessoa é reconhecida mesmo digitando o telefone de outra forma, no cadastro e no convite.
+- A restrição de unicidade por oficina (ADR-002) passa a barrar o mesmo número em qualquer formato, com o `409` de sempre.
+- Coberta por testes: unitários da função (`phone.spec.ts`) e de integração no sistema no ar (`bugfix-check`), que tentam recadastrar e convidar o mesmo número em formatos diferentes.
+
+**Negativas:**
+- Um telefone sem nenhum dígito (por exemplo, um cliente cadastrado sem telefone) é reduzido a vazio; o tratamento desse caso deve ser confirmado pelo grupo.
+- A migração pode deixar, de propósito, dois perfis antigos que convergem para o mesmo número intactos, dependentes de revisão manual pela oficina (via log).
+- Implementado no repositório do sistema em 26/11/2026 (Pull Request #2, com *merge* feito pelo Gabriel). O tratamento do telefone vazio continua pendente de confirmação do grupo.
+
+---
+
 ## 4. Índice de ADRs
 
 | ID | Título | Status | Data |
@@ -501,10 +544,11 @@ Cada envio de orçamento cria uma **nova versão imutável**. O cliente autentic
 | ADR-007 | Decomposição em Microsserviços | Aceita (MVP); separação proposta | 22/11/2026 |
 | ADR-008 | Isolamento Multi-Tenant | Aceita | 24/09/2026 |
 | ADR-009 | Identidade Global, Autenticação e Papéis por Vínculo | Aceita | 22/11/2026 |
-| ADR-010 | Frontend e Navegação por Papel | Aceita; TypeScript proposto | 25/11/2026 |
+| ADR-010 | Frontend e Navegação por Papel | Aceita | 26/11/2026 |
 | ADR-011 | Qualidade, Entrega e Observabilidade | Aceita; detalhes propostos | 25/11/2026 |
 | ADR-012 | Escopo sem Estoque Interno | Aceita | 13/11/2026 |
 | ADR-013 | Orçamento Versionado com Decisão do Cliente | Aceita | 09/11/2026 |
+| ADR-014 | Padronização e Comparação de Telefone | Aceita | 26/11/2026 |
 
 ---
 
@@ -521,6 +565,8 @@ Cada envio de orçamento cria uma **nova versão imutável**. O cliente autentic
 | Versão | Data | Autor | Descrição da Alteração |
 |--------|------|-------|------------------------|
 | 1.0 | 25/11/2026 | Eloisa (revisão) e Matheus (validação) | Versão inicial com ADRs 001 a 013, separando decisões aceitas de propostas; inclui as decisões de escopo já tomadas (sem estoque, identidade global, orçamento versionado) e a tabela de eventos do ADR-003 |
+| 1.1 | 26/11/2026 | Eloisa (revisão) e Matheus (validação) | ADR-010 atualizado: frontend em React com TypeScript, após o redesign incorporado ao MVP em 26/11/2026 |
+| 1.2 | 26/11/2026 | Eloisa (revisão) e Matheus (consolidação) | Inclusão do ADR-014 (padronização de telefone nos três serviços); índice e cabeçalho atualizados. Ajuste posterior: referência ao RF-007 e registro do merge da implementação |
 
 ---
 

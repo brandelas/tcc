@@ -4,8 +4,8 @@
 
 **Projeto:** OficinaPro — Plataforma SaaS Multi-Tenant para Gestão de Oficinas
 **Grupo:** GarageOps
-**Data:** 25/11/2026
-**Versão:** 1.5 — atualizada conforme decisões do grupo
+**Data:** 26/11/2026
+**Versão:** 1.6 — atualizada conforme decisões do grupo
 
 ---
 
@@ -313,7 +313,7 @@ Cada revisão é um novo registro de ESTIMATE_VERSION. A decisão aponta para a 
 | TENANT_MEMBERSHIP | UNIQUE parcial (`tenant_id`, `identity_user_id`) para vínculos ativos | Evitar vínculos ativos duplicados e permitir preservar vínculos revogados/inativos |
 | PLATFORM_ROLE_ASSIGNMENT | UNIQUE (`identity_user_id`, `papel_global`) para concessões ativas | Evitar atribuição global duplicada e manter o papel separado da administração de oficina |
 | CUSTOMER_PROFILE | INDEX (`tenant_id`, `identity_user_id`) | Localizar perfis autorizados da identidade por oficina |
-| CUSTOMER_PROFILE | UNIQUE (`tenant_id`, `telefone`) | O telefone identifica o cliente para o convite; a unicidade vale dentro da oficina, não entre oficinas |
+| CUSTOMER_PROFILE | UNIQUE (`tenant_id`, `telefone`) | O telefone, gravado no formato canônico (somente dígitos, com código do país; ADR-014), identifica o cliente para o convite; a unicidade vale dentro da oficina, não entre oficinas, e não depende do formato digitado |
 | CUSTOMER_VEHICLE | UNIQUE (`tenant_id`, `placa`) | A mesma placa pode existir em oficinas diferentes, mas não duas vezes na mesma oficina |
 | CUSTOMER_VEHICLE | INDEX (`tenant_id`, `customer_profile_id`) | Consultas do cliente e do histórico dentro do tenant |
 | SERVICE_ORDER | INDEX (`tenant_id`, `status`, `aberta_em`) | Filas operacionais da oficina |
@@ -375,6 +375,7 @@ As diferenças são simplificações do protótipo. A tabela acima deve ser atua
 | 1.3 | 20/11/2026 | Gabriel | Papel de plataforma passa a manter o cadastro do TENANT, sem acesso aos dados operacionais; inclusão de cor de identificação e estados `active`/`suspended` do TENANT |
 | 1.4 | 21/11/2026 | Gabriel | Endereço do cliente (ViaCEP) e código FIPE do veículo |
 | 1.5 | 25/11/2026 | Eloisa (revisão) e Gabriel (validação) | Estados da ordem e das versões de orçamento definidos; unicidade de telefone e placa por tenant; correspondência com o esquema físico do MVP (seção 7.1); pendências resolvidas removidas |
+| 1.6 | 26/11/2026 | Eloisa (revisão) e Gabriel (validação) | Telefone gravado e comparado no formato canônico (ADR-014) |
 
 ---
 
